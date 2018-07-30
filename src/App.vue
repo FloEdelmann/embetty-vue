@@ -4,6 +4,21 @@
 
     <header>Also try resizing the page!</header>
 
+    <h2>Setup</h2>
+
+    <article>
+      <h3>NPM</h3>
+      <pre class="language-js"><code>import EmbettyVue from 'embetty-vue';
+
+Vue.use(EmbettyVue, {
+  // required
+  serverUrl: '/path/to/embetty-server', // without trailing spaces
+
+  // optional
+  posterImageMode: 'cover' // or 'contain', see example below
+});</code></pre>
+    </article>
+
 
     <h2>Tweet</h2>
 

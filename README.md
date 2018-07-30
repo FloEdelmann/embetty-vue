@@ -1,26 +1,33 @@
 # embetty-vue
 
+Embetty displays remote content like tweets or videos without compromising your privacy.
+
+This is an alternative to the original [embetty](https://github.com/heiseonline/embetty) implementation based on Web Components. To use it, you need to have a [embetty server](https://github.com/heiseonline/embetty-server) up and running.
+
+
 ## Usage
 
 ```js
 import EmbettyVue from 'embetty-vue';
 
 Vue.use(EmbettyVue, {
-  serverUrl: '/path/to/embetty-server'
+  // required
+  serverUrl: '/path/to/embetty-server', // without trailing spaces
+
+  // optional
+  posterImageMode: 'cover' // or 'contain', see example below
 });
 ```
 
 Use like this:
 
 ```html
-<EmbettyTweet status="928365837123227654" />
-<EmbettyVideo type="youtube" video-id="m6UOo2YGbIE" />
-
-or
-
 <embetty-tweet status="928365837123227654" />
 <embetty-video type="youtube" video-id="m6UOo2YGbIE" />
 ```
+
+See [`src/App.vue`](src/App.vue) for a lot of examples.
+
 
 ## Development
 
