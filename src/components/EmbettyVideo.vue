@@ -1,8 +1,91 @@
 <template>
   <div class="embetty-video">
-    This is a {{ type }} video with ID {{ videoId }} and width {{ width }}.
+    <button type="button" class="playbutton">
+      <svg viewBox="0 0 200 200" class="playicon">
+        <circle cx="100" cy="100" r="90" fill="none" stroke-width="15" stroke="#fff"/>
+        <polygon points="70, 55 70, 145 145, 100" fill="#fff"/>
+      </svg>
+    </button>
+    <div class="poster">
+      <img :src="posterImageUrl">
+    </div>
+    <a href="https://www.heise.de/embetty" target="_blank" rel="noopener" class="powered-by" title="embetty - displaying remote content without compromising your privacy.">
+      powered by <span class="embetty-logo" v-html="embettyLogo"></span>
+    </a>
   </div>
 </template>
+
+<style lang="scss" scoped>
+@import '@/assets/element.scss';
+
+.embetty-video {
+  @include host();
+
+  .poster {
+    position: relative;
+    overflow: hidden;
+    max-height: (100 / 16 * 9)px;
+
+    img {
+      display: block;
+      width: 100%;
+    }
+  }
+
+  .playbutton {
+    box-sizing: border-box;
+    display: block;
+    position: absolute;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    opacity: 0.9;
+    background: none;
+    cursor: pointer;
+    background-image: linear-gradient(transparent, #000);
+    transition: opacity 150ms;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  .playicon {
+    width: 100px;
+    height: 100px;
+  }
+
+  .wrapper {
+    position: relative;
+    padding-bottom: 56.25%;
+    padding-top: 0px;
+    height: 0;
+    overflow: hidden;
+  }
+
+  iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .powered-by {
+    @include powered-by();
+
+    -webkit-font-smoothing: antialiased;
+
+    color: #fff;
+    opacity: .6;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+</style>
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
@@ -39,5 +122,7 @@ export default class EmbettyVideo extends EmbettyEmbed {
     }
   })
   private startAt?: number;
+
+  private posterImageUrl: string = '';
 }
 </script>

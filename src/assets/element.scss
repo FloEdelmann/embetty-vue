@@ -1,0 +1,39 @@
+@import './vars';
+
+// :host in the default implementation
+@mixin host {
+  position: relative;
+  overflow: hidden;
+  display: block;
+  width: 100%;
+  font-family: var(--embetty-font-family, $embetty-font-family);
+  border: 1px solid var(--embetty-border-color, $embetty-border-color);
+  border-width: 1px;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-size: 16px;
+  line-height: 1;
+}
+
+@mixin powered-by {
+  position: absolute;
+  z-index: 3;
+  right: -20px;
+  bottom: 0px;
+  padding: 20px 46px 5px 20px;
+  font-size: 14px;
+  color: #777;
+  text-decoration: none;
+  opacity: .3;
+
+  &:hover {
+    opacity: 1;
+  }
+
+  & .embetty-logo {
+    position: absolute;
+    right: 0;
+    bottom: -42px;
+    width: 40px;
+  }
+}
