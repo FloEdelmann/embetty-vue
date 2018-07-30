@@ -1,7 +1,7 @@
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 
-// eslint-disable-next-line
+// tslint:disable-next-line
 const EMBETTY_LOGO = require('!raw-loader!@/assets/embetty.svg').toString();
 
 @Component
@@ -17,7 +17,7 @@ export default class EmbettyEmbed extends Vue {
   protected embettyLogo: string = EMBETTY_LOGO;
 
   protected fetched: boolean = false;
-  protected data?: object = undefined;
+  protected data?: any = undefined;
 
 
   // override in child components
