@@ -90,7 +90,6 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 
-import { EmbettyVideoTypes } from '@/enums/EmbettyVideoTypes';
 import EmbettyEmbed from '@/components/EmbettyEmbed.vue';
 
 import VideoImpl from '@/interfaces/VideoImpl';
@@ -102,7 +101,7 @@ export default class EmbettyVideo extends EmbettyEmbed {
     type: String,
     required: true,
     validator(videoType: string) {
-      return Object.keys(EmbettyVideoTypes).includes(videoType);
+      return Object.keys(videoImplementations).includes(videoType);
     }
   })
   private type!: string;
@@ -128,13 +127,11 @@ export default class EmbettyVideo extends EmbettyEmbed {
 
 
   private get impl(): VideoImpl {
-    const className = this.type.charAt(0).toUpperCase() + this.type.slice(1) + 'Video';
-
-    if (!(className in videoImplementations)) {
-      throw new Error(`Could not find class ${className}. Please specify a valid video type.`);
+    if (!(this.type in videoImplementations)) {
+      throw new Error(`Could not find video implementation for type ${this.type}. Please specify a valid video type.`);
     }
 
-    return videoImplementations[className];
+    return videoImplementations[this.type];
   }
 
   private get posterImageUrl(): string {

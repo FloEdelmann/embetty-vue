@@ -28,4 +28,3 @@ export default Plugin;
 export { EmbettyTweet };
 export { EmbettyVideo };
 export { EmbettyVueOptions };
-export { EmbettyVideoTypes } from '@/enums/EmbettyVideoTypes';

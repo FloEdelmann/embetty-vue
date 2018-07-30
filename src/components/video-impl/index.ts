@@ -8,7 +8,7 @@ declare interface VideoImplementations {
 }
 
 export const videoImplementations: VideoImplementations = {
-  FacebookVideo,
-  VimeoVideo,
-  YoutubeVideo
+  facebook: FacebookVideo,
+  vimeo: VimeoVideo,
+  youtube: YoutubeVideo
 };
