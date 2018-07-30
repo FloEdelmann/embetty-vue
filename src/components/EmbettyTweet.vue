@@ -1,7 +1,7 @@
 <template>
   <div :class="{'embetty-tweet': true, answered}">
     <template v-if="fetched">
-      <EmbettyTweet v-if="isReply" :status="answeredTweetId" :answered="true" />
+      <embetty-tweet v-if="isReply" :status="answeredTweetId" :answered="true" />
       <header>
         <img :src="profileImageUrl">
         <span>
@@ -307,7 +307,9 @@ import EmbettyEmbed from '@/components/EmbettyEmbed.vue';
 const LINK_IMAGE_SIZE = 125;
 const MIN_WINDOW_WIDTH = 600;
 
-@Component
+@Component({
+  name: 'embetty-tweet'
+})
 export default class EmbettyTweet extends EmbettyEmbed {
   @Prop({
     type: String,

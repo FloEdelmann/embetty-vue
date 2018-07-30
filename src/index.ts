@@ -7,9 +7,7 @@ import { EmbettyVueOptions } from '@/interfaces/EmbettyVueOptions';
 const Plugin = {
   install(Vue: VueConstructor, options: EmbettyVueOptions = {}) {
     Vue.component('embetty-tweet', EmbettyTweet);
-    Vue.component('EmbettyTweet', EmbettyTweet);
     Vue.component('embetty-video', EmbettyVideo);
-    Vue.component('EmbettyVideo', EmbettyVideo);
     Vue._embettyVueOptions = options;
   }
 };

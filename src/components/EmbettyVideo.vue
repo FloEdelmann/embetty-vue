@@ -114,7 +114,9 @@ import EmbettyEmbed from '@/components/EmbettyEmbed.vue';
 import VideoImpl from '@/interfaces/VideoImpl';
 import { videoImplementations } from '@/components/video-impl/index';
 
-@Component
+@Component({
+  name: 'embetty-video'
+})
 export default class EmbettyVideo extends EmbettyEmbed {
   @Prop({
     type: Number,
