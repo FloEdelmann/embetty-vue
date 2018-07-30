@@ -9,8 +9,50 @@
 
     <article>
       <h3>Basic usage</h3>
+      <embetty-tweet status="880759671543541763" />
+      <pre class="language-html"><code>&lt;embetty-tweet status="880759671543541763" /&gt;</code></pre>
+    </article>
+
+    <article>
+      <h3>Tweet containing link and @mentions</h3>
       <embetty-tweet status="928365837123227654" />
       <pre class="language-html"><code>&lt;embetty-tweet status="928365837123227654" /&gt;</code></pre>
+    </article>
+
+    <article>
+      <h3>Tweet containing a photo</h3>
+      <embetty-tweet status="921685144594931712" />
+      <pre class="language-html"><code>&lt;embetty-tweet status="921685144594931712" /&gt;</code></pre>
+    </article>
+
+    <article>
+      <h3>Tweet containing multiple photos</h3>
+      <embetty-tweet status="935819741947744256" />
+      <pre class="language-html"><code>&lt;embetty-tweet status="935819741947744256" /&gt;</code></pre>
+    </article>
+
+    <article>
+      <h3>Custom styling</h3>
+      <embetty-tweet class="my-theme" status="934386458852495360" />
+      <pre class="language-html"><code>&lt;style&gt;
+  .my-theme {
+    --embetty-border-color: red;
+    --embetty-font-family: 'Comic Sans MS';
+  }
+&lt;/style&gt;
+&lt;embetty-tweet class="my-theme" status="934386458852495360" /&gt;</code></pre>
+    </article>
+
+    <article>
+      <h3>Tweet response to a photo</h3>
+      <embetty-tweet status="916618051906428928" />
+      <pre class="language-html"><code>&lt;embetty-tweet status="916618051906428928" /&gt;</code></pre>
+    </article>
+
+    <article>
+      <h3>Tweet discussion</h3>
+      <embetty-tweet status="936339584740454402" />
+      <pre class="language-html"><code>&lt;embetty-tweet status="936339584740454402" /&gt;</code></pre>
     </article>
 
 
@@ -89,6 +131,11 @@ header {
 
 article {
   margin-bottom: 2.5em;
+}
+
+.my-theme {
+  --embetty-border-color: red;
+  --embetty-font-family: 'Comic Sans MS'
 }
 </style>
 
