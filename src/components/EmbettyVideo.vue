@@ -44,7 +44,8 @@
     }
   }
 
-  .playbutton {
+  .playbutton,
+  .playbutton:active {
     box-sizing: border-box;
     display: block;
     position: absolute;
@@ -52,13 +53,16 @@
     width: 100%;
     height: 100%;
     border: 0;
+    padding: 0;
+    outline: 0;
     opacity: 0.9;
     background: none;
     cursor: pointer;
     background-image: linear-gradient(transparent, #000);
     transition: opacity 150ms;
 
-    &:hover {
+    &:hover,
+    &:focus {
       opacity: 1;
     }
   }
@@ -91,10 +95,6 @@
 
     color: #fff;
     opacity: .6;
-
-    &:hover {
-      opacity: 1;
-    }
   }
 }
 </style>

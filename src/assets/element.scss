@@ -26,7 +26,8 @@
   text-decoration: none;
   opacity: .3;
 
-  &:hover {
+  &:hover,
+  &:focus {
     opacity: 1;
   }
 
