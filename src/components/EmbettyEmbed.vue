@@ -25,9 +25,28 @@ export default class EmbettyEmbed extends Vue {
   })
   protected height!: number;
 
+  @Prop({
+    type: String,
+    required: false,
+    default: null
+  })
+  protected serverUrl!: string;
+
   // override in child components
   protected get url(): string | undefined {
     return undefined;
+  }
+
+  protected get _serverUrl(): string {
+    if (this.serverUrl) {
+      return this.serverUrl;
+    }
+
+    if (!Vue._embettyVueOptions.serverUrl) {
+      throw new Error(`serverUrl is neither set directely on the ${this.$vnode.tag} component nor globally.`);
+    }
+
+    return Vue._embettyVueOptions.serverUrl;
   }
 
   protected async fetchData() {
@@ -39,7 +58,7 @@ export default class EmbettyEmbed extends Vue {
   @Watch('url', {
     immediate: true
   })
-  async onUrlChanged() {
+  protected async onUrlChanged() {
     if (this.url) {
       await this.fetchData();
       this.$emit('initialized');

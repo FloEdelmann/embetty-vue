@@ -10,12 +10,18 @@ const Plugin = {
     Vue.component('EmbettyTweet', EmbettyTweet);
     Vue.component('embetty-video', EmbettyVideo);
     Vue.component('EmbettyVideo', EmbettyVideo);
+    Vue._embettyVueOptions = options;
   }
 };
 
 // auto install
 if (typeof window !== 'undefined' && window.hasOwnProperty('Vue')) {
-  (window as any).Vue.use(Plugin.install);
+  const baseUrlMeta = document.querySelector('meta[data-embetty-server]');
+  const embettyVueOptions: EmbettyVueOptions = {
+    serverUrl: baseUrlMeta !== null ? baseUrlMeta.getAttribute('data-embetty-server') as string : undefined
+  };
+
+  (window as any).Vue.use(Plugin, embettyVueOptions);
 }
 
 export default Plugin;
