@@ -7,20 +7,6 @@ const EMBETTY_LOGO = require('!raw-loader!@/assets/embetty.svg').toString();
 @Component
 export default class EmbettyEmbed extends Vue {
   @Prop({
-    type: Number,
-    required: false,
-    default: 1600
-  })
-  protected width!: number;
-
-  @Prop({
-    type: Number,
-    required: false,
-    default: 900
-  })
-  protected height!: number;
-
-  @Prop({
     type: String,
     required: false,
     default: null

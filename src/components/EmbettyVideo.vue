@@ -1,13 +1,21 @@
 <template>
-  <div class="embetty-video">
+  <div class="embetty-video" :style="{ 'width': width === null ? null : `${width}px` }">
     <button type="button" class="playbutton">
       <svg viewBox="0 0 200 200" class="playicon">
         <circle cx="100" cy="100" r="90" fill="none" stroke-width="15" stroke="#fff"/>
         <polygon points="70, 55 70, 145 145, 100" fill="#fff"/>
       </svg>
     </button>
-    <div class="poster">
-      <img :src="posterImageUrl">
+    <div
+      :class="{
+        'poster': true,
+        'default-size': height === null,
+        'contain': posterImageMode === 'contain'
+      }"
+      :style="{
+        'backgroundImage': `url(${posterImageUrl})`,
+        'height': height === null ? null : `${height}px`
+      }">
     </div>
     <a href="https://www.heise.de/embetty" target="_blank" rel="noopener" class="powered-by" title="embetty - displaying remote content without compromising your privacy.">
       powered by <span class="embetty-logo" v-html="embettyLogo"></span>
@@ -23,12 +31,16 @@
 
   .poster {
     position: relative;
-    overflow: hidden;
-    max-height: (100 / 16 * 9)px;
+    background: no-repeat center;
+    background-size: cover;
 
-    img {
-      display: block;
-      width: 100%;
+    &.contain {
+      background-size: contain;
+    }
+
+    &.default-size {
+      height: 0;
+      padding-top: 56.25%; // percentage values in padding refer to width; creates a 16:9 ratio
     }
   }
 
@@ -98,6 +110,20 @@ import { videoImplementations } from '@/components/video-impl/index';
 @Component
 export default class EmbettyVideo extends EmbettyEmbed {
   @Prop({
+    type: Number,
+    required: false,
+    default: null
+  })
+  protected width!: number | null;
+
+  @Prop({
+    type: Number,
+    required: false,
+    default: null
+  })
+  protected height!: number | null;
+
+  @Prop({
     type: String,
     required: true,
     validator(videoType: string) {
@@ -125,6 +151,13 @@ export default class EmbettyVideo extends EmbettyEmbed {
   })
   private startAt?: number;
 
+  @Prop({
+    type: String,
+    required: false,
+    default: null
+  })
+  private posterImageMode?: string | null;
+
 
   private get impl(): VideoImpl {
     if (!(this.type in videoImplementations)) {
@@ -136,6 +169,10 @@ export default class EmbettyVideo extends EmbettyEmbed {
 
   private get posterImageUrl(): string {
     return this._api(this.impl.getPosterImageApiEndpoint(this.videoId));
+  }
+
+  private get _posterImageMode(): string {
+    return this.posterImageMode || Vue._embettyVueOptions.posterImageMode || 'cover';
   }
 }
 </script>
