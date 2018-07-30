@@ -26,14 +26,6 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 
-import EmbettyTweet from '@/components/EmbettyTweet.vue';
-import EmbettyVideo from '@/components/EmbettyVideo.vue';
-
-@Component({
-  components: {
-    EmbettyTweet,
-    EmbettyVideo
-  }
-})
+@Component
 export default class App extends Vue {}
 </script>
