@@ -296,6 +296,16 @@ import EmbettyEmbed from '@/components/EmbettyEmbed.vue';
 
 @Component
 export default class EmbettyTweet extends EmbettyEmbed {
+  @Prop({
+    type: String,
+    required: true,
+    validator(statusId: string) {
+      return /^\d{6,}$/.test(statusId);
+    }
+  })
+  private status!: string;
+
+
   private profileImageUrl: string = '';
   private userName: string = '';
   private screenName: string = '';
@@ -306,14 +316,5 @@ export default class EmbettyTweet extends EmbettyEmbed {
   private twitterUrl: string = '';
   private createdAt: Date = new Date();
   private answered: boolean = false;
-
-  @Prop({
-    type: String,
-    required: true,
-    validator(statusId: string) {
-      return /^\d{6,}$/.test(statusId);
-    }
-  })
-  private status!: string;
 }
 </script>

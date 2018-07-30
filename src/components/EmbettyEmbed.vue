@@ -6,11 +6,6 @@ const EMBETTY_LOGO = require('!raw-loader!@/assets/embetty.svg').toString();
 
 @Component
 export default class EmbettyEmbed extends Vue {
-  protected embettyLogo: string = EMBETTY_LOGO;
-
-  protected fetched: boolean = false;
-  protected data?: object = undefined;
-
   @Prop({
     type: Number,
     required: false,
@@ -32,6 +27,13 @@ export default class EmbettyEmbed extends Vue {
   })
   protected serverUrl!: string;
 
+
+  protected embettyLogo: string = EMBETTY_LOGO;
+
+  protected fetched: boolean = false;
+  protected data?: object = undefined;
+
+
   // override in child components
   protected get url(): string | undefined {
     return undefined;
@@ -49,19 +51,24 @@ export default class EmbettyEmbed extends Vue {
     return Vue._embettyVueOptions.serverUrl;
   }
 
+
   protected async fetchData() {
     const response = await window.fetch(this.url);
     this.data = await response.json();
     this.fetched = true;
   }
 
+  protected _api(url: string) {
+    return this._serverUrl + url;
+  }
+
   @Watch('url', {
     immediate: true
   })
-  protected async onUrlChanged() {
-    if (this.url) {
+  protected async onUrlChanged(url?: string) {
+    if (url) {
       await this.fetchData();
-      this.$emit('initialized');
+      this.$nextTick(() => this.$emit('initialized'));
     }
   }
 }

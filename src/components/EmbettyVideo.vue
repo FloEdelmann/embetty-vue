@@ -123,6 +123,7 @@ export default class EmbettyVideo extends EmbettyEmbed {
   })
   private startAt?: number;
 
+
   private posterImageUrl: string = '';
 }
 </script>
