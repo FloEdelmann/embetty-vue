@@ -4,6 +4,6 @@ import { EmbettyVueOptions } from '@/interfaces/EmbettyVueOptions';
 
 declare module 'vue/types/vue' {
   interface VueConstructor {
-    _embettyVueOptions: EmbettyVueOptions
+    _embettyVueOptions: EmbettyVueOptions;
   }
 }

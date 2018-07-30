@@ -111,8 +111,8 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 
 import EmbettyEmbed from '@/components/EmbettyEmbed.vue';
 
-import VideoImpl from '@/interfaces/VideoImpl';
 import { videoImplementations } from '@/components/video-impl/index';
+import VideoImpl from '@/interfaces/VideoImpl';
 
 @Component({
   name: 'embetty-video'
