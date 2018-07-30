@@ -1,5 +1,5 @@
 <template>
-  <div :class="{'embetty-video': true, answered}">
+  <div :class="{'embetty-tweet': true, answered}">
     <header>
       <img :src="profileImageUrl">
       <span>
@@ -54,7 +54,7 @@
 $profile-image-width: 36px;
 $quoteLineWidth: 4px;
 
-.embetty-video.answered {
+.embetty-tweet.answered {
   margin-top: 0;
   margin-bottom: 0.5rem;
   border: 0;
@@ -84,7 +84,7 @@ $quoteLineWidth: 4px;
   }
 }
 
-.embetty-video {
+.embetty-tweet {
   @include host();
 
   max-width: 642px;

@@ -31,7 +31,7 @@
 
   .poster {
     position: relative;
-    background: no-repeat center;
+    background: no-repeat center black;
     background-size: cover;
 
     &.contain {
