@@ -23,6 +23,3 @@ if (typeof window !== 'undefined' && window.hasOwnProperty('Vue')) {
 }
 
 export default Plugin;
-export { EmbettyTweet };
-export { EmbettyVideo };
-export { EmbettyVueOptions };

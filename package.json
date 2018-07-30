@@ -1,10 +1,34 @@
 {
   "name": "embetty-vue",
   "version": "0.1.0",
-  "private": true,
+  "description": "Embetty displays remote content like tweets or videos without compromising your privacy.",
+  "license": "MIT",
+  "author": {
+    "name": "Florian Edelmann",
+    "email": "florian-edelmann@online.de"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FloEdelmann/embetty-vue"
+  },
+  "bugs": {
+    "url": "https://github.com/FloEdelmann/embetty-vue/issues"
+  },
+  "keywords": [
+    "vue",
+    "vuejs",
+    "embetty",
+    "privacy",
+    "youtube",
+    "vimeo",
+    "facebook",
+    "twitter",
+    "video"
+  ],
+  "main": "./dist/embetty-vue.common.js",
   "scripts": {
     "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
+    "build": "vue-cli-service build --target lib --name embetty-vue ./src/index.ts",
     "lint": "vue-cli-service lint",
     "test:unit": "vue-cli-service test:unit",
     "test:e2e": "vue-cli-service test:e2e"
