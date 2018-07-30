@@ -38,24 +38,24 @@ export default class EmbettyEmbed extends Vue {
   }
 
 
-  protected async fetchData() {
-    const response = await window.fetch(this.url);
-    this.data = await response.json();
-    this.fetched = true;
-  }
-
-  protected _api(url: string) {
-    return this._serverUrl + url;
-  }
-
   @Watch('url', {
     immediate: true
   })
   protected async onUrlChanged(url?: string) {
     if (url) {
       await this.fetchData();
-      this.$nextTick(() => this.$emit('initialized'));
     }
+  }
+
+
+  protected async fetchData() {
+    const response = await window.fetch(this.url);
+    this.data = await response.json();
+    this.fetched = true;
+  }
+
+  protected _api(url?: string): string | undefined {
+    return url ? `${this._serverUrl}${url}` : undefined;
   }
 }
 </script>

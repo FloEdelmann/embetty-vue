@@ -1,25 +1,37 @@
 <template>
   <div class="embetty-video" :style="{ 'width': width === null ? null : `${width}px` }">
-    <button type="button" class="playbutton">
-      <svg viewBox="0 0 200 200" class="playicon">
-        <circle cx="100" cy="100" r="90" fill="none" stroke-width="15" stroke="#fff"/>
-        <polygon points="70, 55 70, 145 145, 100" fill="#fff"/>
-      </svg>
-    </button>
     <div
+      v-if="activated"
       :class="{
-        'poster': true,
-        'default-size': height === null,
-        'contain': posterImageMode === 'contain'
+        'wrapper': true,
+        'default-height': height === null
       }"
       :style="{
-        'backgroundImage': `url(${posterImageUrl})`,
         'height': height === null ? null : `${height}px`
-      }">
-    </div>
-    <a href="https://www.heise.de/embetty" target="_blank" rel="noopener" class="powered-by" title="embetty - displaying remote content without compromising your privacy.">
-      powered by <span class="embetty-logo" v-html="embettyLogo"></span>
-    </a>
+      }"
+      v-html="iframe"></div>
+    <template v-else>
+      <button type="button" class="playbutton" @click="activate">
+        <svg viewBox="0 0 200 200" class="playicon">
+          <circle cx="100" cy="100" r="90" fill="none" stroke-width="15" stroke="#fff"/>
+          <polygon points="70, 55 70, 145 145, 100" fill="#fff"/>
+        </svg>
+      </button>
+      <div
+        :class="{
+          'poster': true,
+          'default-height': height === null,
+          'contain': posterImageMode === 'contain'
+        }"
+        :style="{
+          'backgroundImage': posterImageUrl ? `url(${posterImageUrl})`: null,
+          'height': height === null ? null : `${height}px`
+        }">
+      </div>
+      <a href="https://www.heise.de/embetty" target="_blank" rel="noopener" class="powered-by" title="embetty - displaying remote content without compromising your privacy.">
+        powered by <span class="embetty-logo" v-html="embettyLogo"></span>
+      </a>
+    </template>
   </div>
 </template>
 
@@ -29,8 +41,9 @@
 .embetty-video {
   @include host();
 
-  .poster {
+  .poster, .wrapper {
     position: relative;
+    overflow: hidden;
     background: no-repeat center black;
     background-size: cover;
 
@@ -38,7 +51,7 @@
       background-size: contain;
     }
 
-    &.default-size {
+    &.default-height {
       height: 0;
       padding-top: 56.25%; // percentage values in padding refer to width; creates a 16:9 ratio
     }
@@ -72,22 +85,6 @@
     height: 100px;
   }
 
-  .wrapper {
-    position: relative;
-    padding-bottom: 56.25%;
-    padding-top: 0px;
-    height: 0;
-    overflow: hidden;
-  }
-
-  iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-  }
-
   .powered-by {
     @include powered-by();
 
@@ -96,6 +93,16 @@
     color: #fff;
     opacity: .6;
   }
+}
+</style>
+
+<style lang="scss">
+.embetty-video iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }
 </style>
 
@@ -149,14 +156,17 @@ export default class EmbettyVideo extends EmbettyEmbed {
       return startAt % 1 === 0;
     }
   })
-  private startAt?: number;
+  private startAt!: number;
 
   @Prop({
     type: String,
     required: false,
     default: null
   })
-  private posterImageMode?: string | null;
+  private posterImageMode!: string | null;
+
+
+  private activated: boolean = false;
 
 
   private get impl(): VideoImpl {
@@ -167,12 +177,32 @@ export default class EmbettyVideo extends EmbettyEmbed {
     return videoImplementations[this.type];
   }
 
-  private get posterImageUrl(): string {
+  private get posterImageUrl(): string | undefined {
     return this._api(this.impl.getPosterImageApiEndpoint(this.videoId));
   }
 
   private get _posterImageMode(): string {
     return this.posterImageMode || Vue._embettyVueOptions.posterImageMode || 'cover';
+  }
+
+  protected get url(): string | undefined {
+    return this._api(this.impl.getVideoDataApiEndpoint(this.videoId));
+  }
+
+  private get iframe(): string {
+    return this.impl.getIframe({
+      width: this.width || 1600,
+      height: this.height || 900,
+      videoId: this.videoId,
+      startAt: this.startAt,
+      serverData: this.data
+    });
+  }
+
+
+  private activate(): void {
+    this.activated = true;
+    this.$emit(`activated`);
   }
 }
 </script>

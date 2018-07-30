@@ -11,18 +11,12 @@ const YoutubeVideo: VideoImpl = {
   },
 
   getIframe(videoData: VideoData) {
-    return `
-      <div class="wrapper">
-        <iframe
-          id="ytplayer"
-          type="text/html"
-          width="${videoData.width}"
-          height="${videoData.height}"
-          src="//www.youtube-nocookie.com/embed/${videoData.videoId}?autoplay=1&start=${videoData.startAt}"
-          frameborder="0"
-        ></iframe>
-      </div>
-    `;
+    return `<iframe
+      type="text/html"
+      width="${videoData.width}"
+      height="${videoData.height}"
+      src="//www.youtube-nocookie.com/embed/${videoData.videoId}?autoplay=1&start=${videoData.startAt}"
+      frameborder="0"></iframe>`;
   }
 };
 
