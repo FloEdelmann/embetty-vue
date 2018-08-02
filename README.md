@@ -1,4 +1,4 @@
-# embetty-vue
+# embetty-vue [![npm](https://img.shields.io/npm/v/embetty-vue.svg)](https://www.npmjs.com/package/embetty-vue)
 
 Embetty displays remote content like tweets or videos without compromising your privacy.
 
