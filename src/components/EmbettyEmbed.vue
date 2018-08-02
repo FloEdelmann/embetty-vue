@@ -3,7 +3,7 @@
 const EMBETTY_LOGO = require('!raw-loader!@/assets/embetty.svg').toString();
 
 export default {
-  name: 'embetty-embed',
+  name: 'EmbettyEmbed',
   props: {
     serverUrl: {
       type: String,
@@ -11,6 +11,9 @@ export default {
       default: null
     }
   },
+  /**
+   * @returns {!object} Component's data.
+   */
   data() {
     return {
       embettyLogo: EMBETTY_LOGO,
@@ -22,14 +25,14 @@ export default {
   computed: {
     /**
      * Override this in child components!
-     * @returns {string | undefined}
+     * @returns {string | undefined} The URL to query for data in this component.
      */
     url() {
       return undefined;
     },
 
     /**
-     * @returns {!string}
+     * @returns {!string} The server URL, either from this component's prop or the global config.
      */
     _serverUrl() {
       if (this.serverUrl) {
@@ -46,6 +49,9 @@ export default {
   watch: {
     url: {
       immediate: true,
+      /**
+       * @param {?string} url The newly set URL.
+       */
       handler(url) {
         if (url) {
           this.fetchData();
@@ -64,12 +70,12 @@ export default {
     },
 
     /**
-     * @param {?string} url
+     * @param {?string} apiEndpoint The API endpoint of the embetty-server.
      * @returns {?string} The given URL, prepended with the embetty-server base URL.
      */
-    _api(url) {
-      return url ? `${this._serverUrl}${url}` : undefined;
+    _api(apiEndpoint) {
+      return apiEndpoint ? `${this._serverUrl}${apiEndpoint}` : undefined;
     }
   }
-}
+};
 </script>

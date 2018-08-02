@@ -3,8 +3,8 @@ import EmbettyVideo from '@/components/EmbettyVideo.vue';
 
 const Plugin = {
   /**
-   * @param {VueConstructor} Vue
-   * @param {EmbettyVueOptions} options
+   * @param {!VueConstructor} Vue The global Vue object.
+   * @param {?EmbettyVueOptions} options Options for embetty-vue.
    */
   install(Vue, options = {}) {
     Vue.component('embetty-tweet', EmbettyTweet);

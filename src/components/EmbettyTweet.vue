@@ -6,11 +6,11 @@
         <img :src="profileImageUrl">
         <span>
           <strong>{{ userName }}</strong>
-          <a :href="`https://twitter.com/${screenName}`" target="_blank" rel="noopener" >@{{ screenName }}</a>
+          <a :href="`https://twitter.com/${screenName}`" target="_blank" rel="noopener">@{{ screenName }}</a>
         </span>
       </header>
       <article>
-        <p v-html="fullText"></p>
+        <p v-html="fullText" />
         <section v-if="media.length > 0" :class="`media media-${media.length}`">
           <a
             v-for="med in media"
@@ -23,27 +23,36 @@
 
         <a
           v-if="links.length > 0"
+          ref="link"
           :href="link.url"
           target="_blank"
           rel="noopener"
-          class="links"
-          ref="link">
+          class="links">
           <img :src="linkImageUrl">
-          <section class="link-body" ref="linkBody">
+          <section ref="linkBody" class="link-body">
             <h3>{{ link.title }}</h3>
             <p v-if="linkDescription">{{ linkDescription }}</p>
             <span v-if="linkHostname">{{ linkHostname }}</span>
           </section>
         </a>
 
-        <a :href="twitterUrl" target="_blank" rel="noopener" class="created-at">
+        <a
+          :href="twitterUrl"
+          target="_blank"
+          rel="noopener"
+          class="created-at">
           <time :datetime="createdAt.toISOString()">{{ createdAt.toLocaleString() }}</time>
           via Twitter
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400"><path style="fill:#1da1f2;" d="M153.62,301.59c94.34,0,145.94-78.16,145.94-145.94,0-2.22,0-4.43-.15-6.63A104.36,104.36,0,0,0,325,122.47a102.38,102.38,0,0,1-29.46,8.07,51.47,51.47,0,0,0,22.55-28.37,102.79,102.79,0,0,1-32.57,12.45,51.34,51.34,0,0,0-87.41,46.78A145.62,145.62,0,0,1,92.4,107.81a51.33,51.33,0,0,0,15.88,68.47A50.91,50.91,0,0,1,85,169.86c0,.21,0,.43,0,.65a51.31,51.31,0,0,0,41.15,50.28,51.21,51.21,0,0,1-23.16.88,51.35,51.35,0,0,0,47.92,35.62,102.92,102.92,0,0,1-63.7,22A104.41,104.41,0,0,1,75,278.55a145.21,145.21,0,0,0,78.62,23"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400"><path style="fill:#1da1f2;" d="M153.62,301.59c94.34,0,145.94-78.16,145.94-145.94,0-2.22,0-4.43-.15-6.63A104.36,104.36,0,0,0,325,122.47a102.38,102.38,0,0,1-29.46,8.07,51.47,51.47,0,0,0,22.55-28.37,102.79,102.79,0,0,1-32.57,12.45,51.34,51.34,0,0,0-87.41,46.78A145.62,145.62,0,0,1,92.4,107.81a51.33,51.33,0,0,0,15.88,68.47A50.91,50.91,0,0,1,85,169.86c0,.21,0,.43,0,.65a51.31,51.31,0,0,0,41.15,50.28,51.21,51.21,0,0,1-23.16.88,51.35,51.35,0,0,0,47.92,35.62,102.92,102.92,0,0,1-63.7,22A104.41,104.41,0,0,1,75,278.55a145.21,145.21,0,0,0,78.62,23" /></svg>
         </a>
 
-        <a href="https://www.heise.de/embetty?wt_mc=link.embetty.poweredby" target="_blank" rel="noopener" class="powered-by" title="embetty - displaying remote content without compromising your privacy.">
-          powered by <span class="embetty-logo" v-html="embettyLogo"></span>
+        <a
+          href="https://www.heise.de/embetty?wt_mc=link.embetty.poweredby"
+          target="_blank"
+          rel="noopener"
+          class="powered-by"
+          title="embetty - displaying remote content without compromising your privacy.">
+          powered by <span class="embetty-logo" v-html="embettyLogo" />
         </a>
       </article>
     </template>
@@ -306,12 +315,16 @@ const LINK_IMAGE_SIZE = 125;
 const MIN_WINDOW_WIDTH = 600;
 
 export default {
-  name: 'embetty-tweet',
+  name: 'EmbettyTweet',
   extends: EmbettyEmbed,
   props: {
     status: {
       type: String,
       required: true,
+      /**
+       * @param {!string} statusId The Twitter status (tweet) ID.
+       * @returns {!boolean} True if it seems like a valid status ID, false otherwise.
+       */
       validator(statusId) {
         return /^\d{6,}$/.test(statusId);
       }
@@ -322,6 +335,9 @@ export default {
       default: false
     }
   },
+  /**
+   * @returns {!object} The component's data.
+   */
   data() {
     return {
       linkDescription: null
@@ -330,28 +346,28 @@ export default {
   computed: {
     /**
      * @override
-     * @returns {string}
+     * @returns {!string} The embetty-server URL to query for this tweet's data.
      */
     url() {
       return this._api(`/tweet/${this.status}`);
     },
 
     /**
-     * @returns {string}
+     * @returns {!string} The name of this tweet's user.
      */
     userName() {
       return this.data.user.name;
     },
 
     /**
-     * @returns {string}
+     * @returns {!string} The twitter handle of this tweet's user.
      */
     screenName() {
       return this.data.user.screen_name;
     },
 
     /**
-     * @returns {string}
+     * @returns {!string} The text content of this tweet. Can contain HTML links to URLs, hashtags and at-mentions.
      */
     fullText() {
       return this.data.full_text
@@ -371,7 +387,7 @@ export default {
     },
 
     /**
-     * @returns {any[]}
+     * @returns {!array.<object>} An array of objects describing this tweet's attached photos.
      */
     media() {
       const extended = this.data.extended_entities || {};
@@ -383,28 +399,28 @@ export default {
     },
 
     /**
-     * @returns {any[]}
+     * @returns {!array.<object>} An array of objects describing this tweet's links.
      */
     links() {
       return this.data.entities.urls || [];
     },
 
     /**
-     * @returns {any}
+     * @returns {?object} This tweet's first link object.
      */
     link() {
       return this.links[0];
     },
 
     /**
-     * @returns {string}
+     * @returns {!string} The embetty-server URL for this tweet's first link's image.
      */
     linkImageUrl() {
       return `${this.url}-link-image`;
     },
 
     /**
-     * @returns {string | undefined}
+     * @returns {?string} The hostname of this tweet's first link's URL.
      */
     linkHostname() {
       // adapted from https://stackoverflow.com/a/21553982/451391
@@ -413,14 +429,14 @@ export default {
     },
 
     /**
-     * @returns {string}
+     * @returns {!string} The embetty-server URL for this tweet's user profile image.
      */
     profileImageUrl() {
       return `${this.url}-profile-image`;
     },
 
     /**
-     * @returns {Date}
+     * @returns {!Date} A Date object containing this tweet's creation date.
      */
     createdAt() {
       const createdAt = this.data.created_at.replace(/\+\d{4}\s/, '');
@@ -428,26 +444,31 @@ export default {
     },
 
     /**
-     * @returns {string}
+     * @returns {!string} The URL leading to this tweet on Twitter.
      */
     twitterUrl() {
       return `https://twitter.com/statuses/${this.data.id_str}`;
     },
 
     /**
-     * @returns {string}
+     * @returns {?string} The status ID of the tweet that this tweet is a reply to, if any.
      */
     answeredTweetId() {
       return this.data.in_reply_to_status_id_str;
     },
 
     /**
-     * @returns {boolean}
+     * @returns {!boolean} Whether this is a reply to another tweet.
      */
     isReply() {
       return !!this.answeredTweetId;
     }
   },
+
+  /**
+   * Hook that is called when this component is mounted. Calls fitLinkDescription
+   * as soon as the data are fetched and whenever the window is resized.
+   */
   mounted() {
     this.$watch('fetched', fetched => {
       if (fetched) {
@@ -468,6 +489,9 @@ export default {
     }
   },
   methods: {
+    /**
+     * Truncate this tweet's first link's description to fit into the space it is given.
+     */
     fitLinkDescription() {
       if (!this.link || !window) {
         return;
@@ -524,5 +548,5 @@ export default {
       this.$nextTick(reduceLinkDescriptionLength);
     }
   }
-}
+};
 </script>

@@ -10,13 +10,13 @@
       <h3>NPM</h3>
       <pre class="language-js"><code>import EmbettyVue from 'embetty-vue';
 
-Vue.use(EmbettyVue, {
-  // required
-  serverUrl: '/path/to/embetty-server', // without trailing spaces
+      Vue.use(EmbettyVue, {
+      // required
+      serverUrl: '/path/to/embetty-server', // without trailing spaces
 
-  // optional
-  posterImageMode: 'cover' // or 'contain', see example below
-});</code></pre>
+      // optional
+      posterImageMode: 'cover' // or 'contain', see example below
+      });</code></pre>
     </article>
 
 
@@ -50,12 +50,12 @@ Vue.use(EmbettyVue, {
       <h3>Custom styling</h3>
       <embetty-tweet class="my-theme" status="934386458852495360" />
       <pre class="language-html"><code>&lt;style&gt;
-  .my-theme {
-    --embetty-border-color: red;
-    --embetty-font-family: 'Comic Sans MS';
-  }
-&lt;/style&gt;
-&lt;embetty-tweet class="my-theme" status="934386458852495360" /&gt;</code></pre>
+      .my-theme {
+      --embetty-border-color: red;
+      --embetty-font-family: 'Comic Sans MS';
+      }
+      &lt;/style&gt;
+      &lt;embetty-tweet class="my-theme" status="934386458852495360" /&gt;</code></pre>
     </article>
 
     <article>
@@ -82,44 +82,44 @@ Vue.use(EmbettyVue, {
     <article>
       <h3>YouTube with <code>width</code></h3>
       <p>Aspect ratio of 16:9 is preserved.</p>
-      <embetty-video type="youtube" video-id="3L4fHrIJ3A4" :width="500" />
-      <pre class="language-html"><code>&lt;embetty-video type="youtube" video-id="3L4fHrIJ3A4" :width="500" /&gt;</code></pre>
+      <embetty-video :width="500" type="youtube" video-id="3L4fHrIJ3A4" />
+      <pre class="language-html"><code>&lt;embetty-video :width="500" type="youtube" video-id="3L4fHrIJ3A4" /&gt;</code></pre>
     </article>
 
     <article>
       <h3>YouTube with <code>height</code> and <code>width</code></h3>
       <p>Poster image is cropped.</p>
       <embetty-video
-        type="youtube"
-        video-id="3L4fHrIJ3A4"
+        :width="500"
         :height="200"
-        :width="500" />
+        type="youtube"
+        video-id="3L4fHrIJ3A4" />
       <pre class="language-html"><code>&lt;embetty-video
-    type="youtube"
-    video-id="3L4fHrIJ3A4"
-    :height="200"
-    :width="500" /&gt;</code></pre>
+      :width="500"
+      :height="200"
+      type="youtube"
+      video-id="3L4fHrIJ3A4" /&gt;</code></pre>
     </article>
 
     <article>
       <h3>YouTube with <code>height</code> and <code>poster-image-mode="contain"</code></h3>
       <p>Width is still 100%.</p>
       <embetty-video
+        :height="200"
         type="youtube"
         video-id="3L4fHrIJ3A4"
-        :height="200"
         poster-image-mode="contain" />
       <pre class="language-html"><code>&lt;embetty-video
-    type="youtube"
-    video-id="3L4fHrIJ3A4"
-    :height="200"
-    poster-image-mode="contain" /&gt;</code></pre>
+      :height="200"
+      type="youtube"
+      video-id="3L4fHrIJ3A4"
+      poster-image-mode="contain" /&gt;</code></pre>
     </article>
 
     <article>
       <h3>Vimeo with <code>start-at</code></h3>
-      <embetty-video type="vimeo" video-id="1084537" :start-at="97" />
-      <pre class="language-html"><code>&lt;embetty-video type="vimeo" video-id="1084537" :start-at="97" /&gt;</code></pre>
+      <embetty-video :start-at="97" type="vimeo" video-id="1084537" />
+      <pre class="language-html"><code>&lt;embetty-video :start-at="97" type="vimeo" video-id="1084537" /&gt;</code></pre>
     </article>
 
     <article>
@@ -156,6 +156,6 @@ article {
 
 <script>
 export default {
-  name: 'app'
-}
+  name: 'App'
+};
 </script>

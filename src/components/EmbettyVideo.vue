@@ -1,5 +1,5 @@
 <template>
-  <div class="embetty-video" :style="{ 'width': width === null ? null : `${width}px` }">
+  <div :style="{ 'width': width === null ? null : `${width}px` }" class="embetty-video">
     <div
       v-if="activated"
       :class="{
@@ -9,12 +9,18 @@
       :style="{
         'height': height === null ? null : `${height}px`
       }"
-      v-html="iframe"></div>
+      v-html="iframe" />
     <template v-else>
       <button type="button" class="playbutton" @click="activate">
         <svg viewBox="0 0 200 200" class="playicon">
-          <circle cx="100" cy="100" r="90" fill="none" stroke-width="15" stroke="#fff"/>
-          <polygon points="70, 55 70, 145 145, 100" fill="#fff"/>
+          <circle
+            cx="100"
+            cy="100"
+            r="90"
+            fill="none"
+            stroke-width="15"
+            stroke="#fff" />
+          <polygon points="70, 55 70, 145 145, 100" fill="#fff" />
         </svg>
       </button>
       <div
@@ -26,10 +32,14 @@
         :style="{
           'backgroundImage': posterImageUrl ? `url(${posterImageUrl})`: null,
           'height': height === null ? null : `${height}px`
-        }">
-      </div>
-      <a href="https://www.heise.de/embetty" target="_blank" rel="noopener" class="powered-by" title="embetty - displaying remote content without compromising your privacy.">
-        powered by <span class="embetty-logo" v-html="embettyLogo"></span>
+      }" />
+      <a
+        href="https://www.heise.de/embetty"
+        target="_blank"
+        rel="noopener"
+        class="powered-by"
+        title="embetty - displaying remote content without compromising your privacy.">
+        powered by <span class="embetty-logo" v-html="embettyLogo" />
       </a>
     </template>
   </div>
@@ -106,13 +116,13 @@
 }
 </style>
 
-<script lang="ts">
+<script>
 import EmbettyEmbed from '@/components/EmbettyEmbed.vue';
 
 import { videoImplementations } from '@/components/video-impl/index';
 
 export default {
-  name: 'embetty-video',
+  name: 'EmbettyVideo',
   extends: EmbettyEmbed,
   props: {
     width: {
@@ -128,6 +138,10 @@ export default {
     type: {
       type: String,
       required: true,
+      /**
+       * @param {!string} videoType The type of the video.
+       * @returns {!boolean} True if it is a valid type, false otherwise.
+       */
       validator(videoType) {
         return Object.keys(videoImplementations).includes(videoType);
       }
@@ -135,6 +149,10 @@ export default {
     videoId: {
       type: String,
       required: true,
+      /**
+       * @param {!string} videoId The ID of the video.
+       * @returns {!boolean} True if it seems like a valid video ID, false otherwise.
+       */
       validator(videoId) {
         return /^[a-zA-Z0-9_-]{6,}$/.test(videoId);
       }
@@ -143,8 +161,12 @@ export default {
       type: Number,
       required: false,
       default: 0,
+      /**
+       * @param {!number} startAt The number of seconds to start playback after.
+       * @returns {!boolean} True if it is a non-negative integer, false otherwise.
+       */
       validator(startAt) {
-        return startAt % 1 === 0;
+        return startAt % 1 === 0 && startAt >= 0;
       }
     },
     posterImageMode: {
@@ -153,6 +175,9 @@ export default {
       default: null
     }
   },
+  /**
+   * @returns {!object} The component's data.
+   */
   data() {
     return {
       activated: false
@@ -160,7 +185,8 @@ export default {
   },
   computed: {
     /**
-     * @returns {VideoImpl}
+     * @returns {!VideoImpl} The video implementation, based on the video type.
+     * @throws {!Error} If there is no video implementation for the given type.
      */
     impl() {
       if (!(this.type in videoImplementations)) {
@@ -171,14 +197,14 @@ export default {
     },
 
     /**
-     * @returns {string | undefined}
+     * @returns {!string} The embetty-server URL for the video poster image.
      */
     posterImageUrl() {
       return this._api(this.impl.getPosterImageApiEndpoint(this.videoId));
     },
 
     /**
-     * @returns {string}
+     * @returns {!string} The poster image mode.
      */
     _posterImageMode() {
       return this.posterImageMode || this._embettyVueOptions.posterImageMode || 'cover';
@@ -186,14 +212,15 @@ export default {
 
     /**
      * @override
-     * @returns {string | undefined}
+     * @returns {?string} The embetty-server URL to fetch video data from, or undefined
+     *                    if this video does not require additional data.
      */
     url() {
       return this._api(this.impl.getVideoDataApiEndpoint(this.videoId));
     },
 
     /**
-     * @returns {string}
+     * @returns {!string} The HTML for the <iframe> this component renders upon activating.
      */
     iframe() {
       return this.impl.getIframe({
@@ -205,14 +232,14 @@ export default {
       });
     }
   },
-  mounted() {
-    this.$nextTick(() => console.log('mounted video', this, this._embettyVueOptions));
-  },
   methods: {
+    /**
+     * Activates the video, i.e. replaces the poster image and play button with the iframe.
+     */
     activate() {
       this.activated = true;
       this.$emit(`activated`);
     }
   }
-}
+};
 </script>
