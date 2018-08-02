@@ -3,12 +3,12 @@ import App from './App.vue';
 
 Vue.config.productionTip = false;
 
-import EmbettyVue from './index';
+import EmbettyVue from './install';
 
 Vue.use(EmbettyVue, {
   serverUrl: 'http://localhost:3000'
 });
 
 new Vue({
-  render: (h) => h(App)
+  render: h => h(App)
 }).$mount('#app');

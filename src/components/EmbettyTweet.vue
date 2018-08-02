@@ -299,118 +299,157 @@ $quoteLineWidth: 4px;
 }
 </style>
 
-<script lang="ts">
-import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
-
+<script>
 import EmbettyEmbed from '@/components/EmbettyEmbed.vue';
 
 const LINK_IMAGE_SIZE = 125;
 const MIN_WINDOW_WIDTH = 600;
 
-@Component({
-  name: 'embetty-tweet'
-})
-export default class EmbettyTweet extends EmbettyEmbed {
-  @Prop({
-    type: String,
-    required: true,
-    validator(statusId: string) {
-      return /^\d{6,}$/.test(statusId);
+export default {
+  name: 'embetty-tweet',
+  extends: EmbettyEmbed,
+  props: {
+    status: {
+      type: String,
+      required: true,
+      validator(statusId) {
+        return /^\d{6,}$/.test(statusId);
+      }
+    },
+    answered: {
+      type: Boolean,
+      required: false,
+      default: false
     }
-  })
-  private status!: string;
+  },
+  data() {
+    return {
+      linkDescription: null
+    };
+  },
+  computed: {
+    /**
+     * @override
+     * @returns {string}
+     */
+    url() {
+      return this._api(`/tweet/${this.status}`);
+    },
 
-  @Prop({
-    type: Boolean,
-    required: false,
-    default: false
-  })
-  private answered!: boolean;
+    /**
+     * @returns {string}
+     */
+    userName() {
+      return this.data.user.name;
+    },
 
+    /**
+     * @returns {string}
+     */
+    screenName() {
+      return this.data.user.screen_name;
+    },
 
-  private linkDescription: string | null = null;
+    /**
+     * @returns {string}
+     */
+    fullText() {
+      return this.data.full_text
+        .replace(/(https:\/\/[^\s]+)/g, link => {
+          if (this.media.length > 0 && this.media[0].url === link) {
+            return '';
+          }
 
+          return `<a href="${link}">${link}</a>`;
+        })
+        .replace(/#(\w+)/g, (hashtag, word) => {
+          return `<a href="https://twitter.com/hashtag/${word}">${hashtag}</a>`;
+        })
+        .replace(/@(\w+)/g, (name, word) => {
+          return `<a href="https://twitter.com/${word}">${name}</a>`;
+        });
+    },
 
-  protected get url(): string | undefined {
-    return this._api(`/tweet/${this.status}`);
-  }
-
-  private get userName(): string {
-    return this.data.user.name;
-  }
-
-  private get screenName(): string {
-    return this.data.user.screen_name;
-  }
-
-  private get fullText(): string {
-    return this.data.full_text
-      .replace(/(https:\/\/[^\s]+)/g, (link: string) => {
-        if (this.media.length > 0 && this.media[0].url === link) {
-          return '';
-        }
-
-        return `<a href="${link}">${link}</a>`;
-      })
-      .replace(/#(\w+)/g, (hashtag: string, word: string) => {
-        return `<a href="https://twitter.com/hashtag/${word}">${hashtag}</a>`;
-      })
-      .replace(/@(\w+)/g, (name: string, word: string) => {
-        return `<a href="https://twitter.com/${word}">${name}</a>`;
+    /**
+     * @returns {any[]}
+     */
+    media() {
+      const extended = this.data.extended_entities || {};
+      const media = extended.media || [];
+      return media.map((m, idx) => {
+        m.imageUrl = `${this.url}-images-${idx}`;
+        return m;
       });
-  }
+    },
 
-  private get media(): any[] {
-    const extended = this.data.extended_entities || {};
-    const media = extended.media || [];
-    return media.map((m: any, idx: number) => {
-      m.imageUrl = `${this.url}-images-${idx}`;
-      return m;
-    });
-  }
+    /**
+     * @returns {any[]}
+     */
+    links() {
+      return this.data.entities.urls || [];
+    },
 
-  private get links(): any[] {
-    return this.data.entities.urls || [];
-  }
+    /**
+     * @returns {any}
+     */
+    link() {
+      return this.links[0];
+    },
 
-  private get link(): any {
-    return this.links[0];
-  }
+    /**
+     * @returns {string}
+     */
+    linkImageUrl() {
+      return `${this.url}-link-image`;
+    },
 
-  private get linkImageUrl(): string {
-    return `${this.url}-link-image`;
-  }
+    /**
+     * @returns {string | undefined}
+     */
+    linkHostname() {
+      // adapted from https://stackoverflow.com/a/21553982/451391
+      const match = this.link.url.match(/^.*?\/\/(([^:/?#]*)(?::([0-9]+))?)/);
+      return match ? match[2] : undefined;
+    },
 
-  private get linkHostname(): string | undefined {
-    // adapted from https://stackoverflow.com/a/21553982/451391
-    const match = (this.link.url as string).match(/^.*?\/\/(([^:\/?#]*)(?:\:([0-9]+))?)/);
-    return match ? match[2] : undefined;
-  }
+    /**
+     * @returns {string}
+     */
+    profileImageUrl() {
+      return `${this.url}-profile-image`;
+    },
 
-  private get profileImageUrl(): string {
-    return `${this.url}-profile-image`;
-  }
+    /**
+     * @returns {Date}
+     */
+    createdAt() {
+      const createdAt = this.data.created_at.replace(/\+\d{4}\s/, '');
+      return new Date(createdAt);
+    },
 
-  private get createdAt(): Date | undefined {
-    const createdAt = this.data.created_at.replace(/\+\d{4}\s/, '');
-    return new Date(createdAt);
-  }
+    /**
+     * @returns {string}
+     */
+    twitterUrl() {
+      return `https://twitter.com/statuses/${this.data.id_str}`;
+    },
 
-  private get twitterUrl(): string {
-    return `https://twitter.com/statuses/${this.data.id_str}`;
-  }
+    /**
+     * @returns {string}
+     */
+    answeredTweetId() {
+      return this.data.in_reply_to_status_id_str;
+    },
 
-  private get answeredTweetId() {
-    return this.data.in_reply_to_status_id_str;
-  }
-
-  private get isReply() {
-    return !!this.answeredTweetId;
-  }
-
-
-  private mounted(): void {
-    this.$watch('fetched', (fetched: boolean) => {
+    /**
+     * @returns {boolean}
+     */
+    isReply() {
+      return !!this.answeredTweetId;
+    }
+  },
+  mounted() {
+    this.$watch('fetched', fetched => {
       if (fetched) {
         this.fitLinkDescription();
       }
@@ -427,61 +466,63 @@ export default class EmbettyTweet extends EmbettyEmbed {
         this.fitLinkDescription();
       });
     }
-  }
-
-
-  private fitLinkDescription(): void {
-    if (!this.link || !window) {
-      return;
-    }
-
-    // reset link description to the one returned by the API
-    this.linkDescription = this.link.description;
-
-    if (!this.linkDescription) {
-      return;
-    }
-
-    const section = this.$refs.link as Element;
-    const linkBody = this.$refs.linkBody as Element;
-
-    // don't do anything if the mobile view is active
-    if (section.clientWidth === linkBody.clientWidth) {
-      return;
-    }
-
-    const imgHeight = LINK_IMAGE_SIZE;
-    let counter = 0;
-    let last = '';
-
-    const computedStyle = window.getComputedStyle(section);
-
-    const height = (element: Element) => {
-      const elemMarginTop = parseFloat(computedStyle.getPropertyValue('margin-top'));
-      const elemarginBottom = parseFloat(computedStyle.getPropertyValue('margin-bottom'));
-      const elemHeight = parseFloat(computedStyle.getPropertyValue('height'));
-
-      return elemHeight + elemMarginTop + elemarginBottom;
-    };
-
-    const reduceLinkDescriptionLength = () => {
-      if (counter >= 200 || last === this.linkDescription) {
+  },
+  methods: {
+    fitLinkDescription() {
+      if (!this.link || !window) {
         return;
       }
 
-      if ((height(section) - 2) <= imgHeight) {
+      // reset link description to the one returned by the API
+      this.linkDescription = this.link.description;
+
+      if (!this.linkDescription) {
         return;
       }
 
-      last = this.linkDescription as string;
-      this.linkDescription = (this.linkDescription as string).replace(/\W*\s(\S)*$/, '…');
-      counter++;
+      /** @type Element */
+      const section = this.$refs.link;
+      /** @type Element */
+      const linkBody = this.$refs.linkBody;
 
-      // wait for Vue to render until we measure again
+      // don't do anything if the mobile view is active
+      if (section.clientWidth === linkBody.clientWidth) {
+        return;
+      }
+
+      const imgHeight = LINK_IMAGE_SIZE;
+      let counter = 0;
+      let last = '';
+
+      const computedStyle = window.getComputedStyle(section);
+
+      const sectionHeight = () => {
+        const elemMarginTop = parseFloat(computedStyle.getPropertyValue('margin-top'));
+        const elemarginBottom = parseFloat(computedStyle.getPropertyValue('margin-bottom'));
+        const elemHeight = parseFloat(computedStyle.getPropertyValue('height'));
+
+        return elemHeight + elemMarginTop + elemarginBottom;
+      };
+
+      const reduceLinkDescriptionLength = () => {
+        if (counter >= 200 || last === this.linkDescription) {
+          return;
+        }
+
+        if ((sectionHeight() - 2) <= imgHeight) {
+          return;
+        }
+
+        last = this.linkDescription;
+        this.linkDescription = this.linkDescription.replace(/\W*\s(\S)*$/, '…');
+        counter++;
+
+        // wait for Vue to render until we measure again
+        this.$nextTick(reduceLinkDescriptionLength);
+      };
+
       this.$nextTick(reduceLinkDescriptionLength);
-    };
-
-    this.$nextTick(reduceLinkDescriptionLength);
+    }
   }
 }
 </script>

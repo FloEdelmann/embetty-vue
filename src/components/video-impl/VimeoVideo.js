@@ -1,16 +1,26 @@
-import VideoData from '@/interfaces/VideoData';
-import VideoImpl from '@/interfaces/VideoImpl';
-
-const VimeoVideo: VideoImpl = {
-  getVideoDataApiEndpoint(videoId: string) {
+/** @type VideoImpl */
+const VimeoVideo = {
+  /**
+   * @param {!string} videoId
+   * @returns {?string}
+   */
+  getVideoDataApiEndpoint(videoId) {
     return undefined;
   },
 
-  getPosterImageApiEndpoint(videoId: string) {
+  /**
+   * @param {!string} videoId
+   * @returns {!string}
+   */
+  getPosterImageApiEndpoint(videoId) {
     return `/video/vimeo/${videoId}-poster-image`;
   },
 
-  getIframe(videoData: VideoData) {
+  /**
+   * @param {VideoData} videoData
+   * @returns {string}
+   */
+  getIframe(videoData) {
     return `<iframe
       src="https://player.vimeo.com/video/${videoData.videoId}?autoplay=1#t=${videoData.startAt}"
       width="${videoData.width}"

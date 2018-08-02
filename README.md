@@ -2,7 +2,7 @@
 
 Embetty displays remote content like tweets or videos without compromising your privacy.
 
-This is an alternative to the original [embetty](https://github.com/heiseonline/embetty) implementation based on Web Components. To use it, you need to have a [embetty server](https://github.com/heiseonline/embetty-server) up and running.
+This is a Vue.js alternative to the original [embetty](https://github.com/heiseonline/embetty) implementation (which is based on Web Components). To use it, you need to have a [embetty server](https://github.com/heiseonline/embetty-server) up and running.
 
 
 ## Usage

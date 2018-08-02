@@ -1,61 +1,75 @@
-<script lang="ts">
-import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
-
-// tslint:disable-next-line
+<script>
+// eslint-disable-next-line
 const EMBETTY_LOGO = require('!raw-loader!@/assets/embetty.svg').toString();
 
-@Component
-export default class EmbettyEmbed extends Vue {
-  @Prop({
-    type: String,
-    required: false,
-    default: null
-  })
-  protected serverUrl!: string;
-
-
-  protected embettyLogo: string = EMBETTY_LOGO;
-
-  protected fetched: boolean = false;
-  protected data?: any = undefined;
-
-
-  // override in child components
-  protected get url(): string | undefined {
-    return undefined;
-  }
-
-  protected get _serverUrl(): string {
-    if (this.serverUrl) {
-      return this.serverUrl;
+export default {
+  name: 'embetty-embed',
+  props: {
+    serverUrl: {
+      type: String,
+      required: false,
+      default: null
     }
+  },
+  data() {
+    return {
+      embettyLogo: EMBETTY_LOGO,
 
-    if (!Vue._embettyVueOptions.serverUrl) {
-      throw new Error(`serverUrl is neither set directely on the ${this.$vnode.tag} component nor globally.`);
+      fetched: false,
+      data: undefined
+    };
+  },
+  computed: {
+    /**
+     * Override this in child components!
+     * @returns {string | undefined}
+     */
+    url() {
+      return undefined;
+    },
+
+    /**
+     * @returns {!string}
+     */
+    _serverUrl() {
+      if (this.serverUrl) {
+        return this.serverUrl;
+      }
+
+      if (!this._embettyVueOptions.serverUrl) {
+        throw new Error(`serverUrl is neither set directly on the ${this.$vnode.tag} component nor globally.`);
+      }
+
+      return this._embettyVueOptions.serverUrl;
     }
-
-    return Vue._embettyVueOptions.serverUrl;
-  }
-
-
-  @Watch('url', {
-    immediate: true
-  })
-  protected async onUrlChanged(url?: string) {
-    if (url) {
-      await this.fetchData();
+  },
+  watch: {
+    url: {
+      immediate: true,
+      handler(url) {
+        if (url) {
+          this.fetchData();
+        }
+      }
     }
-  }
+  },
+  methods: {
+    /**
+     * Calls the API of embetty-server using the url set in the calling (child) component.
+     */
+    async fetchData() {
+      const response = await window.fetch(this.url);
+      this.data = await response.json();
+      this.fetched = true;
+    },
 
-
-  protected async fetchData() {
-    const response = await window.fetch(this.url);
-    this.data = await response.json();
-    this.fetched = true;
-  }
-
-  protected _api(url?: string): string | undefined {
-    return url ? `${this._serverUrl}${url}` : undefined;
+    /**
+     * @param {?string} url
+     * @returns {?string} The given URL, prepended with the embetty-server base URL.
+     */
+    _api(url) {
+      return url ? `${this._serverUrl}${url}` : undefined;
+    }
   }
 }
 </script>

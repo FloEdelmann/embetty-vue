@@ -107,104 +107,112 @@
 </style>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
-
 import EmbettyEmbed from '@/components/EmbettyEmbed.vue';
 
 import { videoImplementations } from '@/components/video-impl/index';
-import VideoImpl from '@/interfaces/VideoImpl';
 
-@Component({
-  name: 'embetty-video'
-})
-export default class EmbettyVideo extends EmbettyEmbed {
-  @Prop({
-    type: Number,
-    required: false,
-    default: null
-  })
-  protected width!: number | null;
-
-  @Prop({
-    type: Number,
-    required: false,
-    default: null
-  })
-  protected height!: number | null;
-
-  @Prop({
-    type: String,
-    required: true,
-    validator(videoType: string) {
-      return Object.keys(videoImplementations).includes(videoType);
+export default {
+  name: 'embetty-video',
+  extends: EmbettyEmbed,
+  props: {
+    width: {
+      type: Number,
+      required: false,
+      default: null
+    },
+    height: {
+      type: Number,
+      required: false,
+      default: null
+    },
+    type: {
+      type: String,
+      required: true,
+      validator(videoType) {
+        return Object.keys(videoImplementations).includes(videoType);
+      }
+    },
+    videoId: {
+      type: String,
+      required: true,
+      validator(videoId) {
+        return /^[a-zA-Z0-9_-]{6,}$/.test(videoId);
+      }
+    },
+    startAt: {
+      type: Number,
+      required: false,
+      default: 0,
+      validator(startAt) {
+        return startAt % 1 === 0;
+      }
+    },
+    posterImageMode: {
+      type: String,
+      required: false,
+      default: null
     }
-  })
-  private type!: string;
+  },
+  data() {
+    return {
+      activated: false
+    };
+  },
+  computed: {
+    /**
+     * @returns {VideoImpl}
+     */
+    impl() {
+      if (!(this.type in videoImplementations)) {
+        throw new Error(`Could not find video implementation for type ${this.type}. Please specify a valid video type.`);
+      }
 
-  @Prop({
-    type: String,
-    required: true,
-    validator(videoId: string) {
-      return /^[a-zA-Z0-9_-]{6,}$/.test(videoId);
+      return videoImplementations[this.type];
+    },
+
+    /**
+     * @returns {string | undefined}
+     */
+    posterImageUrl() {
+      return this._api(this.impl.getPosterImageApiEndpoint(this.videoId));
+    },
+
+    /**
+     * @returns {string}
+     */
+    _posterImageMode() {
+      return this.posterImageMode || this._embettyVueOptions.posterImageMode || 'cover';
+    },
+
+    /**
+     * @override
+     * @returns {string | undefined}
+     */
+    url() {
+      return this._api(this.impl.getVideoDataApiEndpoint(this.videoId));
+    },
+
+    /**
+     * @returns {string}
+     */
+    iframe() {
+      return this.impl.getIframe({
+        width: this.width || 1600,
+        height: this.height || 900,
+        videoId: this.videoId,
+        startAt: this.startAt,
+        serverData: this.data
+      });
     }
-  })
-  private videoId!: string;
-
-  @Prop({
-    type: Number,
-    required: false,
-    default: 0,
-    validator(startAt: number) {
-      return startAt % 1 === 0;
+  },
+  mounted() {
+    this.$nextTick(() => console.log('mounted video', this, this._embettyVueOptions));
+  },
+  methods: {
+    activate() {
+      this.activated = true;
+      this.$emit(`activated`);
     }
-  })
-  private startAt!: number;
-
-  @Prop({
-    type: String,
-    required: false,
-    default: null
-  })
-  private posterImageMode!: string | null;
-
-
-  private activated: boolean = false;
-
-
-  private get impl(): VideoImpl {
-    if (!(this.type in videoImplementations)) {
-      throw new Error(`Could not find video implementation for type ${this.type}. Please specify a valid video type.`);
-    }
-
-    return videoImplementations[this.type];
-  }
-
-  private get posterImageUrl(): string | undefined {
-    return this._api(this.impl.getPosterImageApiEndpoint(this.videoId));
-  }
-
-  private get _posterImageMode(): string {
-    return this.posterImageMode || Vue._embettyVueOptions.posterImageMode || 'cover';
-  }
-
-  protected get url(): string | undefined {
-    return this._api(this.impl.getVideoDataApiEndpoint(this.videoId));
-  }
-
-  private get iframe(): string {
-    return this.impl.getIframe({
-      width: this.width || 1600,
-      height: this.height || 900,
-      videoId: this.videoId,
-      startAt: this.startAt,
-      serverData: this.data
-    });
-  }
-
-
-  private activate(): void {
-    this.activated = true;
-    this.$emit(`activated`);
   }
 }
 </script>

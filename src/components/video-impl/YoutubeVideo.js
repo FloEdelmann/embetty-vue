@@ -1,16 +1,26 @@
-import VideoData from '@/interfaces/VideoData';
-import VideoImpl from '@/interfaces/VideoImpl';
-
-const YoutubeVideo: VideoImpl = {
-  getVideoDataApiEndpoint(videoId: string) {
+/** @type VideoImpl */
+const YoutubeVideo = {
+  /**
+   * @param {!string} videoId
+   * @returns {?string}
+   */
+  getVideoDataApiEndpoint(videoId) {
     return undefined;
   },
 
-  getPosterImageApiEndpoint(videoId: string) {
+  /**
+   * @param {!string} videoId
+   * @returns {!string}
+   */
+  getPosterImageApiEndpoint(videoId) {
     return `/video/youtube/${videoId}-poster-image`;
   },
 
-  getIframe(videoData: VideoData) {
+  /**
+   * @param {VideoData} videoData
+   * @returns {string}
+   */
+  getIframe(videoData) {
     return `<iframe
       type="text/html"
       width="${videoData.width}"
