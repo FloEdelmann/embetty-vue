@@ -1,12 +1,14 @@
 import EmbettyTweet from '@/components/EmbettyTweet.vue';
 import EmbettyVideo from '@/components/EmbettyVideo.vue';
 
-const Plugin = {
+var Plugin = {
   /**
    * @param {!VueConstructor} Vue The global Vue object.
    * @param {?EmbettyVueOptions} options Options for embetty-vue.
    */
-  install(Vue, options = {}) {
+  install: function(Vue, options) {
+    options = options || {};
+
     Vue.component('embetty-tweet', EmbettyTweet);
     Vue.component('embetty-video', EmbettyVideo);
     Vue.prototype._embettyVueOptions = options;
@@ -15,10 +17,10 @@ const Plugin = {
 
 // auto install
 if (typeof window !== 'undefined' && window.hasOwnProperty('Vue')) {
-  const baseUrlMeta = document.querySelector('meta[data-embetty-server]');
+  var baseUrlMeta = document.querySelector('meta[data-embetty-server]');
 
   /** @type EmbettyVueOptions */
-  const embettyVueOptions = {
+  var embettyVueOptions = {
     serverUrl: baseUrlMeta !== null ? baseUrlMeta.getAttribute('data-embetty-server') : undefined
   };
 

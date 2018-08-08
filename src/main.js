@@ -10,5 +10,7 @@ Vue.use(EmbettyVue, {
 });
 
 new Vue({
-  render: h => h(App)
+  render: function(h) {
+    return h(App);
+  }
 }).$mount('#app');

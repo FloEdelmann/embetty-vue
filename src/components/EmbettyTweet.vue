@@ -311,8 +311,8 @@ $quoteLineWidth: 4px;
 <script>
 import EmbettyEmbed from '@/components/EmbettyEmbed.vue';
 
-const LINK_IMAGE_SIZE = 125;
-const MIN_WINDOW_WIDTH = 600;
+var LINK_IMAGE_SIZE = 125;
+var MIN_WINDOW_WIDTH = 600;
 
 export default {
   name: 'EmbettyTweet',
@@ -325,7 +325,7 @@ export default {
        * @param {!string} statusId The Twitter status (tweet) ID.
        * @returns {!boolean} True if it seems like a valid status ID, false otherwise.
        */
-      validator(statusId) {
+      validator: function(statusId) {
         return /^\d{6,}$/.test(statusId);
       }
     },
@@ -338,7 +338,7 @@ export default {
   /**
    * @returns {!object} The component's data.
    */
-  data() {
+  data: function() {
     return {
       linkDescription: null
     };
@@ -348,52 +348,54 @@ export default {
      * @override
      * @returns {!string} The embetty-server URL to query for this tweet's data.
      */
-    url() {
-      return this._api(`/tweet/${this.status}`);
+    url: function() {
+      return this._api('/tweet/' + this.status);
     },
 
     /**
      * @returns {!string} The name of this tweet's user.
      */
-    userName() {
+    userName: function() {
       return this.data.user.name;
     },
 
     /**
      * @returns {!string} The twitter handle of this tweet's user.
      */
-    screenName() {
+    screenName: function() {
       return this.data.user.screen_name;
     },
 
     /**
      * @returns {!string} The text content of this tweet. Can contain HTML links to URLs, hashtags and at-mentions.
      */
-    fullText() {
+    fullText: function() {
+      var thisCmp = this;
       return this.data.full_text
-        .replace(/(https:\/\/[^\s]+)/g, link => {
-          if (this.media.length > 0 && this.media[0].url === link) {
+        .replace(/(https:\/\/[^\s]+)/g, function(link) {
+          if (thisCmp.media.length > 0 && thisCmp.media[0].url === link) {
             return '';
           }
 
-          return `<a href="${link}">${link}</a>`;
+          return '<a href="' + link + '">' + link + '</a>';
         })
-        .replace(/#(\w+)/g, (hashtag, word) => {
-          return `<a href="https://twitter.com/hashtag/${word}">${hashtag}</a>`;
+        .replace(/#(\w+)/g, function(hashtag, word) {
+          return '<a href="https://twitter.com/hashtag/' + word + '">' + hashtag + '</a>';
         })
-        .replace(/@(\w+)/g, (name, word) => {
-          return `<a href="https://twitter.com/${word}">${name}</a>`;
+        .replace(/@(\w+)/g, function(name, word) {
+          return '<a href="https://twitter.com/' + word + '">' + name + '</a>';
         });
     },
 
     /**
      * @returns {!array.<object>} An array of objects describing this tweet's attached photos.
      */
-    media() {
-      const extended = this.data.extended_entities || {};
-      const media = extended.media || [];
-      return media.map((m, idx) => {
-        m.imageUrl = `${this.url}-images-${idx}`;
+    media: function() {
+      var thisCmp = this;
+      var extended = this.data.extended_entities || {};
+      var media = extended.media || [];
+      return media.map(function(m, idx) {
+        m.imageUrl = thisCmp.url + '-images-' + idx;
         return m;
       });
     },
@@ -401,66 +403,66 @@ export default {
     /**
      * @returns {!array.<object>} An array of objects describing this tweet's links.
      */
-    links() {
+    links: function() {
       return this.data.entities.urls || [];
     },
 
     /**
      * @returns {?object} This tweet's first link object.
      */
-    link() {
+    link: function() {
       return this.links[0];
     },
 
     /**
      * @returns {!string} The embetty-server URL for this tweet's first link's image.
      */
-    linkImageUrl() {
-      return `${this.url}-link-image`;
+    linkImageUrl: function() {
+      return this.url + '-link-image';
     },
 
     /**
      * @returns {?string} The hostname of this tweet's first link's URL.
      */
-    linkHostname() {
+    linkHostname: function() {
       // adapted from https://stackoverflow.com/a/21553982/451391
-      const match = this.link.url.match(/^.*?\/\/(([^:/?#]*)(?::([0-9]+))?)/);
+      var match = this.link.url.match(/^.*?\/\/(([^:/?#]*)(?::([0-9]+))?)/);
       return match ? match[2] : undefined;
     },
 
     /**
      * @returns {!string} The embetty-server URL for this tweet's user profile image.
      */
-    profileImageUrl() {
-      return `${this.url}-profile-image`;
+    profileImageUrl: function() {
+      return this.url + '-profile-image';
     },
 
     /**
      * @returns {!Date} A Date object containing this tweet's creation date.
      */
-    createdAt() {
-      const createdAt = this.data.created_at.replace(/\+\d{4}\s/, '');
+    createdAt: function() {
+      var createdAt = this.data.created_at.replace(/\+\d{4}\s/, '');
       return new Date(createdAt);
     },
 
     /**
      * @returns {!string} The URL leading to this tweet on Twitter.
      */
-    twitterUrl() {
-      return `https://twitter.com/statuses/${this.data.id_str}`;
+    twitterUrl: function() {
+      return 'https://twitter.com/statuses/' + this.data.id_str;
     },
 
     /**
      * @returns {?string} The status ID of the tweet that this tweet is a reply to, if any.
      */
-    answeredTweetId() {
+    answeredTweetId: function() {
       return this.data.in_reply_to_status_id_str;
     },
 
     /**
      * @returns {!boolean} Whether this is a reply to another tweet.
      */
-    isReply() {
+    isReply: function() {
       return !!this.answeredTweetId;
     }
   },
@@ -469,22 +471,23 @@ export default {
    * Hook that is called when this component is mounted. Calls fitLinkDescription
    * as soon as the data are fetched and whenever the window is resized.
    */
-  mounted() {
-    this.$watch('fetched', fetched => {
+  mounted: function() {
+    var thisCmp = this;
+    this.$watch('fetched', function(fetched) {
       if (fetched) {
-        this.fitLinkDescription();
+        thisCmp.fitLinkDescription();
       }
     }, {
       immediate: true
     });
 
     if (window) {
-      window.addEventListener('resize', () => {
+      window.addEventListener('resize', function() {
         if (window.innerWidth < MIN_WINDOW_WIDTH) {
           return;
         }
 
-        this.fitLinkDescription();
+        thisCmp.fitLinkDescription();
       });
     }
   },
@@ -492,7 +495,7 @@ export default {
     /**
      * Truncate this tweet's first link's description to fit into the space it is given.
      */
-    fitLinkDescription() {
+    fitLinkDescription: function() {
       if (!this.link || !window) {
         return;
       }
@@ -505,30 +508,31 @@ export default {
       }
 
       /** @type Element */
-      const section = this.$refs.link;
+      var section = this.$refs.link;
       /** @type Element */
-      const linkBody = this.$refs.linkBody;
+      var linkBody = this.$refs.linkBody;
 
       // don't do anything if the mobile view is active
       if (section.clientWidth === linkBody.clientWidth) {
         return;
       }
 
-      const imgHeight = LINK_IMAGE_SIZE;
-      let counter = 0;
-      let last = '';
+      var imgHeight = LINK_IMAGE_SIZE;
+      var counter = 0;
+      var last = '';
 
-      const computedStyle = window.getComputedStyle(section);
+      var computedStyle = window.getComputedStyle(section);
 
-      const sectionHeight = () => {
-        const elemMarginTop = parseFloat(computedStyle.getPropertyValue('margin-top'));
-        const elemMarginBottom = parseFloat(computedStyle.getPropertyValue('margin-bottom'));
-        const elemHeight = parseFloat(computedStyle.getPropertyValue('height'));
+      var sectionHeight = function() {
+        var elemMarginTop = parseFloat(computedStyle.getPropertyValue('margin-top'));
+        var elemMarginBottom = parseFloat(computedStyle.getPropertyValue('margin-bottom'));
+        var elemHeight = parseFloat(computedStyle.getPropertyValue('height'));
 
         return elemHeight + elemMarginTop + elemMarginBottom;
       };
 
-      const reduceLinkDescriptionLength = () => {
+      var thisCmp = this;
+      var reduceLinkDescriptionLength = function() {
         if (counter >= 200 || last === this.linkDescription) {
           return;
         }
@@ -537,12 +541,12 @@ export default {
           return;
         }
 
-        last = this.linkDescription;
-        this.linkDescription = this.linkDescription.replace(/\W*\s(\S)*$/, '…');
+        last = thisCmp.linkDescription;
+        thisCmp.linkDescription = thisCmp.linkDescription.replace(/\W*\s(\S)*$/, '…');
         counter++;
 
         // wait for Vue to render until we measure again
-        this.$nextTick(reduceLinkDescriptionLength);
+        thisCmp.$nextTick(reduceLinkDescriptionLength);
       };
 
       this.$nextTick(reduceLinkDescriptionLength);

@@ -3,6 +3,9 @@ module.exports = {
   env: {
     node: true
   },
+  "plugins": [
+    "no-es2015"
+  ],
   extends: [
     'plugin:vue/recommended',
     'eslint:recommended'
@@ -14,6 +17,8 @@ module.exports = {
     "semi": "error",
     "no-trailing-spaces": "error",
     "comma-dangle": ["error", "never"],
+    "quotes": ["error", "single"],
+    "no-template-curly-in-string": "error",
     "vue/max-attributes-per-line": ["error", { "singleline": 3 }],
     "vue/html-closing-bracket-newline": "error",
     "vue/html-closing-bracket-spacing": "error",
@@ -24,7 +29,7 @@ module.exports = {
         "MethodDefinition": true,
         "ClassDeclaration": true,
         "ArrowFunctionExpression": false,
-        "FunctionExpression": true
+        "FunctionExpression": false
       }
     }],
     "valid-jsdoc": ["error", {
@@ -59,6 +64,26 @@ module.exports = {
         "String": "string"
       }
     }],
+
+    // Don't use ES2015 at all, so we don't need a transpiler like Babel.
+    // This reduces the bundle size dramatically.
+    "no-es2015/no-object-computed-properties": "error",
+    "no-es2015/no-object-shorthand-properties": "error",
+    "no-es2015/no-object-shorthand-method": "error",
+    "no-es2015/only-var": "error",
+    "no-es2015/no-destructuring-assignment": "error",
+    "no-es2015/no-destructuring-params": "error",
+    "no-es2015/no-class": "error",
+    "no-es2015/no-default-params": "error",
+    "no-es2015/no-spread-element": "error",
+    "no-es2015/no-rest-params": "error",
+    "no-es2015/no-generator-function": "error",
+    "no-es2015/no-arrow-func": "error",
+    "no-es2015/no-for-of": "error",
+    "no-es2015/no-template-string": "error",
+
+    // using import is allowed, since webpack gets rid of it automatically
+    "no-es2015/no-import": "off"
   },
   parserOptions: {
     parser: 'babel-eslint'

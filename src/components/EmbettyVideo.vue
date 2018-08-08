@@ -140,7 +140,7 @@ export default {
        * @param {!string} videoType The type of the video.
        * @returns {!boolean} True if it is a valid type, false otherwise.
        */
-      validator(videoType) {
+      validator: function(videoType) {
         return videoType in videoImplementations;
       }
     },
@@ -151,7 +151,7 @@ export default {
        * @param {!string} videoId The ID of the video.
        * @returns {!boolean} True if it seems like a valid video ID, false otherwise.
        */
-      validator(videoId) {
+      validator: function(videoId) {
         return /^[a-zA-Z0-9_-]{6,}$/.test(videoId);
       }
     },
@@ -163,7 +163,7 @@ export default {
        * @param {!number} startAt The number of seconds to start playback after.
        * @returns {!boolean} True if it is a non-negative integer, false otherwise.
        */
-      validator(startAt) {
+      validator: function(startAt) {
         return startAt % 1 === 0 && startAt >= 0;
       }
     },
@@ -176,7 +176,7 @@ export default {
   /**
    * @returns {!object} The component's data.
    */
-  data() {
+  data: function() {
     return {
       activated: false
     };
@@ -186,9 +186,9 @@ export default {
      * @returns {!VideoImpl} The video implementation, based on the video type.
      * @throws {!Error} If there is no video implementation for the given type.
      */
-    impl() {
+    impl: function() {
       if (!(this.type in videoImplementations)) {
-        throw new Error(`Could not find video implementation for type ${this.type}. Please specify a valid video type.`);
+        throw new Error('Could not find video implementation for type ' + this.type + '. Please specify a valid video type.');
       }
 
       return videoImplementations[this.type];
@@ -197,14 +197,14 @@ export default {
     /**
      * @returns {!string} The embetty-server URL for the video poster image.
      */
-    posterImageUrl() {
+    posterImageUrl: function() {
       return this._api(this.impl.getPosterImageApiEndpoint(this.videoId));
     },
 
     /**
      * @returns {!string} The poster image mode.
      */
-    _posterImageMode() {
+    _posterImageMode: function() {
       return this.posterImageMode || this._embettyVueOptions.posterImageMode || 'cover';
     },
 
@@ -213,14 +213,14 @@ export default {
      * @returns {?string} The embetty-server URL to fetch video data from, or undefined
      *                    if this video does not require additional data.
      */
-    url() {
+    url: function() {
       return this._api(this.impl.getVideoDataApiEndpoint(this.videoId));
     },
 
     /**
      * @returns {!string} The HTML for the <iframe> this component renders upon activating.
      */
-    iframe() {
+    iframe: function() {
       return this.impl.getIframe({
         width: this.width || 1600,
         height: this.height || 900,
@@ -234,9 +234,9 @@ export default {
     /**
      * Activates the video, i.e. replaces the poster image and play button with the iframe.
      */
-    activate() {
+    activate: function() {
       this.activated = true;
-      this.$emit(`activated`);
+      this.$emit('activated');
     }
   }
 };

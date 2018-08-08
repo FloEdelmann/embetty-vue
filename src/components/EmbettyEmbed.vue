@@ -14,7 +14,7 @@ export default {
   /**
    * @returns {!object} Component's data.
    */
-  data() {
+  data: function() {
     return {
       embettyLogo: EMBETTY_LOGO,
 
@@ -27,20 +27,20 @@ export default {
      * Override this in child components!
      * @returns {string | undefined} The URL to query for data in this component.
      */
-    url() {
+    url: function() {
       return undefined;
     },
 
     /**
      * @returns {!string} The server URL, either from this component's prop or the global config.
      */
-    _serverUrl() {
+    _serverUrl: function() {
       if (this.serverUrl) {
         return this.serverUrl;
       }
 
       if (!this._embettyVueOptions.serverUrl) {
-        throw new Error(`serverUrl is neither set directly on the ${this.$vnode.tag} component nor globally.`);
+        throw new Error('serverUrl is neither set directly on the ' + this.$vnode.tag + ' component nor globally.');
       }
 
       return this._embettyVueOptions.serverUrl;
@@ -52,7 +52,7 @@ export default {
       /**
        * @param {?string} url The newly set URL.
        */
-      handler(url) {
+      handler: function(url) {
         if (url) {
           this.fetchData();
         }
@@ -63,12 +63,15 @@ export default {
     /**
      * Calls the API of embetty-server using the url set in the calling (child) component.
      */
-    fetchData() {
+    fetchData: function() {
+      var thisCmp = this;
       window.fetch(this.url)
-        .then(response => response.json())
-        .then(data => {
-          this.data = data;
-          this.fetched = true;
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          thisCmp.data = data;
+          thisCmp.fetched = true;
         });
     },
 
@@ -76,8 +79,8 @@ export default {
      * @param {?string} apiEndpoint The API endpoint of the embetty-server.
      * @returns {?string} The given URL, prepended with the embetty-server base URL.
      */
-    _api(apiEndpoint) {
-      return apiEndpoint ? `${this._serverUrl}${apiEndpoint}` : undefined;
+    _api: function(apiEndpoint) {
+      return apiEndpoint ? (this._serverUrl + apiEndpoint) : undefined;
     }
   }
 };
