@@ -143,7 +143,7 @@ export default {
        * @returns {!boolean} True if it is a valid type, false otherwise.
        */
       validator(videoType) {
-        return Object.keys(videoImplementations).includes(videoType);
+        return videoType in videoImplementations;
       }
     },
     videoId: {

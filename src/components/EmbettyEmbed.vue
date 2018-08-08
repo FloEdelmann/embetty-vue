@@ -63,10 +63,13 @@ export default {
     /**
      * Calls the API of embetty-server using the url set in the calling (child) component.
      */
-    async fetchData() {
-      const response = await window.fetch(this.url);
-      this.data = await response.json();
-      this.fetched = true;
+    fetchData() {
+      window.fetch(this.url)
+        .then(response => response.json())
+        .then(data => {
+          this.data = data;
+          this.fetched = true;
+        });
     },
 
     /**
