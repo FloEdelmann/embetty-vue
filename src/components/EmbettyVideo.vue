@@ -1,14 +1,12 @@
 <template>
-  <div :style="{ 'width': width === null ? null : `${width}px` }" class="embetty-video">
+  <div :style="width === null ? `` : `width: ${width}px`" class="embetty-video">
     <div
       v-if="activated"
       :class="{
         'wrapper': true,
         'default-height': height === null
       }"
-      :style="{
-        'height': height === null ? null : `${height}px`
-      }"
+      :style="height === null ? `` : `height: ${height}px`"
       v-html="iframe" />
     <template v-else>
       <button type="button" class="playbutton" @click="activate">
@@ -29,10 +27,10 @@
           'default-height': height === null,
           'contain': posterImageMode === 'contain'
         }"
-        :style="{
-          'backgroundImage': posterImageUrl ? `url(${posterImageUrl})`: null,
-          'height': height === null ? null : `${height}px`
-      }" />
+        :style="[
+          posterImageUrl ? { backgroundImage: `url(${posterImageUrl})` } : {},
+          height === null ? {} : { height: `${height}px` }
+      ]" />
       <a
         href="https://www.heise.de/embetty"
         target="_blank"

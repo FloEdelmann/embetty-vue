@@ -522,10 +522,10 @@ export default {
 
       const sectionHeight = () => {
         const elemMarginTop = parseFloat(computedStyle.getPropertyValue('margin-top'));
-        const elemarginBottom = parseFloat(computedStyle.getPropertyValue('margin-bottom'));
+        const elemMarginBottom = parseFloat(computedStyle.getPropertyValue('margin-bottom'));
         const elemHeight = parseFloat(computedStyle.getPropertyValue('height'));
 
-        return elemHeight + elemMarginTop + elemarginBottom;
+        return elemHeight + elemMarginTop + elemMarginBottom;
       };
 
       const reduceLinkDescriptionLength = () => {
