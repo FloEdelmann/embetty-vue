@@ -7,26 +7,59 @@ This is a Vue.js alternative to the original [embetty](https://github.com/heiseo
 
 ## Usage
 
+### Setup when using a bundler (webpack, rollup, etc.)
+
 ```js
+import Vue from 'vue';
 import EmbettyVue from 'embetty-vue';
+// or
+const Vue = require('vue');
+const EmbettyVue = require('embetty-vue');
 
 Vue.use(EmbettyVue, {
-  // required
-  serverUrl: '/path/to/embetty-server', // without trailing spaces
+  // optional, but recommended
+  serverUrl: '/path/to/embetty-server', // without trailing slash
 
   // optional
-  posterImageMode: 'cover' // or 'contain', see example below
+  posterImageMode: 'cover' // or 'contain'
 });
 ```
 
-Use like this:
+The CSS can be imported through `embetty-vue/dist/embetty-vue.css`.
+
+
+### Setup when directly linking the files
+
+In your HTML head:
+
+```html
+<link rel="stylesheet" type="text/css" href="dist/embetty-vue.css" />
+<meta data-embetty-server="/path/to/embetty-server" /> <!-- without trailing slash -->
+<script type="text/javascript" src="vue.js"></script>
+<script type="text/javascript" src="dist/embetty-vue.umd.min.js"></script>
+<script type="text/javascript">
+  window['embetty-vue']();
+  // TODO: This should be easier. In fact, bundling as UMD should not be needed
+  // because the script should execute the install method on its own. Please
+  // help me out if you know how to configure Vue CLI / Webpack how to do this.
+</script>
+```
+
+### Using the components
 
 ```html
 <embetty-tweet status="928365837123227654" />
 <embetty-video type="youtube" video-id="m6UOo2YGbIE" />
 ```
 
-See [`src/App.vue`](src/App.vue) for a lot of examples.
+If you didn't specify the server URL globally (either the options passed to `Vue.use` or the `<meta>` tag), you must specify it on every component:
+
+```html
+<embetty-tweet server-url="/path/to/embetty-server" status="928365837123227654" />
+<embetty-video server-url="/path/to/embetty-server" type="youtube" video-id="m6UOo2YGbIE" />
+```
+
+See [`src/App.vue`](src/App.vue) for a lot of examples and component options.
 
 
 ## Development
