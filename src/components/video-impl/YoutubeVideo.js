@@ -22,11 +22,14 @@ const YoutubeVideo = {
    */
   getIframe(videoData) {
     return `<iframe
-      type="text/html"
+      src="//www.youtube-nocookie.com/embed/${videoData.videoId}?autoplay=1&start=${videoData.startAt}"
       width="${videoData.width}"
       height="${videoData.height}"
-      src="//www.youtube-nocookie.com/embed/${videoData.videoId}?autoplay=1&start=${videoData.startAt}"
-      frameborder="0"></iframe>`;
+      frameborder="0"
+      webkitallowfullscreen
+      mozallowfullscreen
+      msallowfullscreen
+      allowfullscreen></iframe>`;
   }
 };
 

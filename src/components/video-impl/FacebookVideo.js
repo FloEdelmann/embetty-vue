@@ -29,11 +29,11 @@ const FacebookVideo = {
       src="${iframeSrc}"
       width="${videoData.width}"
       height="${videoData.height}"
-      style="border:none;overflow:hidden"
-      scrolling="no"
       frameborder="0"
-      allowTransparency="true"
-      allowFullScreen="true"></iframe>`;
+      webkitallowfullscreen
+      mozallowfullscreen
+      msallowfullscreen
+      allowfullscreen></iframe>`;
   }
 };
 

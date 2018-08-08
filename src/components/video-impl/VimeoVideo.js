@@ -28,6 +28,7 @@ const VimeoVideo = {
       frameborder="0"
       webkitallowfullscreen
       mozallowfullscreen
+      msallowfullscreen
       allowfullscreen></iframe>
     `;
   }
