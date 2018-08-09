@@ -156,7 +156,7 @@ export default {
       }
     },
     startAt: {
-      type: Number,
+      type: [Number, String],
       required: false,
       default: 0,
       /**
@@ -164,7 +164,11 @@ export default {
        * @returns {!boolean} True if it is a non-negative integer, false otherwise.
        */
       validator: function(startAt) {
-        return startAt % 1 === 0 && startAt >= 0;
+        if (typeof startAt === 'number') {
+          return startAt % 1 === 0 && startAt >= 0;
+        }
+
+        return /^(?:(?:\d+h)?\d+m)?\d+s$/.test(startAt);
       }
     },
     posterImageMode: {
@@ -209,6 +213,37 @@ export default {
     },
 
     /**
+     * @returns {!number} The number of seconds the video should start at.
+     */
+    _startAt: function() {
+      if (typeof this.startAt === 'number') {
+        return this.startAt;
+      }
+
+      var timeRegex = /^(?:(?:(\d+)h)?(\d+)m)?(\d+)s$/;
+      var timeMatch = this.startAt.match(timeRegex);
+
+      if (timeMatch) {
+        // '1m16s'    -> timeMatch = ['1m16s',    undefined, '1', '16']
+        // '1h23m45s' -> timeMatch = ['1h23m45s', '1',       '2', '34']
+        var timeNumbers = timeMatch.map(function(val) {
+          if (val === undefined) {
+            return 0;
+          }
+          return parseInt(val);
+        });
+
+        var hours = timeNumbers[1];
+        var minutes = timeNumbers[2];
+        var seconds = timeNumbers[3];
+
+        return (hours * 3600) + (minutes * 60) + seconds;
+      }
+
+      return 0;
+    },
+
+    /**
      * @override
      * @returns {?string} The embetty-server URL to fetch video data from, or undefined
      *                    if this video does not require additional data.
@@ -225,7 +260,7 @@ export default {
         width: this.width || 1600,
         height: this.height || 900,
         videoId: this.videoId,
-        startAt: this.startAt,
+        startAt: this._startAt,
         serverData: this.data
       });
     }

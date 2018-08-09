@@ -117,9 +117,15 @@
     </article>
 
     <article>
-      <h3>Vimeo with <code>start-at</code></h3>
+      <h3>YouTube with <code>start-at</code> (human readable syntax)</h3>
+      <embetty-video type="youtube" video-id="m6UOo2YGbIE" start-at="2h53m19s" />
+      <pre class="language-html"><code>&lt;embetty-video type="youtube" video-id="m6UOo2YGbIE" start-at="2h53m19s" /&gt;</code></pre>
+    </article>
+
+    <article>
+      <h3>Vimeo with <code>start-at</code> (in seconds)</h3>
       <embetty-video :start-at="97" type="vimeo" video-id="1084537" />
-      <pre class="language-html"><code>&lt;embetty-video :start-at="97" type="vimeo" video-id="1084537" /&gt;</code></pre>
+      <pre class="language-html"><code>&lt;embetty-video type="vimeo" video-id="1084537" :start-at="97" /&gt;</code></pre>
     </article>
 
     <article>
