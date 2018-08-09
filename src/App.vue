@@ -123,7 +123,13 @@
     </article>
 
     <article>
-      <h3>Vimeo with <code>start-at</code> (in seconds)</h3>
+      <h3>Vimeo with <code>start-at</code> (in seconds as a string)</h3>
+      <embetty-video type="vimeo" video-id="1084537" start-at="97" />
+      <pre class="language-html"><code>&lt;embetty-video type="vimeo" video-id="1084537" start-at="97" /&gt;</code></pre>
+    </article>
+
+    <article>
+      <h3>Vimeo with <code>start-at</code> (in seconds as a number)</h3>
       <embetty-video :start-at="97" type="vimeo" video-id="1084537" />
       <pre class="language-html"><code>&lt;embetty-video type="vimeo" video-id="1084537" :start-at="97" /&gt;</code></pre>
     </article>

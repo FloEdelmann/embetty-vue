@@ -168,7 +168,7 @@ export default {
           return startAt % 1 === 0 && startAt >= 0;
         }
 
-        return /^(?:(?:\d+h)?\d+m)?\d+s$/.test(startAt);
+        return /^(?:(?:\d+h)?\d+m)?\d+s?$/.test(startAt);
       }
     },
     posterImageMode: {
@@ -220,7 +220,7 @@ export default {
         return this.startAt;
       }
 
-      var timeRegex = /^(?:(?:(\d+)h)?(\d+)m)?(\d+)s$/;
+      var timeRegex = /^(?:(?:(\d+)h)?(\d+)m)?(\d+)s?$/;
       var timeMatch = this.startAt.match(timeRegex);
 
       if (timeMatch) {
