@@ -26,27 +26,29 @@
     "video"
   ],
   "main": "./dist/embetty-vue.common.js",
+  "module": "./dist/embetty-vue.esm.js",
   "scripts": {
-    "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build --target lib --name embetty-vue ./src/install.js",
-    "lint": "vue-cli-service lint",
-    "test:unit": "vue-cli-service test:unit",
-    "test:e2e": "vue-cli-service test:e2e"
+    "watch": "rollup -c -w",
+    "build": "rollup -c"
   },
-  "dependencies": {
-    "vue": "^2.5.16"
-  },
+  "dependencies": {},
   "devDependencies": {
-    "@vue/cli-plugin-e2e-nightwatch": "^3.0.0-rc.10",
-    "@vue/cli-plugin-eslint": "^3.0.0-rc.10",
-    "@vue/cli-plugin-unit-mocha": "^3.0.0-rc.10",
-    "@vue/cli-service": "^3.0.0-rc.10",
-    "@vue/test-utils": "^1.0.0-beta.20",
-    "chai": "^4.1.2",
+    "@babel/core": "^7.4.5",
+    "@babel/preset-env": "^7.5.5",
+    "clean-css": "^4.2.1",
+    "core-js": "^3.1.4",
+    "eslint": "^6.0.1",
     "eslint-plugin-no-es2015": "^1.2.0",
-    "node-sass": "^4.9.2",
-    "raw-loader": "^0.5.1",
-    "sass-loader": "^7.1.0",
-    "vue-template-compiler": "^2.5.16"
+    "eslint-plugin-vue": "^5.2.3",
+    "rollup": "^1.17.0",
+    "rollup-plugin-babel": "^4.3.3",
+    "rollup-plugin-commonjs": "^10.0.1",
+    "rollup-plugin-css-only": "^1.0.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-svg": "^2.0.0",
+    "rollup-plugin-uglify": "^6.0.2",
+    "rollup-plugin-vue": "^5.0.1",
+    "vue": "^2.6.10",
+    "vue-template-compiler": "^2.6.10"
   }
 }

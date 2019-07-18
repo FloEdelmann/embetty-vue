@@ -59,9 +59,9 @@
   </div>
 </template>
 
-<style lang="scss" scoped>
-@import '@/assets/element.scss';
-@import '@/assets/vars.scss';
+<style lang="scss">
+@import '../assets/element.scss';
+@import '../assets/vars.scss';
 
 $profile-image-width: 36px;
 $quoteLineWidth: 4px;
@@ -147,6 +147,19 @@ $quoteLineWidth: 4px;
 
       @media (min-width: 600px) {
         font-size: 18px;
+      }
+
+      a {
+        color: #2b7bb9;
+        text-decoration: none;
+
+        &:hover {
+          color: #3b94d9;
+        }
+
+        &:focus {
+          text-decoration: underline;
+        }
       }
     }
   }
@@ -293,23 +306,8 @@ $quoteLineWidth: 4px;
 }
 </style>
 
-<style lang="scss">
-.embetty-tweet article p a {
-  color: #2b7bb9;
-  text-decoration: none;
-
-  &:hover {
-    color: #3b94d9;
-  }
-
-  &:focus {
-    text-decoration: underline;
-  }
-}
-</style>
-
 <script>
-import EmbettyEmbed from '@/components/EmbettyEmbed.vue';
+import EmbettyEmbed from './EmbettyEmbed.vue';
 
 var LINK_IMAGE_SIZE = 125;
 var MIN_WINDOW_WIDTH = 600;

@@ -1,6 +1,5 @@
 <script>
-// eslint-disable-next-line
-const EMBETTY_LOGO = require('!raw-loader!@/assets/embetty.svg').toString();
+import EMBETTY_LOGO from '../assets/embetty.svg';
 
 export default {
   name: 'EmbettyEmbed',

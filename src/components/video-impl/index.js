@@ -1,6 +1,6 @@
-import FacebookVideo from '@/components/video-impl/FacebookVideo';
-import VimeoVideo from '@/components/video-impl/VimeoVideo';
-import YoutubeVideo from '@/components/video-impl/YoutubeVideo';
+import FacebookVideo from './FacebookVideo';
+import VimeoVideo from './VimeoVideo';
+import YoutubeVideo from './YoutubeVideo';
 
 export var videoImplementations = {
   facebook: FacebookVideo,

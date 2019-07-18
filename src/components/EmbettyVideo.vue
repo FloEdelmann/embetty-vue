@@ -39,8 +39,8 @@
   </div>
 </template>
 
-<style lang="scss" scoped>
-@import '@/assets/element.scss';
+<style lang="scss">
+@import '../assets/element.scss';
 
 .embetty-video {
   @include host();
@@ -92,23 +92,21 @@
     color: #fff;
     opacity: .6;
   }
-}
-</style>
 
-<style lang="scss">
-.embetty-video iframe {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
 }
 </style>
 
 <script>
-import EmbettyEmbed from '@/components/EmbettyEmbed.vue';
+import EmbettyEmbed from './EmbettyEmbed.vue';
 
-import { videoImplementations } from '@/components/video-impl/index';
+import { videoImplementations } from './video-impl/index';
 
 export default {
   name: 'EmbettyVideo',

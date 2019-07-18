@@ -142,7 +142,7 @@
   </div>
 </template>
 
-<style lang="scss" scoped>
+<style lang="scss">
 // Demo styling
 #app {
   font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
