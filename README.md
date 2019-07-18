@@ -11,10 +11,10 @@ This is a Vue.js alternative to the original [embetty](https://github.com/heiseo
 
 ```js
 import Vue from 'vue';
-import EmbettyVue from 'embetty-vue';
+import EmbettyVue from 'embetty-vue'; // or 'embetty-vue/dist/embetty-vue.esm.js'
 // or
 const Vue = require('vue');
-const EmbettyVue = require('embetty-vue');
+const EmbettyVue = require('embetty-vue'); // or 'embetty-vue/dist/embetty-vue.common.js'
 
 Vue.use(EmbettyVue, {
   // optional, but recommended
@@ -25,7 +25,7 @@ Vue.use(EmbettyVue, {
 });
 ```
 
-The CSS can be imported through `embetty-vue/dist/embetty-vue.css`.
+The CSS can be imported from `embetty-vue/dist/embetty-vue.css`.
 
 
 ### Setup when directly linking the files
@@ -33,17 +33,13 @@ The CSS can be imported through `embetty-vue/dist/embetty-vue.css`.
 In your HTML head:
 
 ```html
-<link rel="stylesheet" type="text/css" href="dist/embetty-vue.css" />
+<link rel="stylesheet" type="text/css" href="dist/embetty-vue.min.css" />
 <meta data-embetty-server="/path/to/embetty-server" /> <!-- without trailing slash -->
 <script type="text/javascript" src="vue.js"></script>
-<script type="text/javascript" src="dist/embetty-vue.umd.min.js"></script>
-<script type="text/javascript">
-  window['embetty-vue']();
-  // TODO: This should be easier. In fact, bundling as UMD should not be needed
-  // because the script should execute the install method on its own. Please
-  // help me out if you know how to configure Vue CLI / Webpack how to do this.
-</script>
+<script type="text/javascript" src="dist/embetty-vue.min.js"></script>
 ```
+
+You can link to the files without `.min` for debugging.
 
 ### Using the components
 
@@ -62,6 +58,11 @@ If you didn't specify the server URL globally (either the options passed to `Vue
 See [`src/App.vue`](src/App.vue) for a lot of examples and component options.
 
 
+## Differences to original implementation
+
+*embetty-vue*'s `<embetty-video>` component supports type `native`: Provide an URL to a video file as `video-id` to load it on click in a `<video>` HTML element.
+
+
 ## Development
 
 ### Project setup
@@ -73,29 +74,11 @@ npm install
 ### Compiles and hot-reloads for development
 
 ```
-npm run serve
+npm run watch
 ```
 
 ### Compiles and minifies for production
 
 ```
 npm run build
-```
-
-### Lints and fixes files
-
-```
-npm run lint
-```
-
-### Run unit tests
-
-```
-npm run test:unit
-```
-
-### Run end-to-end tests
-
-```
-npm run test:e2e
 ```
