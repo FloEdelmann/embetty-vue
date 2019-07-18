@@ -2,23 +2,19 @@
   <div :style="width === null ? `` : `width: ${width}px`" class="embetty-video">
     <div
       v-if="activated"
-      :class="{
-        'wrapper': true,
-        'default-height': height === null
-      }"
+      class="wrapper"
+      :class="{ 'default-height': height === null }"
       :style="height === null ? `` : `height: ${height}px`"
       v-html="iframe" />
     <template v-else>
       <button type="button" class="playbutton" @click="activate">
-        <svg viewBox="0 0 200 200" class="playicon">
-          <circle
-            cx="100"
-            cy="100"
-            r="90"
-            fill="none"
-            stroke-width="15"
-            stroke="#fff" />
-          <polygon points="70, 55 70, 145 145, 100" fill="#fff" />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="72"
+          height="72"
+          viewBox="0 0 48 48"
+          fill="#fff">
+          <path d="M24 4C12.95 4 4 12.95 4 24s8.95 20 20 20 20-8.95 20-20S35.05 4 24 4zm-4 29V15l12 9-12 9z" />
         </svg>
       </button>
       <div
@@ -79,18 +75,13 @@
     opacity: 0.9;
     background: none;
     cursor: pointer;
-    background-image: linear-gradient(transparent, #000);
+    background-image: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.8));
     transition: opacity 150ms;
 
     &:hover,
     &:focus {
       opacity: 1;
     }
-  }
-
-  .playicon {
-    width: 100px;
-    height: 100px;
   }
 
   .powered-by {
