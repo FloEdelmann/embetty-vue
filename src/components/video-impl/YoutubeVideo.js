@@ -26,6 +26,7 @@ var YoutubeVideo = {
       'width="' + videoData.width + '" ' +
       'height="' + videoData.height + '" ' +
       'frameborder="0" ' +
+      'allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"' +
       'webkitallowfullscreen ' +
       'mozallowfullscreen ' +
       'msallowfullscreen ' +
