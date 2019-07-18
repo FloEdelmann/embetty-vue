@@ -93,7 +93,8 @@
     opacity: .6;
   }
 
-  iframe {
+  iframe,
+  video {
     position: absolute;
     top: 0;
     left: 0;
@@ -141,7 +142,7 @@ export default {
        * @returns {!boolean} True if it seems like a valid video ID, false otherwise.
        */
       validator: function(videoId) {
-        return /^[a-zA-Z0-9_-]{6,}$/.test(videoId);
+        return /^[a-zA-Z0-9_-]{6,}$/.test(videoId) || videoId.startsWith('http');
       }
     },
     startAt: {
