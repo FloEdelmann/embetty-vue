@@ -3590,8 +3590,8 @@
 	   */
 	  install: function install(Vue, options) {
 	    options = options || {};
-	    Vue.component('embetty-tweet', EmbettyTweet);
-	    Vue.component('embetty-video', EmbettyVideo);
+	    Vue.component('EmbettyTweet', EmbettyTweet);
+	    Vue.component('EmbettyVideo', EmbettyVideo);
 	    Vue.prototype._embettyVueOptions = options;
 	  }
 	};
