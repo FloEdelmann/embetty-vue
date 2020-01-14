@@ -34,23 +34,23 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@babel/core": "^7.4.5",
-    "@babel/preset-env": "^7.5.5",
+    "@babel/core": "^7.8.3",
+    "@babel/preset-env": "^7.8.3",
     "@rollup/plugin-commonjs": "^11.0.1",
     "@rollup/plugin-node-resolve": "^7.0.0",
     "babel-eslint": "^10.0.3",
     "clean-css": "^4.2.1",
-    "core-js": "^3.1.4",
-    "eslint": "^6.0.1",
+    "core-js": "^3.6.4",
+    "eslint": "^6.8.0",
     "eslint-plugin-no-es2015": "^1.2.0",
-    "eslint-plugin-vue": "^5.2.3",
-    "rollup": "^1.17.0",
+    "eslint-plugin-vue": "^6.1.2",
+    "rollup": "^1.29.0",
     "rollup-plugin-babel": "^4.3.3",
-    "rollup-plugin-css-only": "^1.0.0",
+    "rollup-plugin-css-only": "^2.0.0",
     "rollup-plugin-svg": "^2.0.0",
-    "rollup-plugin-uglify": "^6.0.2",
+    "rollup-plugin-uglify": "^6.0.4",
     "rollup-plugin-vue": "^5.0.1",
-    "vue": "^2.6.10",
-    "vue-template-compiler": "^2.6.10"
+    "vue": "^2.6.11",
+    "vue-template-compiler": "^2.6.11"
   }
 }
