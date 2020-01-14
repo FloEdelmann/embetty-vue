@@ -36,6 +36,8 @@
   "devDependencies": {
     "@babel/core": "^7.4.5",
     "@babel/preset-env": "^7.5.5",
+    "@rollup/plugin-commonjs": "^11.0.1",
+    "@rollup/plugin-node-resolve": "^7.0.0",
     "babel-eslint": "^10.0.3",
     "clean-css": "^4.2.1",
     "core-js": "^3.1.4",
@@ -44,9 +46,7 @@
     "eslint-plugin-vue": "^5.2.3",
     "rollup": "^1.17.0",
     "rollup-plugin-babel": "^4.3.3",
-    "rollup-plugin-commonjs": "^10.0.1",
     "rollup-plugin-css-only": "^1.0.0",
-    "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-svg": "^2.0.0",
     "rollup-plugin-uglify": "^6.0.2",
     "rollup-plugin-vue": "^5.0.1",

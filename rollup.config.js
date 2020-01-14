@@ -1,9 +1,9 @@
 import vue from 'rollup-plugin-vue';
 import svg from 'rollup-plugin-svg';
-import commonjs from 'rollup-plugin-commonjs';
+import commonjs from '@rollup/plugin-commonjs';
 import css from 'rollup-plugin-css-only';
 import babel from 'rollup-plugin-babel';
-import resolve from 'rollup-plugin-node-resolve';
+import resolve from '@rollup/plugin-node-resolve';
 import { uglify } from 'rollup-plugin-uglify';
 
 import * as CleanCSS from 'clean-css';
