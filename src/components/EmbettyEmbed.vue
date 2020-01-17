@@ -63,6 +63,11 @@ export default {
      * Calls the API of embetty-server using the url set in the calling (child) component.
      */
     fetchData: function() {
+      // skip fetching in SSR
+      if (typeof window === 'undefined') {
+        return;
+      }
+
       var thisCmp = this;
       window.fetch(this.url)
         .then(function (response) {
