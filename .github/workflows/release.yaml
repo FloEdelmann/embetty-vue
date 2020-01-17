@@ -14,5 +14,5 @@ jobs:
         run: echo "$LABELS"
       - name: Has npm-minor label
         env:
-          HAS_MINOR_LABEL: ${{ contains(github.event.pull_request.labels.*.name, "npm-minor") }}
+          HAS_MINOR_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'npm-minor') }}
         run: echo "$HAS_MINOR_LABEL"
