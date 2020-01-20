@@ -8,7 +8,6 @@ function createCommonjsModule(fn, module) {
 	return module = { exports: {} }, fn(module, module.exports), module.exports;
 }
 
-var O = 'object';
 var check = function (it) {
   return it && it.Math == Math && it;
 };
@@ -16,10 +15,10 @@ var check = function (it) {
 // https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
 var global_1 =
   // eslint-disable-next-line no-undef
-  check(typeof globalThis == O && globalThis) ||
-  check(typeof window == O && window) ||
-  check(typeof self == O && self) ||
-  check(typeof commonjsGlobal == O && commonjsGlobal) ||
+  check(typeof globalThis == 'object' && globalThis) ||
+  check(typeof window == 'object' && window) ||
+  check(typeof self == 'object' && self) ||
+  check(typeof commonjsGlobal == 'object' && commonjsGlobal) ||
   // eslint-disable-next-line no-new-func
   Function('return this')();
 
@@ -33,7 +32,7 @@ var fails = function (exec) {
 
 // Thank's IE8 for his funny defineProperty
 var descriptors = !fails(function () {
-  return Object.defineProperty({}, 'a', { get: function () { return 7; } }).a != 7;
+  return Object.defineProperty({}, 1, { get: function () { return 7; } })[1] != 7;
 });
 
 var nativePropertyIsEnumerable = {}.propertyIsEnumerable;
@@ -175,7 +174,7 @@ var objectDefineProperty = {
 	f: f$2
 };
 
-var hide = descriptors ? function (object, key, value) {
+var createNonEnumerableProperty = descriptors ? function (object, key, value) {
   return objectDefineProperty.f(object, key, createPropertyDescriptor(1, value));
 } : function (object, key, value) {
   object[key] = value;
@@ -184,32 +183,41 @@ var hide = descriptors ? function (object, key, value) {
 
 var setGlobal = function (key, value) {
   try {
-    hide(global_1, key, value);
+    createNonEnumerableProperty(global_1, key, value);
   } catch (error) {
     global_1[key] = value;
   } return value;
 };
 
-var isPure = false;
-
-var shared = createCommonjsModule(function (module) {
 var SHARED = '__core-js_shared__';
 var store = global_1[SHARED] || setGlobal(SHARED, {});
 
-(module.exports = function (key, value) {
-  return store[key] || (store[key] = value !== undefined ? value : {});
-})('versions', []).push({
-  version: '3.1.3',
-  mode:  'global',
-  copyright: '© 2019 Denis Pushkarev (zloirock.ru)'
-});
-});
+var sharedStore = store;
 
-var functionToString = shared('native-function-to-string', Function.toString);
+var functionToString = Function.toString;
+
+// this helper broken in `3.4.1-3.4.4`, so we can't use `shared` helper
+if (typeof sharedStore.inspectSource != 'function') {
+  sharedStore.inspectSource = function (it) {
+    return functionToString.call(it);
+  };
+}
+
+var inspectSource = sharedStore.inspectSource;
 
 var WeakMap = global_1.WeakMap;
 
-var nativeWeakMap = typeof WeakMap === 'function' && /native code/.test(functionToString.call(WeakMap));
+var nativeWeakMap = typeof WeakMap === 'function' && /native code/.test(inspectSource(WeakMap));
+
+var shared = createCommonjsModule(function (module) {
+(module.exports = function (key, value) {
+  return sharedStore[key] || (sharedStore[key] = value !== undefined ? value : {});
+})('versions', []).push({
+  version: '3.6.4',
+  mode:  'global',
+  copyright: '© 2020 Denis Pushkarev (zloirock.ru)'
+});
+});
 
 var id = 0;
 var postfix = Math.random();
@@ -243,25 +251,25 @@ var getterFor = function (TYPE) {
 };
 
 if (nativeWeakMap) {
-  var store = new WeakMap$1();
-  var wmget = store.get;
-  var wmhas = store.has;
-  var wmset = store.set;
+  var store$1 = new WeakMap$1();
+  var wmget = store$1.get;
+  var wmhas = store$1.has;
+  var wmset = store$1.set;
   set = function (it, metadata) {
-    wmset.call(store, it, metadata);
+    wmset.call(store$1, it, metadata);
     return metadata;
   };
   get = function (it) {
-    return wmget.call(store, it) || {};
+    return wmget.call(store$1, it) || {};
   };
   has$1 = function (it) {
-    return wmhas.call(store, it);
+    return wmhas.call(store$1, it);
   };
 } else {
   var STATE = sharedKey('state');
   hiddenKeys[STATE] = true;
   set = function (it, metadata) {
-    hide(it, STATE, metadata);
+    createNonEnumerableProperty(it, STATE, metadata);
     return metadata;
   };
   get = function (it) {
@@ -283,18 +291,14 @@ var internalState = {
 var redefine = createCommonjsModule(function (module) {
 var getInternalState = internalState.get;
 var enforceInternalState = internalState.enforce;
-var TEMPLATE = String(functionToString).split('toString');
-
-shared('inspectSource', function (it) {
-  return functionToString.call(it);
-});
+var TEMPLATE = String(String).split('String');
 
 (module.exports = function (O, key, value, options) {
   var unsafe = options ? !!options.unsafe : false;
   var simple = options ? !!options.enumerable : false;
   var noTargetGet = options ? !!options.noTargetGet : false;
   if (typeof value == 'function') {
-    if (typeof key == 'string' && !has(value, 'name')) hide(value, 'name', key);
+    if (typeof key == 'string' && !has(value, 'name')) createNonEnumerableProperty(value, 'name', key);
     enforceInternalState(value).source = TEMPLATE.join(typeof key == 'string' ? key : '');
   }
   if (O === global_1) {
@@ -307,10 +311,10 @@ shared('inspectSource', function (it) {
     simple = true;
   }
   if (simple) O[key] = value;
-  else hide(O, key, value);
+  else createNonEnumerableProperty(O, key, value);
 // add fake Function#toString for correct work wrapped methods / constructors with methods like LoDash isNative
 })(Function.prototype, 'toString', function toString() {
-  return typeof this == 'function' && getInternalState(this).source || functionToString.call(this);
+  return typeof this == 'function' && getInternalState(this).source || inspectSource(this);
 });
 });
 
@@ -347,7 +351,7 @@ var min$1 = Math.min;
 
 // Helper for a popular repeating case of the spec:
 // Let integer be ? ToInteger(index).
-// If integer < 0, let result be max((length + integer), 0); else let result be min(length, length).
+// If integer < 0, let result be max((length + integer), 0); else let result be min(integer, length).
 var toAbsoluteIndex = function (index, length) {
   var integer = toInteger(index);
   return integer < 0 ? max(integer + length, 0) : min$1(integer, length);
@@ -511,7 +515,7 @@ var _export = function (options, source) {
     }
     // add a flag to not completely full polyfills
     if (options.sham || (targetProperty && targetProperty.sham)) {
-      hide(sourceProperty, 'sham', true);
+      createNonEnumerableProperty(sourceProperty, 'sham', true);
     }
     // extend global
     redefine(target, key, sourceProperty, options);
@@ -561,20 +565,6 @@ if (descriptors && typeof NativeSymbol == 'function' && (!('description' in Nati
   });
 }
 
-var nativeSymbol = !!Object.getOwnPropertySymbols && !fails(function () {
-  // Chrome 38 Symbol has incorrect toString conversion
-  // eslint-disable-next-line no-undef
-  return !String(Symbol());
-});
-
-var Symbol$1 = global_1.Symbol;
-var store$1 = shared('wks');
-
-var wellKnownSymbol = function (name) {
-  return store$1[name] || (store$1[name] = nativeSymbol && Symbol$1[name]
-    || (nativeSymbol ? Symbol$1 : uid)('Symbol.' + name));
-};
-
 // `RegExp.prototype.flags` getter implementation
 // https://tc39.github.io/ecma262/#sec-get-regexp.prototype.flags
 var regexpFlags = function () {
@@ -587,6 +577,31 @@ var regexpFlags = function () {
   if (that.unicode) result += 'u';
   if (that.sticky) result += 'y';
   return result;
+};
+
+// babel-minify transpiles RegExp('a', 'y') -> /a/y and it causes SyntaxError,
+// so we use an intermediate function.
+function RE(s, f) {
+  return RegExp(s, f);
+}
+
+var UNSUPPORTED_Y = fails(function () {
+  // babel-minify transpiles RegExp('a', 'y') -> /a/y and it causes SyntaxError
+  var re = RE('a', 'y');
+  re.lastIndex = 2;
+  return re.exec('abcd') != null;
+});
+
+var BROKEN_CARET = fails(function () {
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=773687
+  var re = RE('^r', 'gy');
+  re.lastIndex = 2;
+  return re.exec('str') != null;
+});
+
+var regexpStickyHelpers = {
+	UNSUPPORTED_Y: UNSUPPORTED_Y,
+	BROKEN_CARET: BROKEN_CARET
 };
 
 var nativeExec = RegExp.prototype.exec;
@@ -605,24 +620,56 @@ var UPDATES_LAST_INDEX_WRONG = (function () {
   return re1.lastIndex !== 0 || re2.lastIndex !== 0;
 })();
 
+var UNSUPPORTED_Y$1 = regexpStickyHelpers.UNSUPPORTED_Y || regexpStickyHelpers.BROKEN_CARET;
+
 // nonparticipating capturing group, copied from es5-shim's String#split patch.
 var NPCG_INCLUDED = /()??/.exec('')[1] !== undefined;
 
-var PATCH = UPDATES_LAST_INDEX_WRONG || NPCG_INCLUDED;
+var PATCH = UPDATES_LAST_INDEX_WRONG || NPCG_INCLUDED || UNSUPPORTED_Y$1;
 
 if (PATCH) {
   patchedExec = function exec(str) {
     var re = this;
     var lastIndex, reCopy, match, i;
+    var sticky = UNSUPPORTED_Y$1 && re.sticky;
+    var flags = regexpFlags.call(re);
+    var source = re.source;
+    var charsAdded = 0;
+    var strCopy = str;
+
+    if (sticky) {
+      flags = flags.replace('y', '');
+      if (flags.indexOf('g') === -1) {
+        flags += 'g';
+      }
+
+      strCopy = String(str).slice(re.lastIndex);
+      // Support anchored sticky behavior.
+      if (re.lastIndex > 0 && (!re.multiline || re.multiline && str[re.lastIndex - 1] !== '\n')) {
+        source = '(?: ' + source + ')';
+        strCopy = ' ' + strCopy;
+        charsAdded++;
+      }
+      // ^(? + rx + ) is needed, in combination with some str slicing, to
+      // simulate the 'y' flag.
+      reCopy = new RegExp('^(?:' + source + ')', flags);
+    }
 
     if (NPCG_INCLUDED) {
-      reCopy = new RegExp('^' + re.source + '$(?!\\s)', regexpFlags.call(re));
+      reCopy = new RegExp('^' + source + '$(?!\\s)', flags);
     }
     if (UPDATES_LAST_INDEX_WRONG) lastIndex = re.lastIndex;
 
-    match = nativeExec.call(re, str);
+    match = nativeExec.call(sticky ? reCopy : re, strCopy);
 
-    if (UPDATES_LAST_INDEX_WRONG && match) {
+    if (sticky) {
+      if (match) {
+        match.input = match.input.slice(charsAdded);
+        match[0] = match[0].slice(charsAdded);
+        match.index = re.lastIndex;
+        re.lastIndex += match[0].length;
+      } else re.lastIndex = 0;
+    } else if (UPDATES_LAST_INDEX_WRONG && match) {
       re.lastIndex = re.global ? match.index + match[0].length : lastIndex;
     }
     if (NPCG_INCLUDED && match && match.length > 1) {
@@ -641,6 +688,41 @@ if (PATCH) {
 
 var regexpExec = patchedExec;
 
+_export({ target: 'RegExp', proto: true, forced: /./.exec !== regexpExec }, {
+  exec: regexpExec
+});
+
+var nativeSymbol = !!Object.getOwnPropertySymbols && !fails(function () {
+  // Chrome 38 Symbol has incorrect toString conversion
+  // eslint-disable-next-line no-undef
+  return !String(Symbol());
+});
+
+var useSymbolAsUid = nativeSymbol
+  // eslint-disable-next-line no-undef
+  && !Symbol.sham
+  // eslint-disable-next-line no-undef
+  && typeof Symbol.iterator == 'symbol';
+
+var WellKnownSymbolsStore = shared('wks');
+var Symbol$1 = global_1.Symbol;
+var createWellKnownSymbol = useSymbolAsUid ? Symbol$1 : Symbol$1 && Symbol$1.withoutSetter || uid;
+
+var wellKnownSymbol = function (name) {
+  if (!has(WellKnownSymbolsStore, name)) {
+    if (nativeSymbol && has(Symbol$1, name)) WellKnownSymbolsStore[name] = Symbol$1[name];
+    else WellKnownSymbolsStore[name] = createWellKnownSymbol('Symbol.' + name);
+  } return WellKnownSymbolsStore[name];
+};
+
+// TODO: Remove from `core-js@4` since it's moved to entry points
+
+
+
+
+
+
+
 var SPECIES = wellKnownSymbol('species');
 
 var REPLACE_SUPPORTS_NAMED_GROUPS = !fails(function () {
@@ -655,6 +737,21 @@ var REPLACE_SUPPORTS_NAMED_GROUPS = !fails(function () {
   };
   return ''.replace(re, '$<a>') !== '7';
 });
+
+// IE <= 11 replaces $0 with the whole match, as if it was $&
+// https://stackoverflow.com/questions/6024666/getting-ie-to-replace-a-regex-with-the-literal-string-0
+var REPLACE_KEEPS_$0 = (function () {
+  return 'a'.replace(/./, '$0') === '$0';
+})();
+
+var REPLACE = wellKnownSymbol('replace');
+// Safari <= 13.0.3(?) substitutes nth capture where n>m with an empty string
+var REGEXP_REPLACE_SUBSTITUTES_UNDEFINED_CAPTURE = (function () {
+  if (/./[REPLACE]) {
+    return /./[REPLACE]('a', '$0') === '';
+  }
+  return false;
+})();
 
 // Chrome 51 has a buggy "split" implementation when RegExp#exec !== nativeExec
 // Weex JS has frozen built-in prototypes, so use try / catch wrapper
@@ -680,14 +777,21 @@ var fixRegexpWellKnownSymbolLogic = function (KEY, length, exec, sham) {
     // Symbol-named RegExp methods call .exec
     var execCalled = false;
     var re = /a/;
-    re.exec = function () { execCalled = true; return null; };
 
     if (KEY === 'split') {
+      // We can't use real regex here since it causes deoptimization
+      // and serious performance degradation in V8
+      // https://github.com/zloirock/core-js/issues/306
+      re = {};
       // RegExp[@@split] doesn't call the regex's exec method, but first creates
       // a new one. We need to return the patched regex when creating the new one.
       re.constructor = {};
       re.constructor[SPECIES] = function () { return re; };
+      re.flags = '';
+      re[SYMBOL] = /./[SYMBOL];
     }
+
+    re.exec = function () { execCalled = true; return null; };
 
     re[SYMBOL]('');
     return !execCalled;
@@ -696,7 +800,11 @@ var fixRegexpWellKnownSymbolLogic = function (KEY, length, exec, sham) {
   if (
     !DELEGATES_TO_SYMBOL ||
     !DELEGATES_TO_EXEC ||
-    (KEY === 'replace' && !REPLACE_SUPPORTS_NAMED_GROUPS) ||
+    (KEY === 'replace' && !(
+      REPLACE_SUPPORTS_NAMED_GROUPS &&
+      REPLACE_KEEPS_$0 &&
+      !REGEXP_REPLACE_SUBSTITUTES_UNDEFINED_CAPTURE
+    )) ||
     (KEY === 'split' && !SPLIT_WORKS_WITH_OVERWRITTEN_EXEC)
   ) {
     var nativeRegExpMethod = /./[SYMBOL];
@@ -711,6 +819,9 @@ var fixRegexpWellKnownSymbolLogic = function (KEY, length, exec, sham) {
         return { done: true, value: nativeMethod.call(str, regexp, arg2) };
       }
       return { done: false };
+    }, {
+      REPLACE_KEEPS_$0: REPLACE_KEEPS_$0,
+      REGEXP_REPLACE_SUBSTITUTES_UNDEFINED_CAPTURE: REGEXP_REPLACE_SUBSTITUTES_UNDEFINED_CAPTURE
     });
     var stringMethod = methods[0];
     var regexMethod = methods[1];
@@ -724,8 +835,9 @@ var fixRegexpWellKnownSymbolLogic = function (KEY, length, exec, sham) {
       // 21.2.5.9 RegExp.prototype[@@search](string)
       : function (string) { return regexMethod.call(string, this); }
     );
-    if (sham) hide(RegExp.prototype[SYMBOL], 'sham', true);
   }
+
+  if (sham) createNonEnumerableProperty(RegExp.prototype[SYMBOL], 'sham', true);
 };
 
 // `ToObject` abstract operation
@@ -797,7 +909,11 @@ var maybeToString = function (it) {
 };
 
 // @@replace logic
-fixRegexpWellKnownSymbolLogic('replace', 2, function (REPLACE, nativeReplace, maybeCallNative) {
+fixRegexpWellKnownSymbolLogic('replace', 2, function (REPLACE, nativeReplace, maybeCallNative, reason) {
+  var REGEXP_REPLACE_SUBSTITUTES_UNDEFINED_CAPTURE = reason.REGEXP_REPLACE_SUBSTITUTES_UNDEFINED_CAPTURE;
+  var REPLACE_KEEPS_$0 = reason.REPLACE_KEEPS_$0;
+  var UNSAFE_SUBSTITUTE = REGEXP_REPLACE_SUBSTITUTES_UNDEFINED_CAPTURE ? '$' : '$0';
+
   return [
     // `String.prototype.replace` method
     // https://tc39.github.io/ecma262/#sec-string.prototype.replace
@@ -811,8 +927,13 @@ fixRegexpWellKnownSymbolLogic('replace', 2, function (REPLACE, nativeReplace, ma
     // `RegExp.prototype[@@replace]` method
     // https://tc39.github.io/ecma262/#sec-regexp.prototype-@@replace
     function (regexp, replaceValue) {
-      var res = maybeCallNative(nativeReplace, regexp, this, replaceValue);
-      if (res.done) return res.value;
+      if (
+        (!REGEXP_REPLACE_SUBSTITUTES_UNDEFINED_CAPTURE && REPLACE_KEEPS_$0) ||
+        (typeof replaceValue === 'string' && replaceValue.indexOf(UNSAFE_SUBSTITUTE) === -1)
+      ) {
+        var res = maybeCallNative(nativeReplace, regexp, this, replaceValue);
+        if (res.done) return res.value;
+      }
 
       var rx = anObject(regexp);
       var S = String(this);
@@ -903,6 +1024,8 @@ fixRegexpWellKnownSymbolLogic('replace', 2, function (REPLACE, nativeReplace, ma
   }
 });
 
+var nativePromiseConstructor = global_1.Promise;
+
 var redefineAll = function (target, src, options) {
   for (var key in src) redefine(target, key, src[key], options);
   return target;
@@ -957,7 +1080,7 @@ var isArrayIteratorMethod = function (it) {
 };
 
 // optional / simple context binding
-var bindContext = function (fn, that, length) {
+var functionBindContext = function (fn, that, length) {
   aFunction$1(fn);
   if (that === undefined) return fn;
   switch (length) {
@@ -980,6 +1103,13 @@ var bindContext = function (fn, that, length) {
 };
 
 var TO_STRING_TAG$1 = wellKnownSymbol('toStringTag');
+var test = {};
+
+test[TO_STRING_TAG$1] = 'z';
+
+var toStringTagSupport = String(test) === '[object z]';
+
+var TO_STRING_TAG$2 = wellKnownSymbol('toStringTag');
 // ES3 wrong here
 var CORRECT_ARGUMENTS = classofRaw(function () { return arguments; }()) == 'Arguments';
 
@@ -991,11 +1121,11 @@ var tryGet = function (it, key) {
 };
 
 // getting tag from ES6+ `Object.prototype.toString`
-var classof = function (it) {
+var classof = toStringTagSupport ? classofRaw : function (it) {
   var O, tag, result;
   return it === undefined ? 'Undefined' : it === null ? 'Null'
     // @@toStringTag case
-    : typeof (tag = tryGet(O = Object(it), TO_STRING_TAG$1)) == 'string' ? tag
+    : typeof (tag = tryGet(O = Object(it), TO_STRING_TAG$2)) == 'string' ? tag
     // builtinTag case
     : CORRECT_ARGUMENTS ? classofRaw(O)
     // ES3 arguments fallback
@@ -1029,8 +1159,8 @@ var Result = function (stopped, result) {
 };
 
 var iterate = module.exports = function (iterable, fn, that, AS_ENTRIES, IS_ITERATOR) {
-  var boundFunction = bindContext(fn, that, AS_ENTRIES ? 2 : 1);
-  var iterator, iterFn, index, length, result, step;
+  var boundFunction = functionBindContext(fn, that, AS_ENTRIES ? 2 : 1);
+  var iterator, iterFn, index, length, result, next, step;
 
   if (IS_ITERATOR) {
     iterator = iterable;
@@ -1049,9 +1179,10 @@ var iterate = module.exports = function (iterable, fn, that, AS_ENTRIES, IS_ITER
     iterator = iterFn.call(iterable);
   }
 
-  while (!(step = iterator.next()).done) {
+  next = iterator.next;
+  while (!(step = next.call(iterator)).done) {
     result = callWithSafeIterationClosing(iterator, boundFunction, step.value, AS_ENTRIES);
-    if (result && result instanceof Result) return result;
+    if (typeof result == 'object' && result && result instanceof Result) return result;
   } return new Result(false);
 };
 
@@ -1108,6 +1239,10 @@ var speciesConstructor = function (O, defaultConstructor) {
 };
 
 var html = getBuiltIn('document', 'documentElement');
+
+var engineUserAgent = getBuiltIn('navigator', 'userAgent') || '';
+
+var engineIsIos = /(iphone|ipod|ipad).*applewebkit/i.test(engineUserAgent);
 
 var location = global_1.location;
 var set$1 = global_1.setImmediate;
@@ -1171,11 +1306,12 @@ if (!set$1 || !clear) {
       Dispatch.now(runner(id));
     };
   // Browsers with MessageChannel, includes WebWorkers
-  } else if (MessageChannel) {
+  // except iOS - https://github.com/zloirock/core-js/issues/624
+  } else if (MessageChannel && !engineIsIos) {
     channel = new MessageChannel();
     port = channel.port2;
     channel.port1.onmessage = listener;
-    defer = bindContext(port.postMessage, port, 1);
+    defer = functionBindContext(port.postMessage, port, 1);
   // Browsers with postMessage, skip WebWorkers
   // IE8 has postMessage, but it's sync & typeof its postMessage is 'object'
   } else if (global_1.addEventListener && typeof postMessage == 'function' && !global_1.importScripts && !fails(post)) {
@@ -1202,8 +1338,6 @@ var task = {
   clear: clear
 };
 
-var userAgent = getBuiltIn('navigator', 'userAgent') || '';
-
 var getOwnPropertyDescriptor$2 = objectGetOwnPropertyDescriptor.f;
 
 var macrotask = task.set;
@@ -1217,7 +1351,7 @@ var IS_NODE = classofRaw(process$1) == 'process';
 var queueMicrotaskDescriptor = getOwnPropertyDescriptor$2(global_1, 'queueMicrotask');
 var queueMicrotask = queueMicrotaskDescriptor && queueMicrotaskDescriptor.value;
 
-var flush, head, last, notify, toggle, node, promise;
+var flush, head, last, notify, toggle, node, promise, then;
 
 // modern engines have queueMicrotask method
 if (!queueMicrotask) {
@@ -1244,10 +1378,10 @@ if (!queueMicrotask) {
       process$1.nextTick(flush);
     };
   // browsers with MutationObserver, except iOS - https://github.com/zloirock/core-js/issues/339
-  } else if (MutationObserver && !/(iphone|ipod|ipad).*applewebkit/i.test(userAgent)) {
+  } else if (MutationObserver && !engineIsIos) {
     toggle = true;
     node = document.createTextNode('');
-    new MutationObserver(flush).observe(node, { characterData: true }); // eslint-disable-line no-new
+    new MutationObserver(flush).observe(node, { characterData: true });
     notify = function () {
       node.data = toggle = !toggle;
     };
@@ -1255,8 +1389,9 @@ if (!queueMicrotask) {
   } else if (Promise && Promise.resolve) {
     // Promise.resolve without an argument throws an error in LG WebOS 2
     promise = Promise.resolve(undefined);
+    then = promise.then;
     notify = function () {
-      promise.then(flush);
+      then.call(promise, flush);
     };
   // for other environments - macrotask based on:
   // - setImmediate
@@ -1325,6 +1460,24 @@ var perform = function (exec) {
   }
 };
 
+var process$2 = global_1.process;
+var versions = process$2 && process$2.versions;
+var v8 = versions && versions.v8;
+var match, version;
+
+if (v8) {
+  match = v8.split('.');
+  version = match[0] + match[1];
+} else if (engineUserAgent) {
+  match = engineUserAgent.match(/Edge\/(\d+)/);
+  if (!match || match[1] >= 74) {
+    match = engineUserAgent.match(/Chrome\/(\d+)/);
+    if (match) version = match[1];
+  }
+}
+
+var engineV8Version = version && +version;
+
 var task$1 = task.set;
 
 
@@ -1341,16 +1494,14 @@ var PROMISE = 'Promise';
 var getInternalState = internalState.get;
 var setInternalState = internalState.set;
 var getInternalPromiseState = internalState.getterFor(PROMISE);
-var PromiseConstructor = global_1[PROMISE];
+var PromiseConstructor = nativePromiseConstructor;
 var TypeError$1 = global_1.TypeError;
 var document$2 = global_1.document;
-var process$2 = global_1.process;
-var $fetch = global_1.fetch;
-var versions = process$2 && process$2.versions;
-var v8 = versions && versions.v8 || '';
+var process$3 = global_1.process;
+var $fetch = getBuiltIn('fetch');
 var newPromiseCapability$1 = newPromiseCapability.f;
 var newGenericPromiseCapability = newPromiseCapability$1;
-var IS_NODE$1 = classofRaw(process$2) == 'process';
+var IS_NODE$1 = classofRaw(process$3) == 'process';
 var DISPATCH_EVENT = !!(document$2 && document$2.createEvent && global_1.dispatchEvent);
 var UNHANDLED_REJECTION = 'unhandledrejection';
 var REJECTION_HANDLED = 'rejectionhandled';
@@ -1359,24 +1510,30 @@ var FULFILLED = 1;
 var REJECTED = 2;
 var HANDLED = 1;
 var UNHANDLED = 2;
-var Internal, OwnPromiseCapability, PromiseWrapper;
+var Internal, OwnPromiseCapability, PromiseWrapper, nativeThen;
 
 var FORCED = isForced_1(PROMISE, function () {
-  // correct subclassing with @@species support
-  var promise = PromiseConstructor.resolve(1);
-  var empty = function () { /* empty */ };
-  var FakePromise = (promise.constructor = {})[SPECIES$3] = function (exec) {
-    exec(empty, empty);
-  };
-  // unhandled rejections tracking support, NodeJS Promise without it fails @@species test
-  return !((IS_NODE$1 || typeof PromiseRejectionEvent == 'function')
-    && (!isPure || promise['finally'])
-    && promise.then(empty) instanceof FakePromise
-    // v8 6.6 (Node 10 and Chrome 66) have a bug with resolving custom thenables
+  var GLOBAL_CORE_JS_PROMISE = inspectSource(PromiseConstructor) !== String(PromiseConstructor);
+  if (!GLOBAL_CORE_JS_PROMISE) {
+    // V8 6.6 (Node 10 and Chrome 66) have a bug with resolving custom thenables
     // https://bugs.chromium.org/p/chromium/issues/detail?id=830565
-    // we can't detect it synchronously, so just check versions
-    && v8.indexOf('6.6') !== 0
-    && userAgent.indexOf('Chrome/66') === -1);
+    // We can't detect it synchronously, so just check versions
+    if (engineV8Version === 66) return true;
+    // Unhandled rejections tracking support, NodeJS Promise without it fails @@species test
+    if (!IS_NODE$1 && typeof PromiseRejectionEvent != 'function') return true;
+  }
+  // We can't use @@species feature detection in V8 since it causes
+  // deoptimization and performance degradation
+  // https://github.com/zloirock/core-js/issues/679
+  if (engineV8Version >= 51 && /native code/.test(PromiseConstructor)) return false;
+  // Detect correctness of subclassing with @@species support
+  var promise = PromiseConstructor.resolve(1);
+  var FakePromise = function (exec) {
+    exec(function () { /* empty */ }, function () { /* empty */ });
+  };
+  var constructor = promise.constructor = {};
+  constructor[SPECIES$3] = FakePromise;
+  return !(promise.then(function () { /* empty */ }) instanceof FakePromise);
 });
 
 var INCORRECT_ITERATION = FORCED || !checkCorrectnessOfIteration(function (iterable) {
@@ -1458,7 +1615,7 @@ var onUnhandled = function (promise, state) {
     if (IS_UNHANDLED) {
       result = perform(function () {
         if (IS_NODE$1) {
-          process$2.emit('unhandledRejection', value, promise);
+          process$3.emit('unhandledRejection', value, promise);
         } else dispatchEvent(UNHANDLED_REJECTION, promise, value);
       });
       // Browsers should not trigger `rejectionHandled` event if it was handled here, NodeJS - should
@@ -1475,7 +1632,7 @@ var isUnhandled = function (state) {
 var onHandleUnhandled = function (promise, state) {
   task$1.call(global_1, function () {
     if (IS_NODE$1) {
-      process$2.emit('rejectionHandled', promise);
+      process$3.emit('rejectionHandled', promise);
     } else dispatchEvent(REJECTION_HANDLED, promise, state.value);
   });
 };
@@ -1559,7 +1716,7 @@ if (FORCED) {
       var reaction = newPromiseCapability$1(speciesConstructor(this, PromiseConstructor));
       reaction.ok = typeof onFulfilled == 'function' ? onFulfilled : true;
       reaction.fail = typeof onRejected == 'function' && onRejected;
-      reaction.domain = IS_NODE$1 ? process$2.domain : undefined;
+      reaction.domain = IS_NODE$1 ? process$3.domain : undefined;
       state.parent = true;
       state.reactions.push(reaction);
       if (state.state != PENDING) notify$1(this, state, false);
@@ -1584,13 +1741,26 @@ if (FORCED) {
       : newGenericPromiseCapability(C);
   };
 
-  // wrap fetch result
-  if ( typeof $fetch == 'function') _export({ global: true, enumerable: true, forced: true }, {
-    // eslint-disable-next-line no-unused-vars
-    fetch: function fetch(input) {
-      return promiseResolve(PromiseConstructor, $fetch.apply(global_1, arguments));
-    }
-  });
+  if ( typeof nativePromiseConstructor == 'function') {
+    nativeThen = nativePromiseConstructor.prototype.then;
+
+    // wrap native Promise#then for native async functions
+    redefine(nativePromiseConstructor.prototype, 'then', function then(onFulfilled, onRejected) {
+      var that = this;
+      return new PromiseConstructor(function (resolve, reject) {
+        nativeThen.call(that, resolve, reject);
+      }).then(onFulfilled, onRejected);
+    // https://github.com/zloirock/core-js/issues/640
+    }, { unsafe: true });
+
+    // wrap fetch result
+    if (typeof $fetch == 'function') _export({ global: true, enumerable: true, forced: true }, {
+      // eslint-disable-next-line no-unused-vars
+      fetch: function fetch(input /* , init */) {
+        return promiseResolve(PromiseConstructor, $fetch.apply(global_1, arguments));
+      }
+    });
+  }
 }
 
 _export({ global: true, wrap: true, forced: FORCED }, {
@@ -1600,7 +1770,7 @@ _export({ global: true, wrap: true, forced: FORCED }, {
 setToStringTag(PromiseConstructor, PROMISE, false);
 setSpecies(PROMISE);
 
-PromiseWrapper = path[PROMISE];
+PromiseWrapper = getBuiltIn(PROMISE);
 
 // statics
 _export({ target: PROMISE, stat: true, forced: FORCED }, {
@@ -1733,6 +1903,11 @@ var script = {
      * Calls the API of embetty-server using the url set in the calling (child) component.
      */
     fetchData: function () {
+      // skip fetching in SSR
+      if (typeof window === 'undefined') {
+        return;
+      }
+
       var thisCmp = this;
       window.fetch(this.url).then(function (response) {
         return response.json();
@@ -1857,13 +2032,15 @@ const __vue_is_functional_template__ = undefined;
 
 /* style inject SSR */
 
-var EmbettyEmbed = normalizeComponent_1({}, __vue_inject_styles__, __vue_script__, __vue_scope_id__, __vue_is_functional_template__, __vue_module_identifier__, undefined, undefined);
+/* style inject shadow dom */
+
+const __vue_component__ = normalizeComponent_1({}, __vue_inject_styles__, __vue_script__, __vue_scope_id__, __vue_is_functional_template__, __vue_module_identifier__, false, undefined, undefined, undefined);
 
 var LINK_IMAGE_SIZE = 125;
 var MIN_WINDOW_WIDTH = 600;
 var script$1 = {
   name: 'EmbettyTweet',
-  extends: EmbettyEmbed,
+  extends: __vue_component__,
   props: {
     status: {
       type: String,
@@ -2263,11 +2440,11 @@ __vue_render__._withStripped = true;
 
 const __vue_inject_styles__$1 = function (inject) {
   if (!inject) return;
-  inject("data-v-86f70e76_0", {
+  inject("data-v-8ad29d26_0", {
     source: ".embetty-tweet.answered {\n  margin-top: 0;\n  margin-bottom: 0.5rem;\n  border: 0;\n  padding: 0;\n}\n.embetty-tweet.answered header {\n  padding-bottom: 0.5rem;\n}\n.embetty-tweet.answered article {\n  border-left: 4px solid #bbb;\n  margin-left: 16px;\n  padding-left: 2rem;\n  padding-bottom: 1rem;\n}\n.embetty-tweet.answered article p {\n  font-size: 14px;\n}\n.embetty-tweet.answered article .created-at {\n  display: none;\n}\n.embetty-tweet.answered .powered-by {\n  display: none;\n}\n.embetty-tweet {\n  position: relative;\n  overflow: hidden;\n  display: block;\n  max-width: 100%;\n  font-family: var(--embetty-font-family, Helvetica, Roboto, \"Segoe UI\", Calibri, sans-serif);\n  border: 1px solid var(--embetty-border-color, #ccc);\n  border-width: 1px;\n  border-radius: 4px;\n  box-sizing: border-box;\n  font-size: 16px;\n  line-height: 1;\n  max-width: 642px;\n  padding: 1rem 1.2rem;\n}\n@media (min-width: 600px) {\n.embetty-tweet {\n    padding: 1.5rem 2rem;\n}\n}\n.embetty-tweet header {\n  display: flex;\n  align-items: center;\n  margin-bottom: 0.5rem;\n}\n.embetty-tweet header img {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n}\n.embetty-tweet header > span {\n  display: inline-block;\n  margin: 0 var(--embetty-spacing, 1rem);\n}\n.embetty-tweet header strong {\n  font-size: 16px;\n  display: block;\n}\n.embetty-tweet header a,\n.embetty-tweet header a:hover {\n  font-size: 14px;\n  color: #697882;\n  text-decoration: none;\n}\n.embetty-tweet article span {\n  display: block;\n}\n.embetty-tweet article p {\n  margin: 0 auto 0.5rem;\n  line-height: 1.4;\n  letter-spacing: 0.01em;\n}\n@media (min-width: 600px) {\n.embetty-tweet article p {\n    font-size: 18px;\n}\n}\n.embetty-tweet article p a {\n  color: #2b7bb9;\n  text-decoration: none;\n}\n.embetty-tweet article p a:hover {\n  color: #3b94d9;\n}\n.embetty-tweet article p a:focus {\n  text-decoration: underline;\n}\n.embetty-tweet .media a {\n  height: 100%;\n  display: flex;\n  align-items: center;\n}\n.embetty-tweet .media a:not(:first-child) {\n  display: none;\n}\n.embetty-tweet .media img {\n  max-width: 100%;\n  width: 100%;\n  height: 100%;\n  object-fit: cover;\n}\n@media (min-width: 600px) {\n.embetty-tweet .media {\n    display: grid;\n    grid-column-gap: 1px;\n    grid-row-gap: 1px;\n}\n.embetty-tweet .media a:not(:first-child) {\n    display: block;\n}\n.embetty-tweet .media.media-2 {\n    grid-template-columns: 50% 50%;\n}\n.embetty-tweet .media.media-3 {\n    grid-template-columns: auto 40%;\n}\n.embetty-tweet .media.media-3 a:first-child {\n    grid-row: 1/span 2;\n}\n.embetty-tweet .media.media-4 {\n    grid-template-columns: auto 20%;\n}\n.embetty-tweet .media.media-4 a:first-child {\n    grid-row: 1/span 3;\n}\n}\n.embetty-tweet .links {\n  border: 1px solid var(--embetty-border-color, #ccc);\n  border-width: 1px;\n  border-radius: 4px;\n  text-decoration: none;\n  display: flex;\n  flex-direction: column;\n  color: #14171a;\n  font-size: 14px;\n}\n.embetty-tweet .links:hover, .embetty-tweet .links:focus {\n  background-color: #f5f8fa;\n  border-color: rgba(136, 153, 166, 0.5);\n  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;\n}\n@media (min-width: 600px) {\n.embetty-tweet .links {\n    flex-direction: row;\n}\n}\n.embetty-tweet .links img {\n  max-width: 100%;\n  object-fit: cover;\n  display: inline-block;\n}\n@media (min-width: 600px) {\n.embetty-tweet .links img {\n    height: 125px;\n    width: 125px;\n    min-width: 125px;\n}\n}\n.embetty-tweet .links > *:last-child {\n  margin-bottom: 0;\n}\n.embetty-tweet .links .link-body {\n  padding: 0.5rem;\n}\n@media (min-width: 600px) {\n.embetty-tweet .links .link-body {\n    display: flex;\n    flex-direction: column;\n    padding: 0.5rem 0.8rem;\n}\n}\n.embetty-tweet .links h3 {\n  font-size: 14px;\n  line-height: 1.3;\n  margin: 0;\n  margin-bottom: 0.3em;\n}\n.embetty-tweet .links p {\n  display: none;\n}\n@media (min-width: 600px) {\n.embetty-tweet .links p {\n    display: block;\n    flex-grow: 1;\n    hyphens: auto;\n    line-height: 18px;\n    font-size: 14px;\n    margin: 0;\n    margin-bottom: 0.3em;\n}\n}\n.embetty-tweet .links span {\n  margin-top: auto;\n  color: #999;\n}\n.embetty-tweet .created-at {\n  margin-top: 0.5rem;\n  display: block;\n  font-size: 14px;\n  color: #777;\n  text-decoration: none;\n}\n.embetty-tweet .created-at svg {\n  height: 22px;\n  vertical-align: middle;\n}\n.embetty-tweet .powered-by {\n  position: absolute;\n  z-index: 3;\n  right: -20px;\n  bottom: 0px;\n  padding: 20px 46px 5px 20px;\n  font-size: 14px;\n  color: #777;\n  text-decoration: none;\n  opacity: 0.3;\n}\n.embetty-tweet .powered-by:hover, .embetty-tweet .powered-by:focus {\n  opacity: 1;\n}\n.embetty-tweet .powered-by .embetty-logo {\n  position: absolute;\n  right: 0;\n  bottom: -42px;\n  width: 40px;\n}\n\n/*# sourceMappingURL=EmbettyTweet.vue.map */",
     map: {
       "version": 3,
-      "sources": ["/home/flo/www/embetty/embetty-vue/src/components/EmbettyTweet.vue", "EmbettyTweet.vue"],
+      "sources": ["/home/runner/work/embetty-vue/embetty-vue/src/components/EmbettyTweet.vue", "EmbettyTweet.vue"],
       "names": [],
       "mappings": "AAoEA;EACA,aAAA;EACA,qBAAA;EACA,SAAA;EACA,UAAA;ACnEA;ADqEA;EACA,sBAAA;ACnEA;ADsEA;EACA,2BAAA;EACA,iBAAA;EACA,kBAAA;EACA,oBAAA;ACpEA;ADsEA;EACA,eAAA;ACpEA;ADuEA;EACA,aAAA;ACrEA;ADyEA;EACA,aAAA;ACvEA;AD2EA;ECxEE,kBAAkB;EAClB,gBAAgB;EAChB,cAAc;EACd,eAAe;EACf,2FAA2F;EAC3F,mDAAmD;EACnD,iBAAiB;EACjB,kBAAkB;EAClB,sBAAsB;EACtB,eAAe;EACf,cAAc;EDiEhB,gBAAA;EACA,oBAAA;AC/DA;ADiEA;AANA;IAOA,oBAAA;AC9DE;AACF;ADgEA;EACA,aAAA;EACA,mBAAA;EACA,qBAAA;AC9DA;ADgEA;EACA,WAjDA;EAkDA,YAlDA;EAmDA,kBAAA;AC9DA;ADiEA;EACA,qBAAA;EACA,sCAAA;AC/DA;ADkEA;EACA,eAAA;EACA,cAAA;AChEA;ADmEA;;EAEA,eAAA;EACA,cAAA;EACA,qBAAA;ACjEA;ADsEA;EACA,cAAA;ACpEA;ADuEA;EACA,qBAAA;EACA,gBAAA;EACA,sBAAA;ACrEA;ADuEA;AALA;IAMA,eAAA;ACpEE;AACF;ADsEA;EACA,cAAA;EACA,qBAAA;ACpEA;ADsEA;EACA,cAAA;ACpEA;ADuEA;EACA,0BAAA;ACrEA;AD4EA;EACA,YAAA;EACA,aAAA;EACA,mBAAA;AC1EA;AD4EA;EACA,aAAA;AC1EA;AD8EA;EACA,eAAA;EACA,WAAA;EACA,YAAA;EACA,iBAAA;AC5EA;AD+EA;AAlBA;IAmBA,aAAA;IACA,oBAAA;IACA,iBAAA;AC5EE;AD8EF;IACA,cAAA;AC5EE;AD+EF;IACA,8BAAA;AC7EE;ADgFF;IACA,+BAAA;AC9EE;ADgFF;IACA,kBAAA;AC9EE;ADkFF;IACA,+BAAA;AChFE;ADkFF;IACA,kBAAA;AChFE;AACF;ADqFA;EACA,mDAAA;EACA,iBAAA;EACA,kBAAA;EACA,qBAAA;EACA,aAAA;EACA,sBAAA;EACA,cAAA;EACA,eAAA;ACnFA;ADqFA;EAEA,yBAAA;EACA,sCAAA;EACA,8EAAA;ACpFA;ADuFA;AAjBA;IAkBA,mBAAA;ACpFE;AACF;ADsFA;EACA,eAAA;EACA,iBAAA;EACA,qBAAA;ACpFA;ADsFA;AALA;IAMA,aAAA;IACA,YAAA;IACA,gBAAA;ACnFE;AACF;ADsFA;EACA,gBAAA;ACpFA;ADuFA;EACA,eAAA;ACrFA;ADuFA;AAHA;IAIA,aAAA;IACA,sBAAA;IACA,sBAAA;ACpFE;AACF;ADuFA;EACA,eAAA;EACA,gBAAA;EACA,SAAA;EACA,oBAAA;ACrFA;ADwFA;EACA,aAAA;ACtFA;ADwFA;AAHA;IAIA,cAAA;IACA,YAAA;IACA,aAAA;IACA,iBAAA;IACA,eAAA;IACA,SAAA;IACA,oBAAA;ACrFE;AACF;ADwFA;EACA,gBAAA;EACA,WAAA;ACtFA;AD0FA;EACA,kBAAA;EACA,cAAA;EACA,eAAA;EACA,WAAA;EACA,qBAAA;ACxFA;AD0FA;EACA,YAAA;EACA,sBAAA;ACxFA;AD4FA;EC1FE,kBAAkB;EAClB,UAAU;EACV,YAAY;EACZ,WAAW;EACX,2BAA2B;EAC3B,eAAe;EACf,WAAW;EACX,qBAAqB;EACrB,YAAY;AACd;AACA;EACE,UAAU;AACZ;AACA;EACE,kBAAkB;EAClB,QAAQ;EACR,aAAa;EACb,WAAW;AACb;;AAEA,2CAA2C",
       "file": "EmbettyTweet.vue",
@@ -2288,10 +2465,12 @@ const __vue_module_identifier__$1 = undefined;
 const __vue_is_functional_template__$1 = false;
 /* style inject SSR */
 
-var EmbettyTweet = normalizeComponent_1({
+/* style inject shadow dom */
+
+const __vue_component__$1 = normalizeComponent_1({
   render: __vue_render__,
   staticRenderFns: __vue_staticRenderFns__
-}, __vue_inject_styles__$1, __vue_script__$1, __vue_scope_id__$1, __vue_is_functional_template__$1, __vue_module_identifier__$1, browser, undefined);
+}, __vue_inject_styles__$1, __vue_script__$1, __vue_scope_id__$1, __vue_is_functional_template__$1, __vue_module_identifier__$1, false, browser, undefined, undefined);
 
 /** @type VideoImpl */
 var FacebookVideo = {
@@ -2413,7 +2592,7 @@ var videoImplementations = {
 //
 var script$2 = {
   name: 'EmbettyVideo',
-  extends: EmbettyEmbed,
+  extends: __vue_component__,
   props: {
     width: {
       type: Number,
@@ -2647,11 +2826,11 @@ __vue_render__$1._withStripped = true;
 
 const __vue_inject_styles__$2 = function (inject) {
   if (!inject) return;
-  inject("data-v-78868f83_0", {
+  inject("data-v-65556e2b_0", {
     source: ".embetty-video {\n  position: relative;\n  overflow: hidden;\n  display: block;\n  max-width: 100%;\n  font-family: var(--embetty-font-family, Helvetica, Roboto, \"Segoe UI\", Calibri, sans-serif);\n  border: 1px solid var(--embetty-border-color, #ccc);\n  border-width: 1px;\n  border-radius: 4px;\n  box-sizing: border-box;\n  font-size: 16px;\n  line-height: 1;\n}\n.embetty-video .poster, .embetty-video .wrapper {\n  position: relative;\n  overflow: hidden;\n  background: no-repeat center black;\n  background-size: cover;\n}\n.embetty-video .poster.contain, .embetty-video .wrapper.contain {\n  background-size: contain;\n}\n.embetty-video .poster.default-height, .embetty-video .wrapper.default-height {\n  height: 0;\n  padding-top: 56.25%;\n}\n.embetty-video .playbutton,\n.embetty-video .playbutton:active {\n  box-sizing: border-box;\n  display: block;\n  position: absolute;\n  z-index: 1;\n  width: 100%;\n  height: 100%;\n  border: 0;\n  padding: 0;\n  outline: 0;\n  opacity: 0.9;\n  background: none;\n  cursor: pointer;\n  background-image: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.8));\n  transition: opacity 150ms;\n}\n.embetty-video .playbutton:hover, .embetty-video .playbutton:focus,\n.embetty-video .playbutton:active:hover,\n.embetty-video .playbutton:active:focus {\n  opacity: 1;\n}\n.embetty-video .powered-by {\n  position: absolute;\n  z-index: 3;\n  right: -20px;\n  bottom: 0px;\n  padding: 20px 46px 5px 20px;\n  font-size: 14px;\n  color: #777;\n  text-decoration: none;\n  opacity: 0.3;\n  -webkit-font-smoothing: antialiased;\n  color: #fff;\n  opacity: 0.6;\n}\n.embetty-video .powered-by:hover, .embetty-video .powered-by:focus {\n  opacity: 1;\n}\n.embetty-video .powered-by .embetty-logo {\n  position: absolute;\n  right: 0;\n  bottom: -42px;\n  width: 40px;\n}\n.embetty-video iframe,\n.embetty-video video {\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n}\n\n/*# sourceMappingURL=EmbettyVideo.vue.map */",
     map: {
       "version": 3,
-      "sources": ["/home/flo/www/embetty/embetty-vue/src/components/EmbettyVideo.vue", "EmbettyVideo.vue"],
+      "sources": ["/home/runner/work/embetty-vue/embetty-vue/src/components/EmbettyVideo.vue", "EmbettyVideo.vue"],
       "names": [],
       "mappings": "AA4CA;EC3CE,kBAAkB;EAClB,gBAAgB;EAChB,cAAc;EACd,eAAe;EACf,2FAA2F;EAC3F,mDAAmD;EACnD,iBAAiB;EACjB,kBAAkB;EAClB,sBAAsB;EACtB,eAAe;EACf,cAAc;AAChB;ADmCA;EACA,kBAAA;EACA,gBAAA;EACA,kCAAA;EACA,sBAAA;ACjCA;ADmCA;EACA,wBAAA;ACjCA;ADoCA;EACA,SAAA;EACA,mBAAA;AClCA;ADsCA;;EAEA,sBAAA;EACA,cAAA;EACA,kBAAA;EACA,UAAA;EACA,WAAA;EACA,YAAA;EACA,SAAA;EACA,UAAA;EACA,UAAA;EACA,YAAA;EACA,gBAAA;EACA,eAAA;EACA,yEAAA;EACA,yBAAA;ACpCA;ADsCA;;;EAEA,UAAA;ACnCA;ADuCA;ECrCE,kBAAkB;EAClB,UAAU;EACV,YAAY;EACZ,WAAW;EACX,2BAA2B;EAC3B,eAAe;EACf,WAAW;EACX,qBAAqB;EACrB,YAAY;EDgCd,mCAAA;EAEA,WAAA;EACA,YAAA;AC/BA;AACA;EACE,UAAU;AACZ;AACA;EACE,kBAAkB;EAClB,QAAQ;EACR,aAAa;EACb,WAAW;AACb;ADyBA;;EAEA,kBAAA;EACA,MAAA;EACA,OAAA;EACA,WAAA;EACA,YAAA;ACvBA;;AAEA,2CAA2C",
       "file": "EmbettyVideo.vue",
@@ -2672,10 +2851,12 @@ const __vue_module_identifier__$2 = undefined;
 const __vue_is_functional_template__$2 = false;
 /* style inject SSR */
 
-var EmbettyVideo = normalizeComponent_1({
+/* style inject shadow dom */
+
+const __vue_component__$2 = normalizeComponent_1({
   render: __vue_render__$1,
   staticRenderFns: __vue_staticRenderFns__$1
-}, __vue_inject_styles__$2, __vue_script__$2, __vue_scope_id__$2, __vue_is_functional_template__$2, __vue_module_identifier__$2, browser, undefined);
+}, __vue_inject_styles__$2, __vue_script__$2, __vue_scope_id__$2, __vue_is_functional_template__$2, __vue_module_identifier__$2, false, browser, undefined, undefined);
 
 var EmbettyPlugin = {
   /**
@@ -2684,13 +2865,13 @@ var EmbettyPlugin = {
    */
   install: function (Vue, options) {
     options = options || {};
-    Vue.component('EmbettyTweet', EmbettyTweet);
-    Vue.component('EmbettyVideo', EmbettyVideo);
+    Vue.component('EmbettyTweet', __vue_component__$1);
+    Vue.component('EmbettyVideo', __vue_component__$2);
     Vue.prototype._embettyVueOptions = options;
   }
 };
 
 exports.EmbettyPlugin = EmbettyPlugin;
-exports.EmbettyTweet = EmbettyTweet;
-exports.EmbettyVideo = EmbettyVideo;
+exports.EmbettyTweet = __vue_component__$1;
+exports.EmbettyVideo = __vue_component__$2;
 exports.default = EmbettyPlugin;

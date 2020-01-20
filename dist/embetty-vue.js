@@ -7,7 +7,6 @@
 		return module = { exports: {} }, fn(module, module.exports), module.exports;
 	}
 
-	var O = 'object';
 	var check = function (it) {
 	  return it && it.Math == Math && it;
 	};
@@ -15,10 +14,10 @@
 	// https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
 	var global_1 =
 	  // eslint-disable-next-line no-undef
-	  check(typeof globalThis == O && globalThis) ||
-	  check(typeof window == O && window) ||
-	  check(typeof self == O && self) ||
-	  check(typeof commonjsGlobal == O && commonjsGlobal) ||
+	  check(typeof globalThis == 'object' && globalThis) ||
+	  check(typeof window == 'object' && window) ||
+	  check(typeof self == 'object' && self) ||
+	  check(typeof commonjsGlobal == 'object' && commonjsGlobal) ||
 	  // eslint-disable-next-line no-new-func
 	  Function('return this')();
 
@@ -32,7 +31,7 @@
 
 	// Thank's IE8 for his funny defineProperty
 	var descriptors = !fails(function () {
-	  return Object.defineProperty({}, 'a', { get: function () { return 7; } }).a != 7;
+	  return Object.defineProperty({}, 1, { get: function () { return 7; } })[1] != 7;
 	});
 
 	var nativePropertyIsEnumerable = {}.propertyIsEnumerable;
@@ -174,7 +173,7 @@
 		f: f$2
 	};
 
-	var hide = descriptors ? function (object, key, value) {
+	var createNonEnumerableProperty = descriptors ? function (object, key, value) {
 	  return objectDefineProperty.f(object, key, createPropertyDescriptor(1, value));
 	} : function (object, key, value) {
 	  object[key] = value;
@@ -183,32 +182,41 @@
 
 	var setGlobal = function (key, value) {
 	  try {
-	    hide(global_1, key, value);
+	    createNonEnumerableProperty(global_1, key, value);
 	  } catch (error) {
 	    global_1[key] = value;
 	  } return value;
 	};
 
-	var isPure = false;
-
-	var shared = createCommonjsModule(function (module) {
 	var SHARED = '__core-js_shared__';
 	var store = global_1[SHARED] || setGlobal(SHARED, {});
 
-	(module.exports = function (key, value) {
-	  return store[key] || (store[key] = value !== undefined ? value : {});
-	})('versions', []).push({
-	  version: '3.1.3',
-	  mode:  'global',
-	  copyright: '© 2019 Denis Pushkarev (zloirock.ru)'
-	});
-	});
+	var sharedStore = store;
 
-	var functionToString = shared('native-function-to-string', Function.toString);
+	var functionToString = Function.toString;
+
+	// this helper broken in `3.4.1-3.4.4`, so we can't use `shared` helper
+	if (typeof sharedStore.inspectSource != 'function') {
+	  sharedStore.inspectSource = function (it) {
+	    return functionToString.call(it);
+	  };
+	}
+
+	var inspectSource = sharedStore.inspectSource;
 
 	var WeakMap = global_1.WeakMap;
 
-	var nativeWeakMap = typeof WeakMap === 'function' && /native code/.test(functionToString.call(WeakMap));
+	var nativeWeakMap = typeof WeakMap === 'function' && /native code/.test(inspectSource(WeakMap));
+
+	var shared = createCommonjsModule(function (module) {
+	(module.exports = function (key, value) {
+	  return sharedStore[key] || (sharedStore[key] = value !== undefined ? value : {});
+	})('versions', []).push({
+	  version: '3.6.4',
+	  mode:  'global',
+	  copyright: '© 2020 Denis Pushkarev (zloirock.ru)'
+	});
+	});
 
 	var id = 0;
 	var postfix = Math.random();
@@ -242,25 +250,25 @@
 	};
 
 	if (nativeWeakMap) {
-	  var store = new WeakMap$1();
-	  var wmget = store.get;
-	  var wmhas = store.has;
-	  var wmset = store.set;
+	  var store$1 = new WeakMap$1();
+	  var wmget = store$1.get;
+	  var wmhas = store$1.has;
+	  var wmset = store$1.set;
 	  set = function (it, metadata) {
-	    wmset.call(store, it, metadata);
+	    wmset.call(store$1, it, metadata);
 	    return metadata;
 	  };
 	  get = function (it) {
-	    return wmget.call(store, it) || {};
+	    return wmget.call(store$1, it) || {};
 	  };
 	  has$1 = function (it) {
-	    return wmhas.call(store, it);
+	    return wmhas.call(store$1, it);
 	  };
 	} else {
 	  var STATE = sharedKey('state');
 	  hiddenKeys[STATE] = true;
 	  set = function (it, metadata) {
-	    hide(it, STATE, metadata);
+	    createNonEnumerableProperty(it, STATE, metadata);
 	    return metadata;
 	  };
 	  get = function (it) {
@@ -282,18 +290,14 @@
 	var redefine = createCommonjsModule(function (module) {
 	var getInternalState = internalState.get;
 	var enforceInternalState = internalState.enforce;
-	var TEMPLATE = String(functionToString).split('toString');
-
-	shared('inspectSource', function (it) {
-	  return functionToString.call(it);
-	});
+	var TEMPLATE = String(String).split('String');
 
 	(module.exports = function (O, key, value, options) {
 	  var unsafe = options ? !!options.unsafe : false;
 	  var simple = options ? !!options.enumerable : false;
 	  var noTargetGet = options ? !!options.noTargetGet : false;
 	  if (typeof value == 'function') {
-	    if (typeof key == 'string' && !has(value, 'name')) hide(value, 'name', key);
+	    if (typeof key == 'string' && !has(value, 'name')) createNonEnumerableProperty(value, 'name', key);
 	    enforceInternalState(value).source = TEMPLATE.join(typeof key == 'string' ? key : '');
 	  }
 	  if (O === global_1) {
@@ -306,10 +310,10 @@
 	    simple = true;
 	  }
 	  if (simple) O[key] = value;
-	  else hide(O, key, value);
+	  else createNonEnumerableProperty(O, key, value);
 	// add fake Function#toString for correct work wrapped methods / constructors with methods like LoDash isNative
 	})(Function.prototype, 'toString', function toString() {
-	  return typeof this == 'function' && getInternalState(this).source || functionToString.call(this);
+	  return typeof this == 'function' && getInternalState(this).source || inspectSource(this);
 	});
 	});
 
@@ -346,7 +350,7 @@
 
 	// Helper for a popular repeating case of the spec:
 	// Let integer be ? ToInteger(index).
-	// If integer < 0, let result be max((length + integer), 0); else let result be min(length, length).
+	// If integer < 0, let result be max((length + integer), 0); else let result be min(integer, length).
 	var toAbsoluteIndex = function (index, length) {
 	  var integer = toInteger(index);
 	  return integer < 0 ? max(integer + length, 0) : min$1(integer, length);
@@ -510,92 +514,12 @@
 	    }
 	    // add a flag to not completely full polyfills
 	    if (options.sham || (targetProperty && targetProperty.sham)) {
-	      hide(sourceProperty, 'sham', true);
+	      createNonEnumerableProperty(sourceProperty, 'sham', true);
 	    }
 	    // extend global
 	    redefine(target, key, sourceProperty, options);
 	  }
 	};
-
-	// `String.prototype.repeat` method implementation
-	// https://tc39.github.io/ecma262/#sec-string.prototype.repeat
-	var stringRepeat = ''.repeat || function repeat(count) {
-	  var str = String(requireObjectCoercible(this));
-	  var result = '';
-	  var n = toInteger(count);
-	  if (n < 0 || n == Infinity) throw RangeError('Wrong number of repetitions');
-	  for (;n > 0; (n >>>= 1) && (str += str)) if (n & 1) result += str;
-	  return result;
-	};
-
-	// https://github.com/tc39/proposal-string-pad-start-end
-
-
-
-
-	var ceil$1 = Math.ceil;
-
-	// `String.prototype.{ padStart, padEnd }` methods implementation
-	var createMethod$1 = function (IS_END) {
-	  return function ($this, maxLength, fillString) {
-	    var S = String(requireObjectCoercible($this));
-	    var stringLength = S.length;
-	    var fillStr = fillString === undefined ? ' ' : String(fillString);
-	    var intMaxLength = toLength(maxLength);
-	    var fillLen, stringFiller;
-	    if (intMaxLength <= stringLength || fillStr == '') return S;
-	    fillLen = intMaxLength - stringLength;
-	    stringFiller = stringRepeat.call(fillStr, ceil$1(fillLen / fillStr.length));
-	    if (stringFiller.length > fillLen) stringFiller = stringFiller.slice(0, fillLen);
-	    return IS_END ? S + stringFiller : stringFiller + S;
-	  };
-	};
-
-	var stringPad = {
-	  // `String.prototype.padStart` method
-	  // https://tc39.github.io/ecma262/#sec-string.prototype.padstart
-	  start: createMethod$1(false),
-	  // `String.prototype.padEnd` method
-	  // https://tc39.github.io/ecma262/#sec-string.prototype.padend
-	  end: createMethod$1(true)
-	};
-
-	var padStart = stringPad.start;
-
-	var abs = Math.abs;
-	var DatePrototype = Date.prototype;
-	var getTime = DatePrototype.getTime;
-	var nativeDateToISOString = DatePrototype.toISOString;
-
-	// `Date.prototype.toISOString` method implementation
-	// https://tc39.github.io/ecma262/#sec-date.prototype.toisostring
-	// PhantomJS / old WebKit fails here:
-	var dateToIsoString = (fails(function () {
-	  return nativeDateToISOString.call(new Date(-5e13 - 1)) != '0385-07-25T07:06:39.999Z';
-	}) || !fails(function () {
-	  nativeDateToISOString.call(new Date(NaN));
-	})) ? function toISOString() {
-	  if (!isFinite(getTime.call(this))) throw RangeError('Invalid time value');
-	  var date = this;
-	  var year = date.getUTCFullYear();
-	  var milliseconds = date.getUTCMilliseconds();
-	  var sign = year < 0 ? '-' : year > 9999 ? '+' : '';
-	  return sign + padStart(abs(year), sign ? 6 : 4, 0) +
-	    '-' + padStart(date.getUTCMonth() + 1, 2, 0) +
-	    '-' + padStart(date.getUTCDate(), 2, 0) +
-	    'T' + padStart(date.getUTCHours(), 2, 0) +
-	    ':' + padStart(date.getUTCMinutes(), 2, 0) +
-	    ':' + padStart(date.getUTCSeconds(), 2, 0) +
-	    '.' + padStart(milliseconds, 3, 0) +
-	    'Z';
-	} : nativeDateToISOString;
-
-	// `Date.prototype.toISOString` method
-	// https://tc39.github.io/ecma262/#sec-date.prototype.toisostring
-	// PhantomJS / old WebKit has a broken implementations
-	_export({ target: 'Date', proto: true, forced: Date.prototype.toISOString !== dateToIsoString }, {
-	  toISOString: dateToIsoString
-	});
 
 	var quot = /"/g;
 
@@ -610,7 +534,7 @@
 
 	// check the existence of a method, lowercase
 	// of a tag and escaping quotes in arguments
-	var forcedStringHtmlMethod = function (METHOD_NAME) {
+	var stringHtmlForced = function (METHOD_NAME) {
 	  return fails(function () {
 	    var test = ''[METHOD_NAME]('"');
 	    return test !== test.toLowerCase() || test.split('"').length > 3;
@@ -619,7 +543,7 @@
 
 	// `String.prototype.link` method
 	// https://tc39.github.io/ecma262/#sec-string.prototype.link
-	_export({ target: 'String', proto: true, forced: forcedStringHtmlMethod('link') }, {
+	_export({ target: 'String', proto: true, forced: stringHtmlForced('link') }, {
 	  link: function link(url) {
 	    return createHtml(this, 'a', 'href', url);
 	  }
@@ -630,6 +554,12 @@
 	  // eslint-disable-next-line no-undef
 	  return !String(Symbol());
 	});
+
+	var useSymbolAsUid = nativeSymbol
+	  // eslint-disable-next-line no-undef
+	  && !Symbol.sham
+	  // eslint-disable-next-line no-undef
+	  && typeof Symbol.iterator == 'symbol';
 
 	// `IsArray` abstract operation
 	// https://tc39.github.io/ecma262/#sec-isarray
@@ -663,48 +593,76 @@
 
 	var html = getBuiltIn('document', 'documentElement');
 
+	var GT = '>';
+	var LT = '<';
+	var PROTOTYPE = 'prototype';
+	var SCRIPT = 'script';
 	var IE_PROTO = sharedKey('IE_PROTO');
 
-	var PROTOTYPE = 'prototype';
-	var Empty = function () { /* empty */ };
+	var EmptyConstructor = function () { /* empty */ };
+
+	var scriptTag = function (content) {
+	  return LT + SCRIPT + GT + content + LT + '/' + SCRIPT + GT;
+	};
+
+	// Create object with fake `null` prototype: use ActiveX Object with cleared prototype
+	var NullProtoObjectViaActiveX = function (activeXDocument) {
+	  activeXDocument.write(scriptTag(''));
+	  activeXDocument.close();
+	  var temp = activeXDocument.parentWindow.Object;
+	  activeXDocument = null; // avoid memory leak
+	  return temp;
+	};
 
 	// Create object with fake `null` prototype: use iframe Object with cleared prototype
-	var createDict = function () {
+	var NullProtoObjectViaIFrame = function () {
 	  // Thrash, waste and sodomy: IE GC bug
 	  var iframe = documentCreateElement('iframe');
-	  var length = enumBugKeys.length;
-	  var lt = '<';
-	  var script = 'script';
-	  var gt = '>';
-	  var js = 'java' + script + ':';
+	  var JS = 'java' + SCRIPT + ':';
 	  var iframeDocument;
 	  iframe.style.display = 'none';
 	  html.appendChild(iframe);
-	  iframe.src = String(js);
+	  // https://github.com/zloirock/core-js/issues/475
+	  iframe.src = String(JS);
 	  iframeDocument = iframe.contentWindow.document;
 	  iframeDocument.open();
-	  iframeDocument.write(lt + script + gt + 'document.F=Object' + lt + '/' + script + gt);
+	  iframeDocument.write(scriptTag('document.F=Object'));
 	  iframeDocument.close();
-	  createDict = iframeDocument.F;
-	  while (length--) delete createDict[PROTOTYPE][enumBugKeys[length]];
-	  return createDict();
+	  return iframeDocument.F;
 	};
+
+	// Check for document.domain and active x support
+	// No need to use active x approach when document.domain is not set
+	// see https://github.com/es-shims/es5-shim/issues/150
+	// variation of https://github.com/kitcambridge/es5-shim/commit/4f738ac066346
+	// avoid IE GC bug
+	var activeXDocument;
+	var NullProtoObject = function () {
+	  try {
+	    /* global ActiveXObject */
+	    activeXDocument = document.domain && new ActiveXObject('htmlfile');
+	  } catch (error) { /* ignore */ }
+	  NullProtoObject = activeXDocument ? NullProtoObjectViaActiveX(activeXDocument) : NullProtoObjectViaIFrame();
+	  var length = enumBugKeys.length;
+	  while (length--) delete NullProtoObject[PROTOTYPE][enumBugKeys[length]];
+	  return NullProtoObject();
+	};
+
+	hiddenKeys[IE_PROTO] = true;
 
 	// `Object.create` method
 	// https://tc39.github.io/ecma262/#sec-object.create
 	var objectCreate = Object.create || function create(O, Properties) {
 	  var result;
 	  if (O !== null) {
-	    Empty[PROTOTYPE] = anObject(O);
-	    result = new Empty();
-	    Empty[PROTOTYPE] = null;
+	    EmptyConstructor[PROTOTYPE] = anObject(O);
+	    result = new EmptyConstructor();
+	    EmptyConstructor[PROTOTYPE] = null;
 	    // add "__proto__" for Object.getPrototypeOf polyfill
 	    result[IE_PROTO] = O;
-	  } else result = createDict();
+	  } else result = NullProtoObject();
 	  return Properties === undefined ? result : objectDefineProperties(result, Properties);
 	};
-
-	hiddenKeys[IE_PROTO] = true;
 
 	var nativeGetOwnPropertyNames = objectGetOwnPropertyNames.f;
 
@@ -732,17 +690,20 @@
 		f: f$5
 	};
 
+	var WellKnownSymbolsStore = shared('wks');
 	var Symbol$1 = global_1.Symbol;
-	var store$1 = shared('wks');
+	var createWellKnownSymbol = useSymbolAsUid ? Symbol$1 : Symbol$1 && Symbol$1.withoutSetter || uid;
 
 	var wellKnownSymbol = function (name) {
-	  return store$1[name] || (store$1[name] = nativeSymbol && Symbol$1[name]
-	    || (nativeSymbol ? Symbol$1 : uid)('Symbol.' + name));
+	  if (!has(WellKnownSymbolsStore, name)) {
+	    if (nativeSymbol && has(Symbol$1, name)) WellKnownSymbolsStore[name] = Symbol$1[name];
+	    else WellKnownSymbolsStore[name] = createWellKnownSymbol('Symbol.' + name);
+	  } return WellKnownSymbolsStore[name];
 	};
 
 	var f$6 = wellKnownSymbol;
 
-	var wrappedWellKnownSymbol = {
+	var wellKnownSymbolWrapped = {
 		f: f$6
 	};
 
@@ -751,7 +712,7 @@
 	var defineWellKnownSymbol = function (NAME) {
 	  var Symbol = path.Symbol || (path.Symbol = {});
 	  if (!has(Symbol, NAME)) defineProperty(Symbol, NAME, {
-	    value: wrappedWellKnownSymbol.f(NAME)
+	    value: wellKnownSymbolWrapped.f(NAME)
 	  });
 	};
 
@@ -774,7 +735,7 @@
 	};
 
 	// optional / simple context binding
-	var bindContext = function (fn, that, length) {
+	var functionBindContext = function (fn, that, length) {
 	  aFunction$1(fn);
 	  if (that === undefined) return fn;
 	  switch (length) {
@@ -816,7 +777,7 @@
 	var push = [].push;
 
 	// `Array.prototype.{ forEach, map, filter, some, every, find, findIndex }` methods implementation
-	var createMethod$2 = function (TYPE) {
+	var createMethod$1 = function (TYPE) {
 	  var IS_MAP = TYPE == 1;
 	  var IS_FILTER = TYPE == 2;
 	  var IS_SOME = TYPE == 3;
@@ -826,7 +787,7 @@
 	  return function ($this, callbackfn, that, specificCreate) {
 	    var O = toObject($this);
 	    var self = indexedObject(O);
-	    var boundFunction = bindContext(callbackfn, that, 3);
+	    var boundFunction = functionBindContext(callbackfn, that, 3);
 	    var length = toLength(self.length);
 	    var index = 0;
 	    var create = specificCreate || arraySpeciesCreate;
@@ -852,25 +813,25 @@
 	var arrayIteration = {
 	  // `Array.prototype.forEach` method
 	  // https://tc39.github.io/ecma262/#sec-array.prototype.foreach
-	  forEach: createMethod$2(0),
+	  forEach: createMethod$1(0),
 	  // `Array.prototype.map` method
 	  // https://tc39.github.io/ecma262/#sec-array.prototype.map
-	  map: createMethod$2(1),
+	  map: createMethod$1(1),
 	  // `Array.prototype.filter` method
 	  // https://tc39.github.io/ecma262/#sec-array.prototype.filter
-	  filter: createMethod$2(2),
+	  filter: createMethod$1(2),
 	  // `Array.prototype.some` method
 	  // https://tc39.github.io/ecma262/#sec-array.prototype.some
-	  some: createMethod$2(3),
+	  some: createMethod$1(3),
 	  // `Array.prototype.every` method
 	  // https://tc39.github.io/ecma262/#sec-array.prototype.every
-	  every: createMethod$2(4),
+	  every: createMethod$1(4),
 	  // `Array.prototype.find` method
 	  // https://tc39.github.io/ecma262/#sec-array.prototype.find
-	  find: createMethod$2(5),
+	  find: createMethod$1(5),
 	  // `Array.prototype.findIndex` method
 	  // https://tc39.github.io/ecma262/#sec-array.prototype.findIndex
-	  findIndex: createMethod$2(6)
+	  findIndex: createMethod$1(6)
 	};
 
 	var $forEach = arrayIteration.forEach;
@@ -883,8 +844,7 @@
 	var getInternalState = internalState.getterFor(SYMBOL);
 	var ObjectPrototype = Object[PROTOTYPE$1];
 	var $Symbol = global_1.Symbol;
-	var JSON$1 = global_1.JSON;
-	var nativeJSONStringify = JSON$1 && JSON$1.stringify;
+	var $stringify = getBuiltIn('JSON', 'stringify');
 	var nativeGetOwnPropertyDescriptor$1 = objectGetOwnPropertyDescriptor.f;
 	var nativeDefineProperty$1 = objectDefineProperty.f;
 	var nativeGetOwnPropertyNames$1 = objectGetOwnPropertyNamesExternal.f;
@@ -893,7 +853,7 @@
 	var ObjectPrototypeSymbols = shared('op-symbols');
 	var StringToSymbolRegistry = shared('string-to-symbol-registry');
 	var SymbolToStringRegistry = shared('symbol-to-string-registry');
-	var WellKnownSymbolsStore = shared('wks');
+	var WellKnownSymbolsStore$1 = shared('wks');
 	var QObject = global_1.QObject;
 	// Don't use setters in Qt Script, https://github.com/zloirock/core-js/issues/173
 	var USE_SETTER = !QObject || !QObject[PROTOTYPE$1] || !QObject[PROTOTYPE$1].findChild;
@@ -923,7 +883,7 @@
 	  return symbol;
 	};
 
-	var isSymbol = nativeSymbol && typeof $Symbol.iterator == 'symbol' ? function (it) {
+	var isSymbol = useSymbolAsUid ? function (it) {
 	  return typeof it == 'symbol';
 	} : function (it) {
 	  return Object(it) instanceof $Symbol;
@@ -1018,11 +978,19 @@
 	    return getInternalState(this).tag;
 	  });
 
+	  redefine($Symbol, 'withoutSetter', function (description) {
+	    return wrap(uid(description), description);
+	  });
+
 	  objectPropertyIsEnumerable.f = $propertyIsEnumerable;
 	  objectDefineProperty.f = $defineProperty;
 	  objectGetOwnPropertyDescriptor.f = $getOwnPropertyDescriptor;
 	  objectGetOwnPropertyNames.f = objectGetOwnPropertyNamesExternal.f = $getOwnPropertyNames;
 	  objectGetOwnPropertySymbols.f = $getOwnPropertySymbols;
+
+	  wellKnownSymbolWrapped.f = function (name) {
+	    return wrap(wellKnownSymbol(name), name);
+	  };
 
 	  if (descriptors) {
 	    // https://github.com/tc39/proposal-Symbol-description
@@ -1036,17 +1004,13 @@
 	      redefine(ObjectPrototype, 'propertyIsEnumerable', $propertyIsEnumerable, { unsafe: true });
 	    }
 	  }
-
-	  wrappedWellKnownSymbol.f = function (name) {
-	    return wrap(wellKnownSymbol(name), name);
-	  };
 	}
 
 	_export({ global: true, wrap: true, forced: !nativeSymbol, sham: !nativeSymbol }, {
 	  Symbol: $Symbol
 	});
 
-	$forEach(objectKeys(WellKnownSymbolsStore), function (name) {
+	$forEach(objectKeys(WellKnownSymbolsStore$1), function (name) {
 	  defineWellKnownSymbol(name);
 	});
 
@@ -1105,34 +1069,41 @@
 
 	// `JSON.stringify` method behavior with symbols
 	// https://tc39.github.io/ecma262/#sec-json.stringify
-	JSON$1 && _export({ target: 'JSON', stat: true, forced: !nativeSymbol || fails(function () {
-	  var symbol = $Symbol();
-	  // MS Edge converts symbol values to JSON as {}
-	  return nativeJSONStringify([symbol]) != '[null]'
-	    // WebKit converts symbol values to JSON as null
-	    || nativeJSONStringify({ a: symbol }) != '{}'
-	    // V8 throws on boxed symbols
-	    || nativeJSONStringify(Object(symbol)) != '{}';
-	}) }, {
-	  stringify: function stringify(it) {
-	    var args = [it];
-	    var index = 1;
-	    var replacer, $replacer;
-	    while (arguments.length > index) args.push(arguments[index++]);
-	    $replacer = replacer = args[1];
-	    if (!isObject(replacer) && it === undefined || isSymbol(it)) return; // IE8 returns string on undefined
-	    if (!isArray(replacer)) replacer = function (key, value) {
-	      if (typeof $replacer == 'function') value = $replacer.call(this, key, value);
-	      if (!isSymbol(value)) return value;
-	    };
-	    args[1] = replacer;
-	    return nativeJSONStringify.apply(JSON$1, args);
-	  }
-	});
+	if ($stringify) {
+	  var FORCED_JSON_STRINGIFY = !nativeSymbol || fails(function () {
+	    var symbol = $Symbol();
+	    // MS Edge converts symbol values to JSON as {}
+	    return $stringify([symbol]) != '[null]'
+	      // WebKit converts symbol values to JSON as null
+	      || $stringify({ a: symbol }) != '{}'
+	      // V8 throws on boxed symbols
+	      || $stringify(Object(symbol)) != '{}';
+	  });
+
+	  _export({ target: 'JSON', stat: true, forced: FORCED_JSON_STRINGIFY }, {
+	    // eslint-disable-next-line no-unused-vars
+	    stringify: function stringify(it, replacer, space) {
+	      var args = [it];
+	      var index = 1;
+	      var $replacer;
+	      while (arguments.length > index) args.push(arguments[index++]);
+	      $replacer = replacer;
+	      if (!isObject(replacer) && it === undefined || isSymbol(it)) return; // IE8 returns string on undefined
+	      if (!isArray(replacer)) replacer = function (key, value) {
+	        if (typeof $replacer == 'function') value = $replacer.call(this, key, value);
+	        if (!isSymbol(value)) return value;
+	      };
+	      args[1] = replacer;
+	      return $stringify.apply(null, args);
+	    }
+	  });
+	}
 
 	// `Symbol.prototype[@@toPrimitive]` method
 	// https://tc39.github.io/ecma262/#sec-symbol.prototype-@@toprimitive
-	if (!$Symbol[PROTOTYPE$1][TO_PRIMITIVE]) hide($Symbol[PROTOTYPE$1], TO_PRIMITIVE, $Symbol[PROTOTYPE$1].valueOf);
+	if (!$Symbol[PROTOTYPE$1][TO_PRIMITIVE]) {
+	  createNonEnumerableProperty($Symbol[PROTOTYPE$1], TO_PRIMITIVE, $Symbol[PROTOTYPE$1].valueOf);
+	}
 	// `Symbol.prototype[@@toStringTag]` property
 	// https://tc39.github.io/ecma262/#sec-symbol.prototype-@@tostringtag
 	setToStringTag($Symbol, SYMBOL);
@@ -1182,10 +1153,33 @@
 	  });
 	}
 
+	var engineUserAgent = getBuiltIn('navigator', 'userAgent') || '';
+
+	var process = global_1.process;
+	var versions = process && process.versions;
+	var v8 = versions && versions.v8;
+	var match, version;
+
+	if (v8) {
+	  match = v8.split('.');
+	  version = match[0] + match[1];
+	} else if (engineUserAgent) {
+	  match = engineUserAgent.match(/Edge\/(\d+)/);
+	  if (!match || match[1] >= 74) {
+	    match = engineUserAgent.match(/Chrome\/(\d+)/);
+	    if (match) version = match[1];
+	  }
+	}
+
+	var engineV8Version = version && +version;
+
 	var SPECIES$1 = wellKnownSymbol('species');
 
 	var arrayMethodHasSpeciesSupport = function (METHOD_NAME) {
-	  return !fails(function () {
+	  // We can't use this feature detection in V8 since it causes
+	  // deoptimization and serious performance degradation
+	  // https://github.com/zloirock/core-js/issues/677
+	  return engineV8Version >= 51 || !fails(function () {
 	    var array = [];
 	    var constructor = array.constructor = {};
 	    constructor[SPECIES$1] = function () {
@@ -1195,35 +1189,48 @@
 	  });
 	};
 
+	var defineProperty$3 = Object.defineProperty;
+	var cache = {};
+
+	var thrower = function (it) { throw it; };
+
+	var arrayMethodUsesToLength = function (METHOD_NAME, options) {
+	  if (has(cache, METHOD_NAME)) return cache[METHOD_NAME];
+	  if (!options) options = {};
+	  var method = [][METHOD_NAME];
+	  var ACCESSORS = has(options, 'ACCESSORS') ? options.ACCESSORS : false;
+	  var argument0 = has(options, 0) ? options[0] : thrower;
+	  var argument1 = has(options, 1) ? options[1] : undefined;
+
+	  return cache[METHOD_NAME] = !!method && !fails(function () {
+	    if (ACCESSORS && !descriptors) return true;
+	    var O = { length: -1 };
+
+	    if (ACCESSORS) defineProperty$3(O, 1, { enumerable: true, get: thrower });
+	    else O[1] = 1;
+
+	    method.call(O, argument0, argument1);
+	  });
+	};
+
 	var $map = arrayIteration.map;
 
+
+
+	var HAS_SPECIES_SUPPORT = arrayMethodHasSpeciesSupport('map');
+	// FF49- issue
+	var USES_TO_LENGTH = arrayMethodUsesToLength('map');
 
 	// `Array.prototype.map` method
 	// https://tc39.github.io/ecma262/#sec-array.prototype.map
 	// with adding support of @@species
-	_export({ target: 'Array', proto: true, forced: !arrayMethodHasSpeciesSupport('map') }, {
+	_export({ target: 'Array', proto: true, forced: !HAS_SPECIES_SUPPORT || !USES_TO_LENGTH }, {
 	  map: function map(callbackfn /* , thisArg */) {
 	    return $map(this, callbackfn, arguments.length > 1 ? arguments[1] : undefined);
 	  }
 	});
 
-	var DatePrototype$1 = Date.prototype;
-	var INVALID_DATE = 'Invalid Date';
-	var TO_STRING = 'toString';
-	var nativeDateToString = DatePrototype$1[TO_STRING];
-	var getTime$1 = DatePrototype$1.getTime;
-
-	// `Date.prototype.toString` method
-	// https://tc39.github.io/ecma262/#sec-date.prototype.tostring
-	if (new Date(NaN) + '' != INVALID_DATE) {
-	  redefine(DatePrototype$1, TO_STRING, function toString() {
-	    var value = getTime$1.call(this);
-	    // eslint-disable-next-line no-self-compare
-	    return value === value ? nativeDateToString.call(this) : INVALID_DATE;
-	  });
-	}
-
-	var defineProperty$3 = objectDefineProperty.f;
+	var defineProperty$4 = objectDefineProperty.f;
 
 	var FunctionPrototype = Function.prototype;
 	var FunctionPrototypeToString = FunctionPrototype.toString;
@@ -1233,7 +1240,7 @@
 	// Function instances `.name` property
 	// https://tc39.github.io/ecma262/#sec-function-instances-name
 	if (descriptors && !(NAME in FunctionPrototype)) {
-	  defineProperty$3(FunctionPrototype, NAME, {
+	  defineProperty$4(FunctionPrototype, NAME, {
 	    configurable: true,
 	    get: function () {
 	      try {
@@ -1244,56 +1251,6 @@
 	    }
 	  });
 	}
-
-	// a string of all valid unicode whitespaces
-	// eslint-disable-next-line max-len
-	var whitespaces = '\u0009\u000A\u000B\u000C\u000D\u0020\u00A0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\u2028\u2029\uFEFF';
-
-	var whitespace = '[' + whitespaces + ']';
-	var ltrim = RegExp('^' + whitespace + whitespace + '*');
-	var rtrim = RegExp(whitespace + whitespace + '*$');
-
-	// `String.prototype.{ trim, trimStart, trimEnd, trimLeft, trimRight }` methods implementation
-	var createMethod$3 = function (TYPE) {
-	  return function ($this) {
-	    var string = String(requireObjectCoercible($this));
-	    if (TYPE & 1) string = string.replace(ltrim, '');
-	    if (TYPE & 2) string = string.replace(rtrim, '');
-	    return string;
-	  };
-	};
-
-	var stringTrim = {
-	  // `String.prototype.{ trimLeft, trimStart }` methods
-	  // https://tc39.github.io/ecma262/#sec-string.prototype.trimstart
-	  start: createMethod$3(1),
-	  // `String.prototype.{ trimRight, trimEnd }` methods
-	  // https://tc39.github.io/ecma262/#sec-string.prototype.trimend
-	  end: createMethod$3(2),
-	  // `String.prototype.trim` method
-	  // https://tc39.github.io/ecma262/#sec-string.prototype.trim
-	  trim: createMethod$3(3)
-	};
-
-	var trim = stringTrim.trim;
-
-
-	var nativeParseFloat = global_1.parseFloat;
-	var FORCED = 1 / nativeParseFloat(whitespaces + '-0') !== -Infinity;
-
-	// `parseFloat` method
-	// https://tc39.github.io/ecma262/#sec-parsefloat-string
-	var _parseFloat = FORCED ? function parseFloat(string) {
-	  var trimmedString = trim(String(string));
-	  var result = nativeParseFloat(trimmedString);
-	  return result === 0 && trimmedString.charAt(0) == '-' ? -0 : result;
-	} : nativeParseFloat;
-
-	// `parseFloat` method
-	// https://tc39.github.io/ecma262/#sec-parsefloat-string
-	_export({ global: true, forced: parseFloat != _parseFloat }, {
-	  parseFloat: _parseFloat
-	});
 
 	// `RegExp.prototype.flags` getter implementation
 	// https://tc39.github.io/ecma262/#sec-get-regexp.prototype.flags
@@ -1307,6 +1264,31 @@
 	  if (that.unicode) result += 'u';
 	  if (that.sticky) result += 'y';
 	  return result;
+	};
+
+	// babel-minify transpiles RegExp('a', 'y') -> /a/y and it causes SyntaxError,
+	// so we use an intermediate function.
+	function RE(s, f) {
+	  return RegExp(s, f);
+	}
+
+	var UNSUPPORTED_Y = fails(function () {
+	  // babel-minify transpiles RegExp('a', 'y') -> /a/y and it causes SyntaxError
+	  var re = RE('a', 'y');
+	  re.lastIndex = 2;
+	  return re.exec('abcd') != null;
+	});
+
+	var BROKEN_CARET = fails(function () {
+	  // https://bugzilla.mozilla.org/show_bug.cgi?id=773687
+	  var re = RE('^r', 'gy');
+	  re.lastIndex = 2;
+	  return re.exec('str') != null;
+	});
+
+	var regexpStickyHelpers = {
+		UNSUPPORTED_Y: UNSUPPORTED_Y,
+		BROKEN_CARET: BROKEN_CARET
 	};
 
 	var nativeExec = RegExp.prototype.exec;
@@ -1325,24 +1307,56 @@
 	  return re1.lastIndex !== 0 || re2.lastIndex !== 0;
 	})();
 
+	var UNSUPPORTED_Y$1 = regexpStickyHelpers.UNSUPPORTED_Y || regexpStickyHelpers.BROKEN_CARET;
+
 	// nonparticipating capturing group, copied from es5-shim's String#split patch.
 	var NPCG_INCLUDED = /()??/.exec('')[1] !== undefined;
 
-	var PATCH = UPDATES_LAST_INDEX_WRONG || NPCG_INCLUDED;
+	var PATCH = UPDATES_LAST_INDEX_WRONG || NPCG_INCLUDED || UNSUPPORTED_Y$1;
 
 	if (PATCH) {
 	  patchedExec = function exec(str) {
 	    var re = this;
 	    var lastIndex, reCopy, match, i;
+	    var sticky = UNSUPPORTED_Y$1 && re.sticky;
+	    var flags = regexpFlags.call(re);
+	    var source = re.source;
+	    var charsAdded = 0;
+	    var strCopy = str;
+
+	    if (sticky) {
+	      flags = flags.replace('y', '');
+	      if (flags.indexOf('g') === -1) {
+	        flags += 'g';
+	      }
+
+	      strCopy = String(str).slice(re.lastIndex);
+	      // Support anchored sticky behavior.
+	      if (re.lastIndex > 0 && (!re.multiline || re.multiline && str[re.lastIndex - 1] !== '\n')) {
+	        source = '(?: ' + source + ')';
+	        strCopy = ' ' + strCopy;
+	        charsAdded++;
+	      }
+	      // ^(? + rx + ) is needed, in combination with some str slicing, to
+	      // simulate the 'y' flag.
+	      reCopy = new RegExp('^(?:' + source + ')', flags);
+	    }
 
 	    if (NPCG_INCLUDED) {
-	      reCopy = new RegExp('^' + re.source + '$(?!\\s)', regexpFlags.call(re));
+	      reCopy = new RegExp('^' + source + '$(?!\\s)', flags);
 	    }
 	    if (UPDATES_LAST_INDEX_WRONG) lastIndex = re.lastIndex;
 
-	    match = nativeExec.call(re, str);
+	    match = nativeExec.call(sticky ? reCopy : re, strCopy);
 
-	    if (UPDATES_LAST_INDEX_WRONG && match) {
+	    if (sticky) {
+	      if (match) {
+	        match.input = match.input.slice(charsAdded);
+	        match[0] = match[0].slice(charsAdded);
+	        match.index = re.lastIndex;
+	        re.lastIndex += match[0].length;
+	      } else re.lastIndex = 0;
+	    } else if (UPDATES_LAST_INDEX_WRONG && match) {
 	      re.lastIndex = re.global ? match.index + match[0].length : lastIndex;
 	    }
 	    if (NPCG_INCLUDED && match && match.length > 1) {
@@ -1365,6 +1379,14 @@
 	  exec: regexpExec
 	});
 
+	// TODO: Remove from `core-js@4` since it's moved to entry points
+
+
+
+
+
+
+
 	var SPECIES$2 = wellKnownSymbol('species');
 
 	var REPLACE_SUPPORTS_NAMED_GROUPS = !fails(function () {
@@ -1379,6 +1401,21 @@
 	  };
 	  return ''.replace(re, '$<a>') !== '7';
 	});
+
+	// IE <= 11 replaces $0 with the whole match, as if it was $&
+	// https://stackoverflow.com/questions/6024666/getting-ie-to-replace-a-regex-with-the-literal-string-0
+	var REPLACE_KEEPS_$0 = (function () {
+	  return 'a'.replace(/./, '$0') === '$0';
+	})();
+
+	var REPLACE = wellKnownSymbol('replace');
+	// Safari <= 13.0.3(?) substitutes nth capture where n>m with an empty string
+	var REGEXP_REPLACE_SUBSTITUTES_UNDEFINED_CAPTURE = (function () {
+	  if (/./[REPLACE]) {
+	    return /./[REPLACE]('a', '$0') === '';
+	  }
+	  return false;
+	})();
 
 	// Chrome 51 has a buggy "split" implementation when RegExp#exec !== nativeExec
 	// Weex JS has frozen built-in prototypes, so use try / catch wrapper
@@ -1404,14 +1441,21 @@
 	    // Symbol-named RegExp methods call .exec
 	    var execCalled = false;
 	    var re = /a/;
-	    re.exec = function () { execCalled = true; return null; };
 
 	    if (KEY === 'split') {
+	      // We can't use real regex here since it causes deoptimization
+	      // and serious performance degradation in V8
+	      // https://github.com/zloirock/core-js/issues/306
+	      re = {};
 	      // RegExp[@@split] doesn't call the regex's exec method, but first creates
 	      // a new one. We need to return the patched regex when creating the new one.
 	      re.constructor = {};
 	      re.constructor[SPECIES$2] = function () { return re; };
+	      re.flags = '';
+	      re[SYMBOL] = /./[SYMBOL];
 	    }
+
+	    re.exec = function () { execCalled = true; return null; };
 
 	    re[SYMBOL]('');
 	    return !execCalled;
@@ -1420,7 +1464,11 @@
 	  if (
 	    !DELEGATES_TO_SYMBOL ||
 	    !DELEGATES_TO_EXEC ||
-	    (KEY === 'replace' && !REPLACE_SUPPORTS_NAMED_GROUPS) ||
+	    (KEY === 'replace' && !(
+	      REPLACE_SUPPORTS_NAMED_GROUPS &&
+	      REPLACE_KEEPS_$0 &&
+	      !REGEXP_REPLACE_SUBSTITUTES_UNDEFINED_CAPTURE
+	    )) ||
 	    (KEY === 'split' && !SPLIT_WORKS_WITH_OVERWRITTEN_EXEC)
 	  ) {
 	    var nativeRegExpMethod = /./[SYMBOL];
@@ -1435,6 +1483,9 @@
 	        return { done: true, value: nativeMethod.call(str, regexp, arg2) };
 	      }
 	      return { done: false };
+	    }, {
+	      REPLACE_KEEPS_$0: REPLACE_KEEPS_$0,
+	      REGEXP_REPLACE_SUBSTITUTES_UNDEFINED_CAPTURE: REGEXP_REPLACE_SUBSTITUTES_UNDEFINED_CAPTURE
 	    });
 	    var stringMethod = methods[0];
 	    var regexMethod = methods[1];
@@ -1448,12 +1499,13 @@
 	      // 21.2.5.9 RegExp.prototype[@@search](string)
 	      : function (string) { return regexMethod.call(string, this); }
 	    );
-	    if (sham) hide(RegExp.prototype[SYMBOL], 'sham', true);
 	  }
+
+	  if (sham) createNonEnumerableProperty(RegExp.prototype[SYMBOL], 'sham', true);
 	};
 
 	// `String.prototype.{ codePointAt, at }` methods implementation
-	var createMethod$4 = function (CONVERT_TO_STRING) {
+	var createMethod$2 = function (CONVERT_TO_STRING) {
 	  return function ($this, pos) {
 	    var S = String(requireObjectCoercible($this));
 	    var position = toInteger(pos);
@@ -1471,10 +1523,10 @@
 	var stringMultibyte = {
 	  // `String.prototype.codePointAt` method
 	  // https://tc39.github.io/ecma262/#sec-string.prototype.codepointat
-	  codeAt: createMethod$4(false),
+	  codeAt: createMethod$2(false),
 	  // `String.prototype.at` method
 	  // https://github.com/mathiasbynens/String.prototype.at
-	  charAt: createMethod$4(true)
+	  charAt: createMethod$2(true)
 	};
 
 	var charAt = stringMultibyte.charAt;
@@ -1552,7 +1604,11 @@
 	};
 
 	// @@replace logic
-	fixRegexpWellKnownSymbolLogic('replace', 2, function (REPLACE, nativeReplace, maybeCallNative) {
+	fixRegexpWellKnownSymbolLogic('replace', 2, function (REPLACE, nativeReplace, maybeCallNative, reason) {
+	  var REGEXP_REPLACE_SUBSTITUTES_UNDEFINED_CAPTURE = reason.REGEXP_REPLACE_SUBSTITUTES_UNDEFINED_CAPTURE;
+	  var REPLACE_KEEPS_$0 = reason.REPLACE_KEEPS_$0;
+	  var UNSAFE_SUBSTITUTE = REGEXP_REPLACE_SUBSTITUTES_UNDEFINED_CAPTURE ? '$' : '$0';
+
 	  return [
 	    // `String.prototype.replace` method
 	    // https://tc39.github.io/ecma262/#sec-string.prototype.replace
@@ -1566,8 +1622,13 @@
 	    // `RegExp.prototype[@@replace]` method
 	    // https://tc39.github.io/ecma262/#sec-regexp.prototype-@@replace
 	    function (regexp, replaceValue) {
-	      var res = maybeCallNative(nativeReplace, regexp, this, replaceValue);
-	      if (res.done) return res.value;
+	      if (
+	        (!REGEXP_REPLACE_SUBSTITUTES_UNDEFINED_CAPTURE && REPLACE_KEEPS_$0) ||
+	        (typeof replaceValue === 'string' && replaceValue.indexOf(UNSAFE_SUBSTITUTE) === -1)
+	      ) {
+	        var res = maybeCallNative(nativeReplace, regexp, this, replaceValue);
+	        if (res.done) return res.value;
+	      }
 
 	      var rx = anObject(regexp);
 	      var S = String(this);
@@ -1659,6 +1720,13 @@
 	});
 
 	var TO_STRING_TAG$1 = wellKnownSymbol('toStringTag');
+	var test = {};
+
+	test[TO_STRING_TAG$1] = 'z';
+
+	var toStringTagSupport = String(test) === '[object z]';
+
+	var TO_STRING_TAG$2 = wellKnownSymbol('toStringTag');
 	// ES3 wrong here
 	var CORRECT_ARGUMENTS = classofRaw(function () { return arguments; }()) == 'Arguments';
 
@@ -1670,35 +1738,30 @@
 	};
 
 	// getting tag from ES6+ `Object.prototype.toString`
-	var classof = function (it) {
+	var classof = toStringTagSupport ? classofRaw : function (it) {
 	  var O, tag, result;
 	  return it === undefined ? 'Undefined' : it === null ? 'Null'
 	    // @@toStringTag case
-	    : typeof (tag = tryGet(O = Object(it), TO_STRING_TAG$1)) == 'string' ? tag
+	    : typeof (tag = tryGet(O = Object(it), TO_STRING_TAG$2)) == 'string' ? tag
 	    // builtinTag case
 	    : CORRECT_ARGUMENTS ? classofRaw(O)
 	    // ES3 arguments fallback
 	    : (result = classofRaw(O)) == 'Object' && typeof O.callee == 'function' ? 'Arguments' : result;
 	};
 
-	var TO_STRING_TAG$2 = wellKnownSymbol('toStringTag');
-	var test = {};
-
-	test[TO_STRING_TAG$2] = 'z';
-
 	// `Object.prototype.toString` method implementation
 	// https://tc39.github.io/ecma262/#sec-object.prototype.tostring
-	var objectToString = String(test) !== '[object z]' ? function toString() {
+	var objectToString = toStringTagSupport ? {}.toString : function toString() {
 	  return '[object ' + classof(this) + ']';
-	} : test.toString;
-
-	var ObjectPrototype$1 = Object.prototype;
+	};
 
 	// `Object.prototype.toString` method
 	// https://tc39.github.io/ecma262/#sec-object.prototype.tostring
-	if (objectToString !== ObjectPrototype$1.toString) {
-	  redefine(ObjectPrototype$1, 'toString', objectToString, { unsafe: true });
+	if (!toStringTagSupport) {
+	  redefine(Object.prototype, 'toString', objectToString, { unsafe: true });
 	}
+
+	var nativePromiseConstructor = global_1.Promise;
 
 	var redefineAll = function (target, src, options) {
 	  for (var key in src) redefine(target, key, src[key], options);
@@ -1762,8 +1825,8 @@
 	};
 
 	var iterate = module.exports = function (iterable, fn, that, AS_ENTRIES, IS_ITERATOR) {
-	  var boundFunction = bindContext(fn, that, AS_ENTRIES ? 2 : 1);
-	  var iterator, iterFn, index, length, result, step;
+	  var boundFunction = functionBindContext(fn, that, AS_ENTRIES ? 2 : 1);
+	  var iterator, iterFn, index, length, result, next, step;
 
 	  if (IS_ITERATOR) {
 	    iterator = iterable;
@@ -1782,9 +1845,10 @@
 	    iterator = iterFn.call(iterable);
 	  }
 
-	  while (!(step = iterator.next()).done) {
+	  next = iterator.next;
+	  while (!(step = next.call(iterator)).done) {
 	    result = callWithSafeIterationClosing(iterator, boundFunction, step.value, AS_ENTRIES);
-	    if (result && result instanceof Result) return result;
+	    if (typeof result == 'object' && result && result instanceof Result) return result;
 	  } return new Result(false);
 	};
 
@@ -1840,10 +1904,12 @@
 	  return C === undefined || (S = anObject(C)[SPECIES$4]) == undefined ? defaultConstructor : aFunction$1(S);
 	};
 
+	var engineIsIos = /(iphone|ipod|ipad).*applewebkit/i.test(engineUserAgent);
+
 	var location = global_1.location;
 	var set$1 = global_1.setImmediate;
 	var clear = global_1.clearImmediate;
-	var process = global_1.process;
+	var process$1 = global_1.process;
 	var MessageChannel = global_1.MessageChannel;
 	var Dispatch = global_1.Dispatch;
 	var counter = 0;
@@ -1892,9 +1958,9 @@
 	    delete queue[id];
 	  };
 	  // Node.js 0.8-
-	  if (classofRaw(process) == 'process') {
+	  if (classofRaw(process$1) == 'process') {
 	    defer = function (id) {
-	      process.nextTick(runner(id));
+	      process$1.nextTick(runner(id));
 	    };
 	  // Sphere (JS game engine) Dispatch API
 	  } else if (Dispatch && Dispatch.now) {
@@ -1902,11 +1968,12 @@
 	      Dispatch.now(runner(id));
 	    };
 	  // Browsers with MessageChannel, includes WebWorkers
-	  } else if (MessageChannel) {
+	  // except iOS - https://github.com/zloirock/core-js/issues/624
+	  } else if (MessageChannel && !engineIsIos) {
 	    channel = new MessageChannel();
 	    port = channel.port2;
 	    channel.port1.onmessage = listener;
-	    defer = bindContext(port.postMessage, port, 1);
+	    defer = functionBindContext(port.postMessage, port, 1);
 	  // Browsers with postMessage, skip WebWorkers
 	  // IE8 has postMessage, but it's sync & typeof its postMessage is 'object'
 	  } else if (global_1.addEventListener && typeof postMessage == 'function' && !global_1.importScripts && !fails(post)) {
@@ -1933,28 +2000,26 @@
 	  clear: clear
 	};
 
-	var userAgent = getBuiltIn('navigator', 'userAgent') || '';
-
 	var getOwnPropertyDescriptor$2 = objectGetOwnPropertyDescriptor.f;
 
 	var macrotask = task.set;
 
 
 	var MutationObserver = global_1.MutationObserver || global_1.WebKitMutationObserver;
-	var process$1 = global_1.process;
+	var process$2 = global_1.process;
 	var Promise = global_1.Promise;
-	var IS_NODE = classofRaw(process$1) == 'process';
+	var IS_NODE = classofRaw(process$2) == 'process';
 	// Node.js 11 shows ExperimentalWarning on getting `queueMicrotask`
 	var queueMicrotaskDescriptor = getOwnPropertyDescriptor$2(global_1, 'queueMicrotask');
 	var queueMicrotask = queueMicrotaskDescriptor && queueMicrotaskDescriptor.value;
 
-	var flush, head, last, notify, toggle, node, promise;
+	var flush, head, last, notify, toggle, node, promise, then;
 
 	// modern engines have queueMicrotask method
 	if (!queueMicrotask) {
 	  flush = function () {
 	    var parent, fn;
-	    if (IS_NODE && (parent = process$1.domain)) parent.exit();
+	    if (IS_NODE && (parent = process$2.domain)) parent.exit();
 	    while (head) {
 	      fn = head.fn;
 	      head = head.next;
@@ -1972,13 +2037,13 @@
 	  // Node.js
 	  if (IS_NODE) {
 	    notify = function () {
-	      process$1.nextTick(flush);
+	      process$2.nextTick(flush);
 	    };
 	  // browsers with MutationObserver, except iOS - https://github.com/zloirock/core-js/issues/339
-	  } else if (MutationObserver && !/(iphone|ipod|ipad).*applewebkit/i.test(userAgent)) {
+	  } else if (MutationObserver && !engineIsIos) {
 	    toggle = true;
 	    node = document.createTextNode('');
-	    new MutationObserver(flush).observe(node, { characterData: true }); // eslint-disable-line no-new
+	    new MutationObserver(flush).observe(node, { characterData: true });
 	    notify = function () {
 	      node.data = toggle = !toggle;
 	    };
@@ -1986,8 +2051,9 @@
 	  } else if (Promise && Promise.resolve) {
 	    // Promise.resolve without an argument throws an error in LG WebOS 2
 	    promise = Promise.resolve(undefined);
+	    then = promise.then;
 	    notify = function () {
-	      promise.then(flush);
+	      then.call(promise, flush);
 	    };
 	  // for other environments - macrotask based on:
 	  // - setImmediate
@@ -2072,16 +2138,14 @@
 	var getInternalState$1 = internalState.get;
 	var setInternalState$1 = internalState.set;
 	var getInternalPromiseState = internalState.getterFor(PROMISE);
-	var PromiseConstructor = global_1[PROMISE];
+	var PromiseConstructor = nativePromiseConstructor;
 	var TypeError$1 = global_1.TypeError;
 	var document$2 = global_1.document;
-	var process$2 = global_1.process;
-	var $fetch = global_1.fetch;
-	var versions = process$2 && process$2.versions;
-	var v8 = versions && versions.v8 || '';
+	var process$3 = global_1.process;
+	var $fetch = getBuiltIn('fetch');
 	var newPromiseCapability$1 = newPromiseCapability.f;
 	var newGenericPromiseCapability = newPromiseCapability$1;
-	var IS_NODE$1 = classofRaw(process$2) == 'process';
+	var IS_NODE$1 = classofRaw(process$3) == 'process';
 	var DISPATCH_EVENT = !!(document$2 && document$2.createEvent && global_1.dispatchEvent);
 	var UNHANDLED_REJECTION = 'unhandledrejection';
 	var REJECTION_HANDLED = 'rejectionhandled';
@@ -2090,27 +2154,33 @@
 	var REJECTED = 2;
 	var HANDLED = 1;
 	var UNHANDLED = 2;
-	var Internal, OwnPromiseCapability, PromiseWrapper;
+	var Internal, OwnPromiseCapability, PromiseWrapper, nativeThen;
 
-	var FORCED$1 = isForced_1(PROMISE, function () {
-	  // correct subclassing with @@species support
-	  var promise = PromiseConstructor.resolve(1);
-	  var empty = function () { /* empty */ };
-	  var FakePromise = (promise.constructor = {})[SPECIES$5] = function (exec) {
-	    exec(empty, empty);
-	  };
-	  // unhandled rejections tracking support, NodeJS Promise without it fails @@species test
-	  return !((IS_NODE$1 || typeof PromiseRejectionEvent == 'function')
-	    && (!isPure || promise['finally'])
-	    && promise.then(empty) instanceof FakePromise
-	    // v8 6.6 (Node 10 and Chrome 66) have a bug with resolving custom thenables
+	var FORCED = isForced_1(PROMISE, function () {
+	  var GLOBAL_CORE_JS_PROMISE = inspectSource(PromiseConstructor) !== String(PromiseConstructor);
+	  if (!GLOBAL_CORE_JS_PROMISE) {
+	    // V8 6.6 (Node 10 and Chrome 66) have a bug with resolving custom thenables
 	    // https://bugs.chromium.org/p/chromium/issues/detail?id=830565
-	    // we can't detect it synchronously, so just check versions
-	    && v8.indexOf('6.6') !== 0
-	    && userAgent.indexOf('Chrome/66') === -1);
+	    // We can't detect it synchronously, so just check versions
+	    if (engineV8Version === 66) return true;
+	    // Unhandled rejections tracking support, NodeJS Promise without it fails @@species test
+	    if (!IS_NODE$1 && typeof PromiseRejectionEvent != 'function') return true;
+	  }
+	  // We can't use @@species feature detection in V8 since it causes
+	  // deoptimization and performance degradation
+	  // https://github.com/zloirock/core-js/issues/679
+	  if (engineV8Version >= 51 && /native code/.test(PromiseConstructor)) return false;
+	  // Detect correctness of subclassing with @@species support
+	  var promise = PromiseConstructor.resolve(1);
+	  var FakePromise = function (exec) {
+	    exec(function () { /* empty */ }, function () { /* empty */ });
+	  };
+	  var constructor = promise.constructor = {};
+	  constructor[SPECIES$5] = FakePromise;
+	  return !(promise.then(function () { /* empty */ }) instanceof FakePromise);
 	});
 
-	var INCORRECT_ITERATION = FORCED$1 || !checkCorrectnessOfIteration(function (iterable) {
+	var INCORRECT_ITERATION = FORCED || !checkCorrectnessOfIteration(function (iterable) {
 	  PromiseConstructor.all(iterable)['catch'](function () { /* empty */ });
 	});
 
@@ -2189,7 +2259,7 @@
 	    if (IS_UNHANDLED) {
 	      result = perform(function () {
 	        if (IS_NODE$1) {
-	          process$2.emit('unhandledRejection', value, promise);
+	          process$3.emit('unhandledRejection', value, promise);
 	        } else dispatchEvent(UNHANDLED_REJECTION, promise, value);
 	      });
 	      // Browsers should not trigger `rejectionHandled` event if it was handled here, NodeJS - should
@@ -2206,7 +2276,7 @@
 	var onHandleUnhandled = function (promise, state) {
 	  task$1.call(global_1, function () {
 	    if (IS_NODE$1) {
-	      process$2.emit('rejectionHandled', promise);
+	      process$3.emit('rejectionHandled', promise);
 	    } else dispatchEvent(REJECTION_HANDLED, promise, state.value);
 	  });
 	};
@@ -2256,7 +2326,7 @@
 	};
 
 	// constructor polyfill
-	if (FORCED$1) {
+	if (FORCED) {
 	  // 25.4.3.1 Promise(executor)
 	  PromiseConstructor = function Promise(executor) {
 	    anInstance(this, PromiseConstructor, PROMISE);
@@ -2290,7 +2360,7 @@
 	      var reaction = newPromiseCapability$1(speciesConstructor(this, PromiseConstructor));
 	      reaction.ok = typeof onFulfilled == 'function' ? onFulfilled : true;
 	      reaction.fail = typeof onRejected == 'function' && onRejected;
-	      reaction.domain = IS_NODE$1 ? process$2.domain : undefined;
+	      reaction.domain = IS_NODE$1 ? process$3.domain : undefined;
 	      state.parent = true;
 	      state.reactions.push(reaction);
 	      if (state.state != PENDING) notify$1(this, state, false);
@@ -2315,26 +2385,39 @@
 	      : newGenericPromiseCapability(C);
 	  };
 
-	  // wrap fetch result
-	  if ( typeof $fetch == 'function') _export({ global: true, enumerable: true, forced: true }, {
-	    // eslint-disable-next-line no-unused-vars
-	    fetch: function fetch(input) {
-	      return promiseResolve(PromiseConstructor, $fetch.apply(global_1, arguments));
-	    }
-	  });
+	  if ( typeof nativePromiseConstructor == 'function') {
+	    nativeThen = nativePromiseConstructor.prototype.then;
+
+	    // wrap native Promise#then for native async functions
+	    redefine(nativePromiseConstructor.prototype, 'then', function then(onFulfilled, onRejected) {
+	      var that = this;
+	      return new PromiseConstructor(function (resolve, reject) {
+	        nativeThen.call(that, resolve, reject);
+	      }).then(onFulfilled, onRejected);
+	    // https://github.com/zloirock/core-js/issues/640
+	    }, { unsafe: true });
+
+	    // wrap fetch result
+	    if (typeof $fetch == 'function') _export({ global: true, enumerable: true, forced: true }, {
+	      // eslint-disable-next-line no-unused-vars
+	      fetch: function fetch(input /* , init */) {
+	        return promiseResolve(PromiseConstructor, $fetch.apply(global_1, arguments));
+	      }
+	    });
+	  }
 	}
 
-	_export({ global: true, wrap: true, forced: FORCED$1 }, {
+	_export({ global: true, wrap: true, forced: FORCED }, {
 	  Promise: PromiseConstructor
 	});
 
 	setToStringTag(PromiseConstructor, PROMISE, false);
 	setSpecies(PROMISE);
 
-	PromiseWrapper = path[PROMISE];
+	PromiseWrapper = getBuiltIn(PROMISE);
 
 	// statics
-	_export({ target: PROMISE, stat: true, forced: FORCED$1 }, {
+	_export({ target: PROMISE, stat: true, forced: FORCED }, {
 	  // `Promise.reject` method
 	  // https://tc39.github.io/ecma262/#sec-promise.reject
 	  reject: function reject(r) {
@@ -2344,7 +2427,7 @@
 	  }
 	});
 
-	_export({ target: PROMISE, stat: true, forced:  FORCED$1 }, {
+	_export({ target: PROMISE, stat: true, forced:  FORCED }, {
 	  // `Promise.resolve` method
 	  // https://tc39.github.io/ecma262/#sec-promise.resolve
 	  resolve: function resolve(x) {
@@ -2464,6 +2547,11 @@
 	     * Calls the API of embetty-server using the url set in the calling (child) component.
 	     */
 	    fetchData: function fetchData() {
+	      // skip fetching in SSR
+	      if (typeof window === 'undefined') {
+	        return;
+	      }
+
 	      var thisCmp = this;
 	      window.fetch(this.url).then(function (response) {
 	        return response.json();
@@ -2588,13 +2676,15 @@
 
 	/* style inject SSR */
 
-	var EmbettyEmbed = normalizeComponent_1({}, __vue_inject_styles__, __vue_script__, __vue_scope_id__, __vue_is_functional_template__, __vue_module_identifier__, undefined, undefined);
+	/* style inject shadow dom */
+
+	var __vue_component__ = normalizeComponent_1({}, __vue_inject_styles__, __vue_script__, __vue_scope_id__, __vue_is_functional_template__, __vue_module_identifier__, false, undefined, undefined, undefined);
 
 	var LINK_IMAGE_SIZE = 125;
 	var MIN_WINDOW_WIDTH = 600;
 	var script$1 = {
 	  name: 'EmbettyTweet',
-	  extends: EmbettyEmbed,
+	  extends: __vue_component__,
 	  props: {
 	    status: {
 	      type: String,
@@ -2993,11 +3083,11 @@
 
 	var __vue_inject_styles__$1 = function __vue_inject_styles__(inject) {
 	  if (!inject) return;
-	  inject("data-v-86f70e76_0", {
+	  inject("data-v-8ad29d26_0", {
 	    source: ".embetty-tweet.answered {\n  margin-top: 0;\n  margin-bottom: 0.5rem;\n  border: 0;\n  padding: 0;\n}\n.embetty-tweet.answered header {\n  padding-bottom: 0.5rem;\n}\n.embetty-tweet.answered article {\n  border-left: 4px solid #bbb;\n  margin-left: 16px;\n  padding-left: 2rem;\n  padding-bottom: 1rem;\n}\n.embetty-tweet.answered article p {\n  font-size: 14px;\n}\n.embetty-tweet.answered article .created-at {\n  display: none;\n}\n.embetty-tweet.answered .powered-by {\n  display: none;\n}\n.embetty-tweet {\n  position: relative;\n  overflow: hidden;\n  display: block;\n  max-width: 100%;\n  font-family: var(--embetty-font-family, Helvetica, Roboto, \"Segoe UI\", Calibri, sans-serif);\n  border: 1px solid var(--embetty-border-color, #ccc);\n  border-width: 1px;\n  border-radius: 4px;\n  box-sizing: border-box;\n  font-size: 16px;\n  line-height: 1;\n  max-width: 642px;\n  padding: 1rem 1.2rem;\n}\n@media (min-width: 600px) {\n.embetty-tweet {\n    padding: 1.5rem 2rem;\n}\n}\n.embetty-tweet header {\n  display: flex;\n  align-items: center;\n  margin-bottom: 0.5rem;\n}\n.embetty-tweet header img {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n}\n.embetty-tweet header > span {\n  display: inline-block;\n  margin: 0 var(--embetty-spacing, 1rem);\n}\n.embetty-tweet header strong {\n  font-size: 16px;\n  display: block;\n}\n.embetty-tweet header a,\n.embetty-tweet header a:hover {\n  font-size: 14px;\n  color: #697882;\n  text-decoration: none;\n}\n.embetty-tweet article span {\n  display: block;\n}\n.embetty-tweet article p {\n  margin: 0 auto 0.5rem;\n  line-height: 1.4;\n  letter-spacing: 0.01em;\n}\n@media (min-width: 600px) {\n.embetty-tweet article p {\n    font-size: 18px;\n}\n}\n.embetty-tweet article p a {\n  color: #2b7bb9;\n  text-decoration: none;\n}\n.embetty-tweet article p a:hover {\n  color: #3b94d9;\n}\n.embetty-tweet article p a:focus {\n  text-decoration: underline;\n}\n.embetty-tweet .media a {\n  height: 100%;\n  display: flex;\n  align-items: center;\n}\n.embetty-tweet .media a:not(:first-child) {\n  display: none;\n}\n.embetty-tweet .media img {\n  max-width: 100%;\n  width: 100%;\n  height: 100%;\n  object-fit: cover;\n}\n@media (min-width: 600px) {\n.embetty-tweet .media {\n    display: grid;\n    grid-column-gap: 1px;\n    grid-row-gap: 1px;\n}\n.embetty-tweet .media a:not(:first-child) {\n    display: block;\n}\n.embetty-tweet .media.media-2 {\n    grid-template-columns: 50% 50%;\n}\n.embetty-tweet .media.media-3 {\n    grid-template-columns: auto 40%;\n}\n.embetty-tweet .media.media-3 a:first-child {\n    grid-row: 1/span 2;\n}\n.embetty-tweet .media.media-4 {\n    grid-template-columns: auto 20%;\n}\n.embetty-tweet .media.media-4 a:first-child {\n    grid-row: 1/span 3;\n}\n}\n.embetty-tweet .links {\n  border: 1px solid var(--embetty-border-color, #ccc);\n  border-width: 1px;\n  border-radius: 4px;\n  text-decoration: none;\n  display: flex;\n  flex-direction: column;\n  color: #14171a;\n  font-size: 14px;\n}\n.embetty-tweet .links:hover, .embetty-tweet .links:focus {\n  background-color: #f5f8fa;\n  border-color: rgba(136, 153, 166, 0.5);\n  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;\n}\n@media (min-width: 600px) {\n.embetty-tweet .links {\n    flex-direction: row;\n}\n}\n.embetty-tweet .links img {\n  max-width: 100%;\n  object-fit: cover;\n  display: inline-block;\n}\n@media (min-width: 600px) {\n.embetty-tweet .links img {\n    height: 125px;\n    width: 125px;\n    min-width: 125px;\n}\n}\n.embetty-tweet .links > *:last-child {\n  margin-bottom: 0;\n}\n.embetty-tweet .links .link-body {\n  padding: 0.5rem;\n}\n@media (min-width: 600px) {\n.embetty-tweet .links .link-body {\n    display: flex;\n    flex-direction: column;\n    padding: 0.5rem 0.8rem;\n}\n}\n.embetty-tweet .links h3 {\n  font-size: 14px;\n  line-height: 1.3;\n  margin: 0;\n  margin-bottom: 0.3em;\n}\n.embetty-tweet .links p {\n  display: none;\n}\n@media (min-width: 600px) {\n.embetty-tweet .links p {\n    display: block;\n    flex-grow: 1;\n    hyphens: auto;\n    line-height: 18px;\n    font-size: 14px;\n    margin: 0;\n    margin-bottom: 0.3em;\n}\n}\n.embetty-tweet .links span {\n  margin-top: auto;\n  color: #999;\n}\n.embetty-tweet .created-at {\n  margin-top: 0.5rem;\n  display: block;\n  font-size: 14px;\n  color: #777;\n  text-decoration: none;\n}\n.embetty-tweet .created-at svg {\n  height: 22px;\n  vertical-align: middle;\n}\n.embetty-tweet .powered-by {\n  position: absolute;\n  z-index: 3;\n  right: -20px;\n  bottom: 0px;\n  padding: 20px 46px 5px 20px;\n  font-size: 14px;\n  color: #777;\n  text-decoration: none;\n  opacity: 0.3;\n}\n.embetty-tweet .powered-by:hover, .embetty-tweet .powered-by:focus {\n  opacity: 1;\n}\n.embetty-tweet .powered-by .embetty-logo {\n  position: absolute;\n  right: 0;\n  bottom: -42px;\n  width: 40px;\n}\n\n/*# sourceMappingURL=EmbettyTweet.vue.map */",
 	    map: {
 	      "version": 3,
-	      "sources": ["/home/flo/www/embetty/embetty-vue/src/components/EmbettyTweet.vue", "EmbettyTweet.vue"],
+	      "sources": ["/home/runner/work/embetty-vue/embetty-vue/src/components/EmbettyTweet.vue", "EmbettyTweet.vue"],
 	      "names": [],
 	      "mappings": "AAoEA;EACA,aAAA;EACA,qBAAA;EACA,SAAA;EACA,UAAA;ACnEA;ADqEA;EACA,sBAAA;ACnEA;ADsEA;EACA,2BAAA;EACA,iBAAA;EACA,kBAAA;EACA,oBAAA;ACpEA;ADsEA;EACA,eAAA;ACpEA;ADuEA;EACA,aAAA;ACrEA;ADyEA;EACA,aAAA;ACvEA;AD2EA;ECxEE,kBAAkB;EAClB,gBAAgB;EAChB,cAAc;EACd,eAAe;EACf,2FAA2F;EAC3F,mDAAmD;EACnD,iBAAiB;EACjB,kBAAkB;EAClB,sBAAsB;EACtB,eAAe;EACf,cAAc;EDiEhB,gBAAA;EACA,oBAAA;AC/DA;ADiEA;AANA;IAOA,oBAAA;AC9DE;AACF;ADgEA;EACA,aAAA;EACA,mBAAA;EACA,qBAAA;AC9DA;ADgEA;EACA,WAjDA;EAkDA,YAlDA;EAmDA,kBAAA;AC9DA;ADiEA;EACA,qBAAA;EACA,sCAAA;AC/DA;ADkEA;EACA,eAAA;EACA,cAAA;AChEA;ADmEA;;EAEA,eAAA;EACA,cAAA;EACA,qBAAA;ACjEA;ADsEA;EACA,cAAA;ACpEA;ADuEA;EACA,qBAAA;EACA,gBAAA;EACA,sBAAA;ACrEA;ADuEA;AALA;IAMA,eAAA;ACpEE;AACF;ADsEA;EACA,cAAA;EACA,qBAAA;ACpEA;ADsEA;EACA,cAAA;ACpEA;ADuEA;EACA,0BAAA;ACrEA;AD4EA;EACA,YAAA;EACA,aAAA;EACA,mBAAA;AC1EA;AD4EA;EACA,aAAA;AC1EA;AD8EA;EACA,eAAA;EACA,WAAA;EACA,YAAA;EACA,iBAAA;AC5EA;AD+EA;AAlBA;IAmBA,aAAA;IACA,oBAAA;IACA,iBAAA;AC5EE;AD8EF;IACA,cAAA;AC5EE;AD+EF;IACA,8BAAA;AC7EE;ADgFF;IACA,+BAAA;AC9EE;ADgFF;IACA,kBAAA;AC9EE;ADkFF;IACA,+BAAA;AChFE;ADkFF;IACA,kBAAA;AChFE;AACF;ADqFA;EACA,mDAAA;EACA,iBAAA;EACA,kBAAA;EACA,qBAAA;EACA,aAAA;EACA,sBAAA;EACA,cAAA;EACA,eAAA;ACnFA;ADqFA;EAEA,yBAAA;EACA,sCAAA;EACA,8EAAA;ACpFA;ADuFA;AAjBA;IAkBA,mBAAA;ACpFE;AACF;ADsFA;EACA,eAAA;EACA,iBAAA;EACA,qBAAA;ACpFA;ADsFA;AALA;IAMA,aAAA;IACA,YAAA;IACA,gBAAA;ACnFE;AACF;ADsFA;EACA,gBAAA;ACpFA;ADuFA;EACA,eAAA;ACrFA;ADuFA;AAHA;IAIA,aAAA;IACA,sBAAA;IACA,sBAAA;ACpFE;AACF;ADuFA;EACA,eAAA;EACA,gBAAA;EACA,SAAA;EACA,oBAAA;ACrFA;ADwFA;EACA,aAAA;ACtFA;ADwFA;AAHA;IAIA,cAAA;IACA,YAAA;IACA,aAAA;IACA,iBAAA;IACA,eAAA;IACA,SAAA;IACA,oBAAA;ACrFE;AACF;ADwFA;EACA,gBAAA;EACA,WAAA;ACtFA;AD0FA;EACA,kBAAA;EACA,cAAA;EACA,eAAA;EACA,WAAA;EACA,qBAAA;ACxFA;AD0FA;EACA,YAAA;EACA,sBAAA;ACxFA;AD4FA;EC1FE,kBAAkB;EAClB,UAAU;EACV,YAAY;EACZ,WAAW;EACX,2BAA2B;EAC3B,eAAe;EACf,WAAW;EACX,qBAAqB;EACrB,YAAY;AACd;AACA;EACE,UAAU;AACZ;AACA;EACE,kBAAkB;EAClB,QAAQ;EACR,aAAa;EACb,WAAW;AACb;;AAEA,2CAA2C",
 	      "file": "EmbettyTweet.vue",
@@ -3018,10 +3108,12 @@
 	var __vue_is_functional_template__$1 = false;
 	/* style inject SSR */
 
-	var EmbettyTweet = normalizeComponent_1({
+	/* style inject shadow dom */
+
+	var __vue_component__$1 = normalizeComponent_1({
 	  render: __vue_render__,
 	  staticRenderFns: __vue_staticRenderFns__
-	}, __vue_inject_styles__$1, __vue_script__$1, __vue_scope_id__$1, __vue_is_functional_template__$1, __vue_module_identifier__$1, browser, undefined);
+	}, __vue_inject_styles__$1, __vue_script__$1, __vue_scope_id__$1, __vue_is_functional_template__$1, __vue_module_identifier__$1, false, browser, undefined, undefined);
 
 	var aPossiblePrototype = function (it) {
 	  if (!isObject(it) && it !== null) {
@@ -3066,10 +3158,40 @@
 	  return $this;
 	};
 
+	// a string of all valid unicode whitespaces
+	// eslint-disable-next-line max-len
+	var whitespaces = '\u0009\u000A\u000B\u000C\u000D\u0020\u00A0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\u2028\u2029\uFEFF';
+
+	var whitespace = '[' + whitespaces + ']';
+	var ltrim = RegExp('^' + whitespace + whitespace + '*');
+	var rtrim = RegExp(whitespace + whitespace + '*$');
+
+	// `String.prototype.{ trim, trimStart, trimEnd, trimLeft, trimRight }` methods implementation
+	var createMethod$3 = function (TYPE) {
+	  return function ($this) {
+	    var string = String(requireObjectCoercible($this));
+	    if (TYPE & 1) string = string.replace(ltrim, '');
+	    if (TYPE & 2) string = string.replace(rtrim, '');
+	    return string;
+	  };
+	};
+
+	var stringTrim = {
+	  // `String.prototype.{ trimLeft, trimStart }` methods
+	  // https://tc39.github.io/ecma262/#sec-string.prototype.trimstart
+	  start: createMethod$3(1),
+	  // `String.prototype.{ trimRight, trimEnd }` methods
+	  // https://tc39.github.io/ecma262/#sec-string.prototype.trimend
+	  end: createMethod$3(2),
+	  // `String.prototype.trim` method
+	  // https://tc39.github.io/ecma262/#sec-string.prototype.trim
+	  trim: createMethod$3(3)
+	};
+
 	var getOwnPropertyNames = objectGetOwnPropertyNames.f;
 	var getOwnPropertyDescriptor$3 = objectGetOwnPropertyDescriptor.f;
-	var defineProperty$4 = objectDefineProperty.f;
-	var trim$1 = stringTrim.trim;
+	var defineProperty$5 = objectDefineProperty.f;
+	var trim = stringTrim.trim;
 
 	var NUMBER = 'Number';
 	var NativeNumber = global_1[NUMBER];
@@ -3084,7 +3206,7 @@
 	  var it = toPrimitive(argument, false);
 	  var first, third, radix, maxCode, digits, length, index, code;
 	  if (typeof it == 'string' && it.length > 2) {
-	    it = trim$1(it);
+	    it = trim(it);
 	    first = it.charCodeAt(0);
 	    if (first === 43 || first === 45) {
 	      third = it.charCodeAt(2);
@@ -3126,33 +3248,13 @@
 	    'MIN_SAFE_INTEGER,parseFloat,parseInt,isInteger'
 	  ).split(','), j = 0, key; keys$1.length > j; j++) {
 	    if (has(NativeNumber, key = keys$1[j]) && !has(NumberWrapper, key)) {
-	      defineProperty$4(NumberWrapper, key, getOwnPropertyDescriptor$3(NativeNumber, key));
+	      defineProperty$5(NumberWrapper, key, getOwnPropertyDescriptor$3(NativeNumber, key));
 	    }
 	  }
 	  NumberWrapper.prototype = NumberPrototype;
 	  NumberPrototype.constructor = NumberWrapper;
 	  redefine(global_1, NUMBER, NumberWrapper);
 	}
-
-	var trim$2 = stringTrim.trim;
-
-
-	var nativeParseInt = global_1.parseInt;
-	var hex = /^[+-]?0[Xx]/;
-	var FORCED$2 = nativeParseInt(whitespaces + '08') !== 8 || nativeParseInt(whitespaces + '0x16') !== 22;
-
-	// `parseInt` method
-	// https://tc39.github.io/ecma262/#sec-parseint-string-radix
-	var _parseInt = FORCED$2 ? function parseInt(string, radix) {
-	  var S = trim$2(String(string));
-	  return nativeParseInt(S, (radix >>> 0) || (hex.test(S) ? 16 : 10));
-	} : nativeParseInt;
-
-	// `parseInt` method
-	// https://tc39.github.io/ecma262/#sec-parseint-string-radix
-	_export({ global: true, forced: parseInt != _parseInt }, {
-	  parseInt: _parseInt
-	});
 
 	var MATCH = wellKnownSymbol('match');
 
@@ -3183,12 +3285,26 @@
 	  } return false;
 	};
 
+	var getOwnPropertyDescriptor$4 = objectGetOwnPropertyDescriptor.f;
+
+
+
+
+
+
 	var nativeStartsWith = ''.startsWith;
 	var min$3 = Math.min;
 
+	var CORRECT_IS_REGEXP_LOGIC = correctIsRegexpLogic('startsWith');
+	// https://github.com/zloirock/core-js/pull/702
+	var MDN_POLYFILL_BUG =  !CORRECT_IS_REGEXP_LOGIC && !!function () {
+	  var descriptor = getOwnPropertyDescriptor$4(String.prototype, 'startsWith');
+	  return descriptor && !descriptor.writable;
+	}();
+
 	// `String.prototype.startsWith` method
 	// https://tc39.github.io/ecma262/#sec-string.prototype.startswith
-	_export({ target: 'String', proto: true, forced: !correctIsRegexpLogic('startsWith') }, {
+	_export({ target: 'String', proto: true, forced: !MDN_POLYFILL_BUG && !CORRECT_IS_REGEXP_LOGIC }, {
 	  startsWith: function startsWith(searchString /* , position = 0 */) {
 	    var that = String(requireObjectCoercible(this));
 	    notARegexp(searchString);
@@ -3319,7 +3435,7 @@
 
 	var script$2 = {
 	  name: 'EmbettyVideo',
-	  extends: EmbettyEmbed,
+	  extends: __vue_component__,
 	  props: {
 	    width: {
 	      type: Number,
@@ -3553,11 +3669,11 @@
 
 	var __vue_inject_styles__$2 = function __vue_inject_styles__(inject) {
 	  if (!inject) return;
-	  inject("data-v-78868f83_0", {
+	  inject("data-v-65556e2b_0", {
 	    source: ".embetty-video {\n  position: relative;\n  overflow: hidden;\n  display: block;\n  max-width: 100%;\n  font-family: var(--embetty-font-family, Helvetica, Roboto, \"Segoe UI\", Calibri, sans-serif);\n  border: 1px solid var(--embetty-border-color, #ccc);\n  border-width: 1px;\n  border-radius: 4px;\n  box-sizing: border-box;\n  font-size: 16px;\n  line-height: 1;\n}\n.embetty-video .poster, .embetty-video .wrapper {\n  position: relative;\n  overflow: hidden;\n  background: no-repeat center black;\n  background-size: cover;\n}\n.embetty-video .poster.contain, .embetty-video .wrapper.contain {\n  background-size: contain;\n}\n.embetty-video .poster.default-height, .embetty-video .wrapper.default-height {\n  height: 0;\n  padding-top: 56.25%;\n}\n.embetty-video .playbutton,\n.embetty-video .playbutton:active {\n  box-sizing: border-box;\n  display: block;\n  position: absolute;\n  z-index: 1;\n  width: 100%;\n  height: 100%;\n  border: 0;\n  padding: 0;\n  outline: 0;\n  opacity: 0.9;\n  background: none;\n  cursor: pointer;\n  background-image: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.8));\n  transition: opacity 150ms;\n}\n.embetty-video .playbutton:hover, .embetty-video .playbutton:focus,\n.embetty-video .playbutton:active:hover,\n.embetty-video .playbutton:active:focus {\n  opacity: 1;\n}\n.embetty-video .powered-by {\n  position: absolute;\n  z-index: 3;\n  right: -20px;\n  bottom: 0px;\n  padding: 20px 46px 5px 20px;\n  font-size: 14px;\n  color: #777;\n  text-decoration: none;\n  opacity: 0.3;\n  -webkit-font-smoothing: antialiased;\n  color: #fff;\n  opacity: 0.6;\n}\n.embetty-video .powered-by:hover, .embetty-video .powered-by:focus {\n  opacity: 1;\n}\n.embetty-video .powered-by .embetty-logo {\n  position: absolute;\n  right: 0;\n  bottom: -42px;\n  width: 40px;\n}\n.embetty-video iframe,\n.embetty-video video {\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n}\n\n/*# sourceMappingURL=EmbettyVideo.vue.map */",
 	    map: {
 	      "version": 3,
-	      "sources": ["/home/flo/www/embetty/embetty-vue/src/components/EmbettyVideo.vue", "EmbettyVideo.vue"],
+	      "sources": ["/home/runner/work/embetty-vue/embetty-vue/src/components/EmbettyVideo.vue", "EmbettyVideo.vue"],
 	      "names": [],
 	      "mappings": "AA4CA;EC3CE,kBAAkB;EAClB,gBAAgB;EAChB,cAAc;EACd,eAAe;EACf,2FAA2F;EAC3F,mDAAmD;EACnD,iBAAiB;EACjB,kBAAkB;EAClB,sBAAsB;EACtB,eAAe;EACf,cAAc;AAChB;ADmCA;EACA,kBAAA;EACA,gBAAA;EACA,kCAAA;EACA,sBAAA;ACjCA;ADmCA;EACA,wBAAA;ACjCA;ADoCA;EACA,SAAA;EACA,mBAAA;AClCA;ADsCA;;EAEA,sBAAA;EACA,cAAA;EACA,kBAAA;EACA,UAAA;EACA,WAAA;EACA,YAAA;EACA,SAAA;EACA,UAAA;EACA,UAAA;EACA,YAAA;EACA,gBAAA;EACA,eAAA;EACA,yEAAA;EACA,yBAAA;ACpCA;ADsCA;;;EAEA,UAAA;ACnCA;ADuCA;ECrCE,kBAAkB;EAClB,UAAU;EACV,YAAY;EACZ,WAAW;EACX,2BAA2B;EAC3B,eAAe;EACf,WAAW;EACX,qBAAqB;EACrB,YAAY;EDgCd,mCAAA;EAEA,WAAA;EACA,YAAA;AC/BA;AACA;EACE,UAAU;AACZ;AACA;EACE,kBAAkB;EAClB,QAAQ;EACR,aAAa;EACb,WAAW;AACb;ADyBA;;EAEA,kBAAA;EACA,MAAA;EACA,OAAA;EACA,WAAA;EACA,YAAA;ACvBA;;AAEA,2CAA2C",
 	      "file": "EmbettyVideo.vue",
@@ -3578,10 +3694,12 @@
 	var __vue_is_functional_template__$2 = false;
 	/* style inject SSR */
 
-	var EmbettyVideo = normalizeComponent_1({
+	/* style inject shadow dom */
+
+	var __vue_component__$2 = normalizeComponent_1({
 	  render: __vue_render__$1,
 	  staticRenderFns: __vue_staticRenderFns__$1
-	}, __vue_inject_styles__$2, __vue_script__$2, __vue_scope_id__$2, __vue_is_functional_template__$2, __vue_module_identifier__$2, browser, undefined);
+	}, __vue_inject_styles__$2, __vue_script__$2, __vue_scope_id__$2, __vue_is_functional_template__$2, __vue_module_identifier__$2, false, browser, undefined, undefined);
 
 	var EmbettyPlugin = {
 	  /**
@@ -3590,8 +3708,8 @@
 	   */
 	  install: function install(Vue, options) {
 	    options = options || {};
-	    Vue.component('EmbettyTweet', EmbettyTweet);
-	    Vue.component('EmbettyVideo', EmbettyVideo);
+	    Vue.component('EmbettyTweet', __vue_component__$1);
+	    Vue.component('EmbettyVideo', __vue_component__$2);
 	    Vue.prototype._embettyVueOptions = options;
 	  }
 	};

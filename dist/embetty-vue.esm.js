@@ -62,6 +62,11 @@ var script = {
      * Calls the API of embetty-server using the url set in the calling (child) component.
      */
     fetchData: function() {
+      // skip fetching in SSR
+      if (typeof window === 'undefined') {
+        return;
+      }
+
       var thisCmp = this;
       window.fetch(this.url)
         .then(function (response) {
@@ -185,15 +190,19 @@ const __vue_script__ = script;
   
   /* style inject SSR */
   
+  /* style inject shadow dom */
+  
 
   
-  var EmbettyEmbed = normalizeComponent_1(
+  const __vue_component__ = normalizeComponent_1(
     {},
     __vue_inject_styles__,
     __vue_script__,
     __vue_scope_id__,
     __vue_is_functional_template__,
     __vue_module_identifier__,
+    false,
+    undefined,
     undefined,
     undefined
   );
@@ -205,7 +214,7 @@ var MIN_WINDOW_WIDTH = 600;
 
 var script$1 = {
   name: 'EmbettyTweet',
-  extends: EmbettyEmbed,
+  extends: __vue_component__,
   props: {
     status: {
       type: String,
@@ -607,15 +616,19 @@ __vue_render__._withStripped = true;
   
   /* style inject SSR */
   
+  /* style inject shadow dom */
+  
 
   
-  var EmbettyTweet = normalizeComponent_1(
+  const __vue_component__$1 = normalizeComponent_1(
     { render: __vue_render__, staticRenderFns: __vue_staticRenderFns__ },
     __vue_inject_styles__$1,
     __vue_script__$1,
     __vue_scope_id__$1,
     __vue_is_functional_template__$1,
     __vue_module_identifier__$1,
+    false,
+    undefined,
     undefined,
     undefined
   );
@@ -770,7 +783,7 @@ var videoImplementations = {
 
 var script$2 = {
   name: 'EmbettyVideo',
-  extends: EmbettyEmbed,
+  extends: __vue_component__,
   props: {
     width: {
       type: Number,
@@ -1030,15 +1043,19 @@ __vue_render__$1._withStripped = true;
   
   /* style inject SSR */
   
+  /* style inject shadow dom */
+  
 
   
-  var EmbettyVideo = normalizeComponent_1(
+  const __vue_component__$2 = normalizeComponent_1(
     { render: __vue_render__$1, staticRenderFns: __vue_staticRenderFns__$1 },
     __vue_inject_styles__$2,
     __vue_script__$2,
     __vue_scope_id__$2,
     __vue_is_functional_template__$2,
     __vue_module_identifier__$2,
+    false,
+    undefined,
     undefined,
     undefined
   );
@@ -1051,11 +1068,11 @@ var EmbettyPlugin = {
   install: function(Vue, options) {
     options = options || {};
 
-    Vue.component('EmbettyTweet', EmbettyTweet);
-    Vue.component('EmbettyVideo', EmbettyVideo);
+    Vue.component('EmbettyTweet', __vue_component__$1);
+    Vue.component('EmbettyVideo', __vue_component__$2);
     Vue.prototype._embettyVueOptions = options;
   }
 };
 
 export default EmbettyPlugin;
-export { EmbettyPlugin, EmbettyTweet, EmbettyVideo };
+export { EmbettyPlugin, __vue_component__$1 as EmbettyTweet, __vue_component__$2 as EmbettyVideo };
