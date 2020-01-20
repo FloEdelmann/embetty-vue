@@ -19,14 +19,14 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 12
+          registry-url: https://registry.npmjs.org/
       - name: Install dependencies
         run: npm ci
-      - name: Setup git and npm
+      - name: Setup git
         run: |
           git remote add gh-origin https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git​
           git config user.name "Flo Edelmann"
           git config user.email "florian-edelmann@online.de"
-          npm config set //registry.npmjs.org/:_authToken=$NPM_API_TOKEN
       - name: Bump patch version
         if: contains(github.event.pull_request.labels.*.name, 'npm-patch')
         run: npm version patch --force -m "Version %s"​
@@ -38,10 +38,12 @@ jobs:
         run: npm version major --force -m "Version %s"​
       - name: Release new version
         run: |
-          npm publish
+          npm publish --access public
           git push gh-origin HEAD:master --tags
           VERSION_NUMBER=$(git tag --list | tail -n 1 | cut -d v -f 2)
           echo "::set-env name=VERSION_NUMBER::$VERSION_NUMBER"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_API_TOKEN }}
       - name: Create GitHub Release
         uses: actions/create-release@v1
         with:
@@ -56,5 +58,4 @@ jobs:
           draft: true
           prerelease: false
 env:
-  NPM_API_TOKEN: ${{ secrets.NPM_API_TOKEN }}​
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
