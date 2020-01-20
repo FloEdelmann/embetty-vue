@@ -2,6 +2,10 @@ name: Release
 on:
   pull_request:
     # types: closed
+env:
+  PR_LABELS: ${{ github.event.pull_request.labels.*.name }}
+  NPM_API_TOKEN: ${{ secrets.NPM_API_TOKEN }}​
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 jobs:
   release:
     name: Release
@@ -9,7 +13,6 @@ jobs:
     # if: github.event.pull_request.merged​ && ($PR_HAS_PATCH_LABEL || $PR_HAS_MINOR_LABEL || $PR_HAS_MAJOR_LABEL)
     if: true && ($PR_HAS_PATCH_LABEL || $PR_HAS_MINOR_LABEL || $PR_HAS_MAJOR_LABEL)
     env:
-      PR_LABELS: ${{ github.event.pull_request.labels.*.name }}
       PR_HAS_PATCH_LABEL: ${{ contains(env.PR_LABELS, 'npm-patch') }}
       PR_HAS_MINOR_LABEL: ${{ contains(env.PR_LABELS, 'npm-minor') }}
       PR_HAS_MAJOR_LABEL: ${{ contains(env.PR_LABELS, 'npm-major') }}
@@ -41,6 +44,3 @@ jobs:
       #   run: |
       #     npm publish
       #     git push gh-origin HEAD:master --tags
-env:
-  NPM_API_TOKEN: ${{ secrets.NPM_API_TOKEN }}​
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
