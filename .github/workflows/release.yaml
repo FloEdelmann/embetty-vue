@@ -1,18 +1,46 @@
 name: Release
 on:
   pull_request:
+    # types: closed
 jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+    # if: github.event.pull_request.merged​ && ($PR_HAS_PATCH_LABEL || $PR_HAS_MINOR_LABEL || $PR_HAS_MAJOR_LABEL)
+    if: true && ($PR_HAS_PATCH_LABEL || $PR_HAS_MINOR_LABEL || $PR_HAS_MAJOR_LABEL)
+    env:
+      PR_LABELS: ${{ github.event.pull_request.labels.*.name }}
+      PR_HAS_PATCH_LABEL: ${{ contains($PR_LABELS, 'npm-patch') }}
+      PR_HAS_MINOR_LABEL: ${{ contains($PR_LABELS, 'npm-minor') }}
+      PR_HAS_MAJOR_LABEL: ${{ contains($PR_LABELS, 'npm-major') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v1
-      - name: Dump PR labels
-        env:
-          LABELS: ${{ toJson(github.event.pull_request.labels.*.name) }}
-        run: echo "$LABELS"
-      - name: Has npm-minor label
-        env:
-          HAS_MINOR_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'npm-minor') }}
-        run: echo "$HAS_MINOR_LABEL"
+      - name: Setup Node.js v12
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      - name: Install dependencies
+        run: npm ci
+      - name: Setup git and npm
+        run: |​
+          git remote add gh-origin https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git​
+          git config user.name "Flo Edelmann"
+          git config user.email "florian-edelmann@online.de"
+          npm config set //registry.npmjs.org/:_authToken=$NPM_API_TOKEN
+      - name: Bump patch version
+        if: $PR_HAS_PATCH_LABEL
+        run: npm version patch --force -m "Version %s"​
+      - name: Bump minor version
+        if: $PR_HAS_MINOR_LABEL
+        run: npm version minor --force -m "Version %s"​
+      - name: Bump major version
+        if: $PR_HAS_MAJOR_LABEL
+        run: npm version major --force -m "Version %s"​
+      # - name: Release new version
+      #   run: |
+      #     npm publish
+      #     git push gh-origin HEAD:master --tags
+env:​
+  NPM_API_TOKEN: ${{ secrets.NPM_API_TOKEN }}​
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
