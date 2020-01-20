@@ -6,12 +6,13 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    # if: github.event.pull_request.merged​ && (env.PR_HAS_PATCH_LABEL || env.PR_HAS_MINOR_LABEL || env.PR_HAS_MAJOR_LABEL)
-    if: true && (env.PR_HAS_PATCH_LABEL || env.PR_HAS_MINOR_LABEL || env.PR_HAS_MAJOR_LABEL)
-    env:
-      PR_HAS_PATCH_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'npm-patch') }}
-      PR_HAS_MINOR_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'npm-minor') }}
-      PR_HAS_MAJOR_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'npm-major') }}
+    # if: github.event.pull_request.merged​ && (...)
+    if: |
+      true && (
+        contains(github.event.pull_request.labels.*.name, 'npm-patch') ||
+        contains(github.event.pull_request.labels.*.name, 'npm-minor') ||
+        contains(github.event.pull_request.labels.*.name, 'npm-major')
+      )
     steps:
       - name: Checkout
         uses: actions/checkout@v1
@@ -28,13 +29,13 @@ jobs:
           git config user.email "florian-edelmann@online.de"
           npm config set //registry.npmjs.org/:_authToken=$NPM_API_TOKEN
       - name: Bump patch version
-        if: env.PR_HAS_PATCH_LABEL
+        if: contains(github.event.pull_request.labels.*.name, 'npm-patch')
         run: npm version patch --force -m "Version %s"​
       - name: Bump minor version
-        if: env.PR_HAS_MINOR_LABEL
+        if: contains(github.event.pull_request.labels.*.name, 'npm-minor')
         run: npm version minor --force -m "Version %s"​
       - name: Bump major version
-        if: env.PR_HAS_MAJOR_LABEL
+        if: contains(github.event.pull_request.labels.*.name, 'npm-major')
         run: npm version major --force -m "Version %s"​
       # - name: Release new version
       #   run: |
