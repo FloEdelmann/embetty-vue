@@ -7,7 +7,7 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     if: |
-      github.event.pull_request.merged​ && (
+      github.event.pull_request.merged && (
         contains(github.event.pull_request.labels.*.name, 'npm-patch') ||
         contains(github.event.pull_request.labels.*.name, 'npm-minor') ||
         contains(github.event.pull_request.labels.*.name, 'npm-major')
