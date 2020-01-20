@@ -24,18 +24,18 @@ jobs:
         run: npm ci
       - name: Setup git
         run: |
-          git remote add gh-origin https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git​
+          git remote add gh-origin https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
           git config user.name "Flo Edelmann"
           git config user.email "florian-edelmann@online.de"
       - name: Bump patch version
         if: contains(github.event.pull_request.labels.*.name, 'npm-patch')
-        run: npm version patch --force -m "Version %s"​
+        run: npm version patch --force -m "Version %s"
       - name: Bump minor version
         if: contains(github.event.pull_request.labels.*.name, 'npm-minor')
-        run: npm version minor --force -m "Version %s"​
+        run: npm version minor --force -m "Version %s"
       - name: Bump major version
         if: contains(github.event.pull_request.labels.*.name, 'npm-major')
-        run: npm version major --force -m "Version %s"​
+        run: npm version major --force -m "Version %s"
       - name: Release new version
         run: |
           npm publish --access public
