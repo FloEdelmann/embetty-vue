@@ -41,6 +41,23 @@ jobs:
       #   run: |
       #     npm publish
       #     git push gh-origin HEAD:master --tags
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+      # - name: Create GitHub Release
+      #   uses: actions/create-release@v1
+      #   with:
+      #     tag_name: ${{ github.ref }}
+      #     release_name: Release ${{ github.ref }}
+      #     body: |
+      #       **NEW:**
+      #       **FIXED:**
+      #       **IMPROVED:**
+      #       **META:**
+      #       **BREAKING:**
+      #     draft: true
+      #     prerelease: false
 env:
   NPM_API_TOKEN: ${{ secrets.NPM_API_TOKEN }}​
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
