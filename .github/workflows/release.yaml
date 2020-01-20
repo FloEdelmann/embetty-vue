@@ -37,14 +37,17 @@ jobs:
       - name: Bump major version
         if: contains(github.event.pull_request.labels.*.name, 'npm-major')
         run: npm version major --force -m "Version %s"​
+      - name: Save new version number
+        run: |
+          VERSION_NUMBER=$(git tag --list | tail -n 1 | cut -d v -f 2)
+          echo "::set-env name=VERSION_NUMBER::$VERSION_NUMBER"
       # - name: Release new version
       #   run: |
       #     npm publish
       #     git push gh-origin HEAD:master --tags
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
+      - name: Dump VERSION_NUMBER
+        if: startsWith(env.VERSION_NUMBER, '1')
+        run: echo "$VERSION_NUMBER"
       # - name: Create GitHub Release
       #   uses: actions/create-release@v1
       #   with:
