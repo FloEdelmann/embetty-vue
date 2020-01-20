@@ -1,14 +1,13 @@
 name: Release
 on:
   pull_request:
-    # types: closed
+    types: closed
 jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    # if: github.event.pull_request.merged​ && (...)
     if: |
-      true && (
+      github.event.pull_request.merged​ && (
         contains(github.event.pull_request.labels.*.name, 'npm-patch') ||
         contains(github.event.pull_request.labels.*.name, 'npm-minor') ||
         contains(github.event.pull_request.labels.*.name, 'npm-major')
@@ -37,30 +36,25 @@ jobs:
       - name: Bump major version
         if: contains(github.event.pull_request.labels.*.name, 'npm-major')
         run: npm version major --force -m "Version %s"​
-      - name: Save new version number
+      - name: Release new version
         run: |
+          npm publish
+          git push gh-origin HEAD:master --tags
           VERSION_NUMBER=$(git tag --list | tail -n 1 | cut -d v -f 2)
           echo "::set-env name=VERSION_NUMBER::$VERSION_NUMBER"
-      # - name: Release new version
-      #   run: |
-      #     npm publish
-      #     git push gh-origin HEAD:master --tags
-      - name: Dump VERSION_NUMBER
-        if: startsWith(env.VERSION_NUMBER, '1')
-        run: echo "$VERSION_NUMBER"
-      # - name: Create GitHub Release
-      #   uses: actions/create-release@v1
-      #   with:
-      #     tag_name: ${{ github.ref }}
-      #     release_name: Release ${{ github.ref }}
-      #     body: |
-      #       **NEW:**
-      #       **FIXED:**
-      #       **IMPROVED:**
-      #       **META:**
-      #       **BREAKING:**
-      #     draft: true
-      #     prerelease: false
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        with:
+          tag_name: v${{ env.VERSION_NUMBER }}
+          release_name: Version ${{ env.VERSION_NUMBER }}
+          body: |
+            **NEW:**
+            **FIXED:**
+            **IMPROVED:**
+            **META:**
+            **BREAKING:**
+          draft: true
+          prerelease: false
 env:
   NPM_API_TOKEN: ${{ secrets.NPM_API_TOKEN }}​
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
