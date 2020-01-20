@@ -29,7 +29,8 @@
   "module": "./dist/embetty-vue.esm.js",
   "scripts": {
     "watch": "rollup -c -w",
-    "build": "rollup -c"
+    "build": "rollup -c",
+    "version": "npm run build && git add -A dist"
   },
   "dependencies": {},
   "devDependencies": {
