@@ -3422,7 +3422,7 @@
 	   * @returns {!string} The <iframe> playing the video.
 	   */
 	  getIframe: function getIframe(videoData) {
-	    return '<iframe ' + 'src="//www.youtube-nocookie.com/embed/' + videoData.videoId + '?autoplay=1&start=' + videoData.startAt + '" ' + 'width="' + videoData.width + '" ' + 'height="' + videoData.height + '" ' + 'frameborder="0" ' + 'allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"' + 'webkitallowfullscreen ' + 'mozallowfullscreen ' + 'msallowfullscreen ' + 'allowfullscreen></iframe>';
+	    return '<iframe ' + 'src="https://www.youtube-nocookie.com/embed/' + videoData.videoId + '?autoplay=1&start=' + videoData.startAt + '" ' + 'width="' + videoData.width + '" ' + 'height="' + videoData.height + '" ' + 'frameborder="0" ' + 'allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"' + 'webkitallowfullscreen ' + 'mozallowfullscreen ' + 'msallowfullscreen ' + 'allowfullscreen></iframe>';
 	  }
 	};
 
