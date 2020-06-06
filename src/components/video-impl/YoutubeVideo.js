@@ -22,7 +22,7 @@ var YoutubeVideo = {
    */
   getIframe: function(videoData) {
     return '<iframe ' +
-      'src="//www.youtube-nocookie.com/embed/' + videoData.videoId + '?autoplay=1&start=' + videoData.startAt + '" ' +
+      'src="https://www.youtube-nocookie.com/embed/' + videoData.videoId + '?autoplay=1&start=' + videoData.startAt + '" ' +
       'width="' + videoData.width + '" ' +
       'height="' + videoData.height + '" ' +
       'frameborder="0" ' +
