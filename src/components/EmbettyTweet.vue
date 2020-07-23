@@ -447,7 +447,7 @@ export default {
      * @returns {!string} The URL leading to this tweet on Twitter.
      */
     twitterUrl: function() {
-      return 'https://twitter.com/statuses/' + this.data.id_str;
+      return 'https://twitter.com/'+ this.screenName +'/status/' + this.data.id_str;
     },
 
     /**
