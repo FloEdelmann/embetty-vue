@@ -213,7 +213,7 @@ var shared = createCommonjsModule(function (module) {
 (module.exports = function (key, value) {
   return sharedStore[key] || (sharedStore[key] = value !== undefined ? value : {});
 })('versions', []).push({
-  version: '3.6.5',
+  version: '3.6.4',
   mode:  'global',
   copyright: '© 2020 Denis Pushkarev (zloirock.ru)'
 });
@@ -1314,13 +1314,7 @@ if (!set$1 || !clear) {
     defer = functionBindContext(port.postMessage, port, 1);
   // Browsers with postMessage, skip WebWorkers
   // IE8 has postMessage, but it's sync & typeof its postMessage is 'object'
-  } else if (
-    global_1.addEventListener &&
-    typeof postMessage == 'function' &&
-    !global_1.importScripts &&
-    !fails(post) &&
-    location.protocol !== 'file:'
-  ) {
+  } else if (global_1.addEventListener && typeof postMessage == 'function' && !global_1.importScripts && !fails(post)) {
     defer = post;
     global_1.addEventListener('message', listener, false);
   // IE8-
@@ -1933,80 +1927,90 @@ var script = {
   }
 };
 
-function normalizeComponent(template, style, script, scopeId, isFunctionalTemplate, moduleIdentifier /* server only */, shadowMode, createInjector, createInjectorSSR, createInjectorShadow) {
-    if (typeof shadowMode !== 'boolean') {
-        createInjectorSSR = createInjector;
-        createInjector = shadowMode;
-        shadowMode = false;
+function normalizeComponent(template, style, script, scopeId, isFunctionalTemplate, moduleIdentifier
+/* server only */
+, shadowMode, createInjector, createInjectorSSR, createInjectorShadow) {
+  if (typeof shadowMode !== 'boolean') {
+    createInjectorSSR = createInjector;
+    createInjector = shadowMode;
+    shadowMode = false;
+  } // Vue.extend constructor export interop.
+
+
+  var options = typeof script === 'function' ? script.options : script; // render functions
+
+  if (template && template.render) {
+    options.render = template.render;
+    options.staticRenderFns = template.staticRenderFns;
+    options._compiled = true; // functional template
+
+    if (isFunctionalTemplate) {
+      options.functional = true;
     }
-    // Vue.extend constructor export interop.
-    const options = typeof script === 'function' ? script.options : script;
-    // render functions
-    if (template && template.render) {
-        options.render = template.render;
-        options.staticRenderFns = template.staticRenderFns;
-        options._compiled = true;
-        // functional template
-        if (isFunctionalTemplate) {
-            options.functional = true;
-        }
+  } // scopedId
+
+
+  if (scopeId) {
+    options._scopeId = scopeId;
+  }
+
+  var hook;
+
+  if (moduleIdentifier) {
+    // server build
+    hook = function hook(context) {
+      // 2.3 injection
+      context = context || // cached call
+      this.$vnode && this.$vnode.ssrContext || // stateful
+      this.parent && this.parent.$vnode && this.parent.$vnode.ssrContext; // functional
+      // 2.2 with runInNewContext: true
+
+      if (!context && typeof __VUE_SSR_CONTEXT__ !== 'undefined') {
+        context = __VUE_SSR_CONTEXT__;
+      } // inject component styles
+
+
+      if (style) {
+        style.call(this, createInjectorSSR(context));
+      } // register component module identifier for async chunk inference
+
+
+      if (context && context._registeredComponents) {
+        context._registeredComponents.add(moduleIdentifier);
+      }
+    }; // used by ssr in case component is cached and beforeCreate
+    // never gets called
+
+
+    options._ssrRegister = hook;
+  } else if (style) {
+    hook = shadowMode ? function () {
+      style.call(this, createInjectorShadow(this.$root.$options.shadowRoot));
+    } : function (context) {
+      style.call(this, createInjector(context));
+    };
+  }
+
+  if (hook) {
+    if (options.functional) {
+      // register for functional component in vue file
+      var originalRender = options.render;
+
+      options.render = function renderWithStyleInjection(h, context) {
+        hook.call(context);
+        return originalRender(h, context);
+      };
+    } else {
+      // inject component registration as beforeCreate hook
+      var existing = options.beforeCreate;
+      options.beforeCreate = existing ? [].concat(existing, hook) : [hook];
     }
-    // scopedId
-    if (scopeId) {
-        options._scopeId = scopeId;
-    }
-    let hook;
-    if (moduleIdentifier) {
-        // server build
-        hook = function (context) {
-            // 2.3 injection
-            context =
-                context || // cached call
-                    (this.$vnode && this.$vnode.ssrContext) || // stateful
-                    (this.parent && this.parent.$vnode && this.parent.$vnode.ssrContext); // functional
-            // 2.2 with runInNewContext: true
-            if (!context && typeof __VUE_SSR_CONTEXT__ !== 'undefined') {
-                context = __VUE_SSR_CONTEXT__;
-            }
-            // inject component styles
-            if (style) {
-                style.call(this, createInjectorSSR(context));
-            }
-            // register component module identifier for async chunk inference
-            if (context && context._registeredComponents) {
-                context._registeredComponents.add(moduleIdentifier);
-            }
-        };
-        // used by ssr in case component is cached and beforeCreate
-        // never gets called
-        options._ssrRegister = hook;
-    }
-    else if (style) {
-        hook = shadowMode
-            ? function (context) {
-                style.call(this, createInjectorShadow(context, this.$root.$options.shadowRoot));
-            }
-            : function (context) {
-                style.call(this, createInjector(context));
-            };
-    }
-    if (hook) {
-        if (options.functional) {
-            // register for functional component in vue file
-            const originalRender = options.render;
-            options.render = function renderWithStyleInjection(h, context) {
-                hook.call(context);
-                return originalRender(h, context);
-            };
-        }
-        else {
-            // inject component registration as beforeCreate hook
-            const existing = options.beforeCreate;
-            options.beforeCreate = existing ? [].concat(existing, hook) : [hook];
-        }
-    }
-    return script;
+  }
+
+  return script;
 }
+
+var normalizeComponent_1 = normalizeComponent;
 
 /* script */
 const __vue_script__ = script;
@@ -2030,7 +2034,7 @@ const __vue_is_functional_template__ = undefined;
 
 /* style inject shadow dom */
 
-const __vue_component__ = /*#__PURE__*/normalizeComponent({}, __vue_inject_styles__, __vue_script__, __vue_scope_id__, __vue_is_functional_template__, __vue_module_identifier__, false, undefined, undefined, undefined);
+const __vue_component__ = normalizeComponent_1({}, __vue_inject_styles__, __vue_script__, __vue_scope_id__, __vue_is_functional_template__, __vue_module_identifier__, false, undefined, undefined, undefined);
 
 var LINK_IMAGE_SIZE = 125;
 var MIN_WINDOW_WIDTH = 600;
@@ -2168,7 +2172,7 @@ var script$1 = {
      * @returns {!string} The URL leading to this tweet on Twitter.
      */
     twitterUrl: function () {
-      return 'https://twitter.com/statuses/' + this.data.id_str;
+      return 'https://twitter.com/' + this.screenName + '/status/' + this.data.id_str;
     },
 
     /**
@@ -2272,58 +2276,60 @@ var script$1 = {
   }
 };
 
-const isOldIE = typeof navigator !== 'undefined' &&
-    /msie [6-9]\\b/.test(navigator.userAgent.toLowerCase());
+var isOldIE = typeof navigator !== 'undefined' && /msie [6-9]\\b/.test(navigator.userAgent.toLowerCase());
 function createInjector(context) {
-    return (id, style) => addStyle(id, style);
+  return function (id, style) {
+    return addStyle(id, style);
+  };
 }
-let HEAD;
-const styles = {};
+var HEAD;
+var styles = {};
+
 function addStyle(id, css) {
-    const group = isOldIE ? css.media || 'default' : id;
-    const style = styles[group] || (styles[group] = { ids: new Set(), styles: [] });
-    if (!style.ids.has(id)) {
-        style.ids.add(id);
-        let code = css.source;
-        if (css.map) {
-            // https://developer.chrome.com/devtools/docs/javascript-debugging
-            // this makes source maps inside style tags work properly in Chrome
-            code += '\n/*# sourceURL=' + css.map.sources[0] + ' */';
-            // http://stackoverflow.com/a/26603875
-            code +=
-                '\n/*# sourceMappingURL=data:application/json;base64,' +
-                    btoa(unescape(encodeURIComponent(JSON.stringify(css.map)))) +
-                    ' */';
-        }
-        if (!style.element) {
-            style.element = document.createElement('style');
-            style.element.type = 'text/css';
-            if (css.media)
-                style.element.setAttribute('media', css.media);
-            if (HEAD === undefined) {
-                HEAD = document.head || document.getElementsByTagName('head')[0];
-            }
-            HEAD.appendChild(style.element);
-        }
-        if ('styleSheet' in style.element) {
-            style.styles.push(code);
-            style.element.styleSheet.cssText = style.styles
-                .filter(Boolean)
-                .join('\n');
-        }
-        else {
-            const index = style.ids.size - 1;
-            const textNode = document.createTextNode(code);
-            const nodes = style.element.childNodes;
-            if (nodes[index])
-                style.element.removeChild(nodes[index]);
-            if (nodes.length)
-                style.element.insertBefore(textNode, nodes[index]);
-            else
-                style.element.appendChild(textNode);
-        }
+  var group = isOldIE ? css.media || 'default' : id;
+  var style = styles[group] || (styles[group] = {
+    ids: new Set(),
+    styles: []
+  });
+
+  if (!style.ids.has(id)) {
+    style.ids.add(id);
+    var code = css.source;
+
+    if (css.map) {
+      // https://developer.chrome.com/devtools/docs/javascript-debugging
+      // this makes source maps inside style tags work properly in Chrome
+      code += '\n/*# sourceURL=' + css.map.sources[0] + ' */'; // http://stackoverflow.com/a/26603875
+
+      code += '\n/*# sourceMappingURL=data:application/json;base64,' + btoa(unescape(encodeURIComponent(JSON.stringify(css.map)))) + ' */';
     }
+
+    if (!style.element) {
+      style.element = document.createElement('style');
+      style.element.type = 'text/css';
+      if (css.media) style.element.setAttribute('media', css.media);
+
+      if (HEAD === undefined) {
+        HEAD = document.head || document.getElementsByTagName('head')[0];
+      }
+
+      HEAD.appendChild(style.element);
+    }
+
+    if ('styleSheet' in style.element) {
+      style.styles.push(code);
+      style.element.styleSheet.cssText = style.styles.filter(Boolean).join('\n');
+    } else {
+      var index = style.ids.size - 1;
+      var textNode = document.createTextNode(code);
+      var nodes = style.element.childNodes;
+      if (nodes[index]) style.element.removeChild(nodes[index]);
+      if (nodes.length) style.element.insertBefore(textNode, nodes[index]);else style.element.appendChild(textNode);
+    }
+  }
 }
+
+var browser = createInjector;
 
 /* script */
 const __vue_script__$1 = script$1;
@@ -2434,15 +2440,15 @@ __vue_render__._withStripped = true;
 
 const __vue_inject_styles__$1 = function (inject) {
   if (!inject) return;
-  inject("data-v-8ad29d26_0", {
+  inject("data-v-41b5df95_0", {
     source: ".embetty-tweet.answered {\n  margin-top: 0;\n  margin-bottom: 0.5rem;\n  border: 0;\n  padding: 0;\n}\n.embetty-tweet.answered header {\n  padding-bottom: 0.5rem;\n}\n.embetty-tweet.answered article {\n  border-left: 4px solid #bbb;\n  margin-left: 16px;\n  padding-left: 2rem;\n  padding-bottom: 1rem;\n}\n.embetty-tweet.answered article p {\n  font-size: 14px;\n}\n.embetty-tweet.answered article .created-at {\n  display: none;\n}\n.embetty-tweet.answered .powered-by {\n  display: none;\n}\n.embetty-tweet {\n  position: relative;\n  overflow: hidden;\n  display: block;\n  max-width: 100%;\n  font-family: var(--embetty-font-family, Helvetica, Roboto, \"Segoe UI\", Calibri, sans-serif);\n  border: 1px solid var(--embetty-border-color, #ccc);\n  border-width: 1px;\n  border-radius: 4px;\n  box-sizing: border-box;\n  font-size: 16px;\n  line-height: 1;\n  max-width: 642px;\n  padding: 1rem 1.2rem;\n}\n@media (min-width: 600px) {\n.embetty-tweet {\n    padding: 1.5rem 2rem;\n}\n}\n.embetty-tweet header {\n  display: flex;\n  align-items: center;\n  margin-bottom: 0.5rem;\n}\n.embetty-tweet header img {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n}\n.embetty-tweet header > span {\n  display: inline-block;\n  margin: 0 var(--embetty-spacing, 1rem);\n}\n.embetty-tweet header strong {\n  font-size: 16px;\n  display: block;\n}\n.embetty-tweet header a,\n.embetty-tweet header a:hover {\n  font-size: 14px;\n  color: #697882;\n  text-decoration: none;\n}\n.embetty-tweet article span {\n  display: block;\n}\n.embetty-tweet article p {\n  margin: 0 auto 0.5rem;\n  line-height: 1.4;\n  letter-spacing: 0.01em;\n}\n@media (min-width: 600px) {\n.embetty-tweet article p {\n    font-size: 18px;\n}\n}\n.embetty-tweet article p a {\n  color: #2b7bb9;\n  text-decoration: none;\n}\n.embetty-tweet article p a:hover {\n  color: #3b94d9;\n}\n.embetty-tweet article p a:focus {\n  text-decoration: underline;\n}\n.embetty-tweet .media a {\n  height: 100%;\n  display: flex;\n  align-items: center;\n}\n.embetty-tweet .media a:not(:first-child) {\n  display: none;\n}\n.embetty-tweet .media img {\n  max-width: 100%;\n  width: 100%;\n  height: 100%;\n  object-fit: cover;\n}\n@media (min-width: 600px) {\n.embetty-tweet .media {\n    display: grid;\n    grid-column-gap: 1px;\n    grid-row-gap: 1px;\n}\n.embetty-tweet .media a:not(:first-child) {\n    display: block;\n}\n.embetty-tweet .media.media-2 {\n    grid-template-columns: 50% 50%;\n}\n.embetty-tweet .media.media-3 {\n    grid-template-columns: auto 40%;\n}\n.embetty-tweet .media.media-3 a:first-child {\n    grid-row: 1/span 2;\n}\n.embetty-tweet .media.media-4 {\n    grid-template-columns: auto 20%;\n}\n.embetty-tweet .media.media-4 a:first-child {\n    grid-row: 1/span 3;\n}\n}\n.embetty-tweet .links {\n  border: 1px solid var(--embetty-border-color, #ccc);\n  border-width: 1px;\n  border-radius: 4px;\n  text-decoration: none;\n  display: flex;\n  flex-direction: column;\n  color: #14171a;\n  font-size: 14px;\n}\n.embetty-tweet .links:hover, .embetty-tweet .links:focus {\n  background-color: #f5f8fa;\n  border-color: rgba(136, 153, 166, 0.5);\n  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;\n}\n@media (min-width: 600px) {\n.embetty-tweet .links {\n    flex-direction: row;\n}\n}\n.embetty-tweet .links img {\n  max-width: 100%;\n  object-fit: cover;\n  display: inline-block;\n}\n@media (min-width: 600px) {\n.embetty-tweet .links img {\n    height: 125px;\n    width: 125px;\n    min-width: 125px;\n}\n}\n.embetty-tweet .links > *:last-child {\n  margin-bottom: 0;\n}\n.embetty-tweet .links .link-body {\n  padding: 0.5rem;\n}\n@media (min-width: 600px) {\n.embetty-tweet .links .link-body {\n    display: flex;\n    flex-direction: column;\n    padding: 0.5rem 0.8rem;\n}\n}\n.embetty-tweet .links h3 {\n  font-size: 14px;\n  line-height: 1.3;\n  margin: 0;\n  margin-bottom: 0.3em;\n}\n.embetty-tweet .links p {\n  display: none;\n}\n@media (min-width: 600px) {\n.embetty-tweet .links p {\n    display: block;\n    flex-grow: 1;\n    hyphens: auto;\n    line-height: 18px;\n    font-size: 14px;\n    margin: 0;\n    margin-bottom: 0.3em;\n}\n}\n.embetty-tweet .links span {\n  margin-top: auto;\n  color: #999;\n}\n.embetty-tweet .created-at {\n  margin-top: 0.5rem;\n  display: block;\n  font-size: 14px;\n  color: #777;\n  text-decoration: none;\n}\n.embetty-tweet .created-at svg {\n  height: 22px;\n  vertical-align: middle;\n}\n.embetty-tweet .powered-by {\n  position: absolute;\n  z-index: 3;\n  right: -20px;\n  bottom: 0px;\n  padding: 20px 46px 5px 20px;\n  font-size: 14px;\n  color: #777;\n  text-decoration: none;\n  opacity: 0.3;\n}\n.embetty-tweet .powered-by:hover, .embetty-tweet .powered-by:focus {\n  opacity: 1;\n}\n.embetty-tweet .powered-by .embetty-logo {\n  position: absolute;\n  right: 0;\n  bottom: -42px;\n  width: 40px;\n}\n\n/*# sourceMappingURL=EmbettyTweet.vue.map */",
     map: {
       "version": 3,
-      "sources": ["/home/runner/work/embetty-vue/embetty-vue/src/components/EmbettyTweet.vue", "EmbettyTweet.vue"],
+      "sources": ["/home/flo/www/embetty/embetty-vue/src/components/EmbettyTweet.vue", "EmbettyTweet.vue"],
       "names": [],
       "mappings": "AAoEA;EACA,aAAA;EACA,qBAAA;EACA,SAAA;EACA,UAAA;ACnEA;ADqEA;EACA,sBAAA;ACnEA;ADsEA;EACA,2BAAA;EACA,iBAAA;EACA,kBAAA;EACA,oBAAA;ACpEA;ADsEA;EACA,eAAA;ACpEA;ADuEA;EACA,aAAA;ACrEA;ADyEA;EACA,aAAA;ACvEA;AD2EA;ECxEE,kBAAkB;EAClB,gBAAgB;EAChB,cAAc;EACd,eAAe;EACf,2FAA2F;EAC3F,mDAAmD;EACnD,iBAAiB;EACjB,kBAAkB;EAClB,sBAAsB;EACtB,eAAe;EACf,cAAc;EDiEhB,gBAAA;EACA,oBAAA;AC/DA;ADiEA;AANA;IAOA,oBAAA;AC9DE;AACF;ADgEA;EACA,aAAA;EACA,mBAAA;EACA,qBAAA;AC9DA;ADgEA;EACA,WAjDA;EAkDA,YAlDA;EAmDA,kBAAA;AC9DA;ADiEA;EACA,qBAAA;EACA,sCAAA;AC/DA;ADkEA;EACA,eAAA;EACA,cAAA;AChEA;ADmEA;;EAEA,eAAA;EACA,cAAA;EACA,qBAAA;ACjEA;ADsEA;EACA,cAAA;ACpEA;ADuEA;EACA,qBAAA;EACA,gBAAA;EACA,sBAAA;ACrEA;ADuEA;AALA;IAMA,eAAA;ACpEE;AACF;ADsEA;EACA,cAAA;EACA,qBAAA;ACpEA;ADsEA;EACA,cAAA;ACpEA;ADuEA;EACA,0BAAA;ACrEA;AD4EA;EACA,YAAA;EACA,aAAA;EACA,mBAAA;AC1EA;AD4EA;EACA,aAAA;AC1EA;AD8EA;EACA,eAAA;EACA,WAAA;EACA,YAAA;EACA,iBAAA;AC5EA;AD+EA;AAlBA;IAmBA,aAAA;IACA,oBAAA;IACA,iBAAA;AC5EE;AD8EF;IACA,cAAA;AC5EE;AD+EF;IACA,8BAAA;AC7EE;ADgFF;IACA,+BAAA;AC9EE;ADgFF;IACA,kBAAA;AC9EE;ADkFF;IACA,+BAAA;AChFE;ADkFF;IACA,kBAAA;AChFE;AACF;ADqFA;EACA,mDAAA;EACA,iBAAA;EACA,kBAAA;EACA,qBAAA;EACA,aAAA;EACA,sBAAA;EACA,cAAA;EACA,eAAA;ACnFA;ADqFA;EAEA,yBAAA;EACA,sCAAA;EACA,8EAAA;ACpFA;ADuFA;AAjBA;IAkBA,mBAAA;ACpFE;AACF;ADsFA;EACA,eAAA;EACA,iBAAA;EACA,qBAAA;ACpFA;ADsFA;AALA;IAMA,aAAA;IACA,YAAA;IACA,gBAAA;ACnFE;AACF;ADsFA;EACA,gBAAA;ACpFA;ADuFA;EACA,eAAA;ACrFA;ADuFA;AAHA;IAIA,aAAA;IACA,sBAAA;IACA,sBAAA;ACpFE;AACF;ADuFA;EACA,eAAA;EACA,gBAAA;EACA,SAAA;EACA,oBAAA;ACrFA;ADwFA;EACA,aAAA;ACtFA;ADwFA;AAHA;IAIA,cAAA;IACA,YAAA;IACA,aAAA;IACA,iBAAA;IACA,eAAA;IACA,SAAA;IACA,oBAAA;ACrFE;AACF;ADwFA;EACA,gBAAA;EACA,WAAA;ACtFA;AD0FA;EACA,kBAAA;EACA,cAAA;EACA,eAAA;EACA,WAAA;EACA,qBAAA;ACxFA;AD0FA;EACA,YAAA;EACA,sBAAA;ACxFA;AD4FA;EC1FE,kBAAkB;EAClB,UAAU;EACV,YAAY;EACZ,WAAW;EACX,2BAA2B;EAC3B,eAAe;EACf,WAAW;EACX,qBAAqB;EACrB,YAAY;AACd;AACA;EACE,UAAU;AACZ;AACA;EACE,kBAAkB;EAClB,QAAQ;EACR,aAAa;EACb,WAAW;AACb;;AAEA,2CAA2C",
       "file": "EmbettyTweet.vue",
-      "sourcesContent": ["<template>\n  <div :class=\"{'embetty-tweet': true, answered}\">\n    <template v-if=\"fetched\">\n      <embetty-tweet v-if=\"isReply\" :status=\"answeredTweetId\" :answered=\"true\" />\n      <header>\n        <img :src=\"profileImageUrl\">\n        <span>\n          <strong>{{ userName }}</strong>\n          <a :href=\"`https://twitter.com/${screenName}`\" target=\"_blank\" rel=\"noopener\">@{{ screenName }}</a>\n        </span>\n      </header>\n      <article>\n        <p v-html=\"fullText\" />\n        <section v-if=\"media.length > 0\" :class=\"`media media-${media.length}`\">\n          <a\n            v-for=\"med in media\"\n            :key=\"med.imageUrl\"\n            :href=\"med.imageUrl\"\n            target=\"_blank\">\n            <img :src=\"med.imageUrl\">\n          </a>\n        </section>\n\n        <a\n          v-if=\"links.length > 0\"\n          ref=\"link\"\n          :href=\"link.url\"\n          target=\"_blank\"\n          rel=\"noopener\"\n          class=\"links\">\n          <img :src=\"linkImageUrl\">\n          <section ref=\"linkBody\" class=\"link-body\">\n            <h3>{{ link.title }}</h3>\n            <p v-if=\"linkDescription\">{{ linkDescription }}</p>\n            <span v-if=\"linkHostname\">{{ linkHostname }}</span>\n          </section>\n        </a>\n\n        <a\n          :href=\"twitterUrl\"\n          target=\"_blank\"\n          rel=\"noopener\"\n          class=\"created-at\">\n          <time :datetime=\"createdAt.toISOString()\">{{ createdAt.toLocaleString() }}</time>\n          via Twitter\n          <svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 400 400\"><path style=\"fill:#1da1f2;\" d=\"M153.62,301.59c94.34,0,145.94-78.16,145.94-145.94,0-2.22,0-4.43-.15-6.63A104.36,104.36,0,0,0,325,122.47a102.38,102.38,0,0,1-29.46,8.07,51.47,51.47,0,0,0,22.55-28.37,102.79,102.79,0,0,1-32.57,12.45,51.34,51.34,0,0,0-87.41,46.78A145.62,145.62,0,0,1,92.4,107.81a51.33,51.33,0,0,0,15.88,68.47A50.91,50.91,0,0,1,85,169.86c0,.21,0,.43,0,.65a51.31,51.31,0,0,0,41.15,50.28,51.21,51.21,0,0,1-23.16.88,51.35,51.35,0,0,0,47.92,35.62,102.92,102.92,0,0,1-63.7,22A104.41,104.41,0,0,1,75,278.55a145.21,145.21,0,0,0,78.62,23\" /></svg>\n        </a>\n\n        <a\n          href=\"https://www.heise.de/embetty?wt_mc=link.embetty.poweredby\"\n          target=\"_blank\"\n          rel=\"noopener\"\n          class=\"powered-by\"\n          title=\"embetty - displaying remote content without compromising your privacy.\">\n          powered by <span class=\"embetty-logo\" v-html=\"embettyLogo\" />\n        </a>\n      </article>\n    </template>\n  </div>\n</template>\n\n<style lang=\"scss\">\n@import '../assets/element.scss';\n@import '../assets/vars.scss';\n\n$profile-image-width: 36px;\n$quoteLineWidth: 4px;\n\n.embetty-tweet.answered {\n  margin-top: 0;\n  margin-bottom: 0.5rem;\n  border: 0;\n  padding: 0;\n\n  header {\n    padding-bottom: 0.5rem;\n  }\n\n  article {\n    border-left: $quoteLineWidth solid #bbb;\n    margin-left: $profile-image-width / 2 - $quoteLineWidth / 2;\n    padding-left: 2rem;\n    padding-bottom: 1rem;\n\n    p {\n      font-size: 14px;\n    }\n\n    .created-at {\n      display: none;\n    }\n  }\n\n  .powered-by {\n    display: none;\n  }\n}\n\n.embetty-tweet {\n  @include host();\n\n  max-width: 642px;\n  padding: 1rem 1.2rem;\n\n  @media (min-width: 600px) {\n    padding: 1.5rem 2rem;\n  }\n\n  header {\n    display: flex;\n    align-items: center;\n    margin-bottom: .5rem;\n\n    img {\n      width: $profile-image-width;\n      height: $profile-image-width;\n      border-radius: 50%;\n    }\n\n    > span {\n      display: inline-block;\n      margin: 0 var(--embetty-spacing, $embetty-spacing);\n    }\n\n    strong {\n      font-size: 16px;\n      display: block;\n    }\n\n    a,\n    a:hover {\n      font-size: 14px;\n      color: #697882;\n      text-decoration: none;\n    }\n  }\n\n  article {\n    span {\n      display: block;\n    }\n\n    p {\n      margin: 0 auto 0.5rem;\n      line-height: 1.4;\n      letter-spacing: .01em;\n\n      @media (min-width: 600px) {\n        font-size: 18px;\n      }\n\n      a {\n        color: #2b7bb9;\n        text-decoration: none;\n\n        &:hover {\n          color: #3b94d9;\n        }\n\n        &:focus {\n          text-decoration: underline;\n        }\n      }\n    }\n  }\n\n  .media {\n    a {\n      height: 100%;\n      display: flex;\n      align-items: center;\n\n      &:not(:first-child) {\n        display: none;\n      }\n    }\n\n    img {\n      max-width: 100%;\n      width: 100%;\n      height: 100%;\n      object-fit: cover;\n    }\n\n    @media (min-width: 600px) {\n      display: grid;\n      grid-column-gap: 1px;\n      grid-row-gap: 1px;\n\n      a:not(:first-child) {\n        display: block;\n      }\n\n      &.media-2 {\n        grid-template-columns: 50% 50%;\n      }\n\n      &.media-3 {\n        grid-template-columns: auto 40%;\n\n        a:first-child {\n          grid-row: 1 / span 2;\n        }\n      }\n\n      &.media-4 {\n        grid-template-columns: auto 20%;\n\n        a:first-child {\n          grid-row: 1 / span 3;\n        }\n      }\n    }\n  }\n\n  .links {\n    border: 1px solid var(--embetty-border-color, $embetty-border-color);\n    border-width: 1px;\n    border-radius: 4px;\n    text-decoration: none;\n    display: flex;\n    flex-direction: column;\n    color: #14171a;\n    font-size: 14px;\n\n    &:hover,\n    &:focus {\n      background-color: rgb(245, 248, 250);\n      border-color: rgba(136,153,166,.5);\n      transition: background-color .15s ease-in-out, border-color .15s ease-in-out;\n    }\n\n    @media (min-width: 600px) {\n      flex-direction: row;\n    }\n\n    img {\n      max-width: 100%;\n      object-fit: cover;\n      display: inline-block;\n\n      @media (min-width: 600px) {\n        height: 125px;\n        width: 125px;\n        min-width: 125px;\n      }\n    }\n\n    & > *:last-child {\n      margin-bottom: 0;\n    }\n\n    .link-body {\n      padding: .5rem;\n\n      @media (min-width: 600px) {\n        display: flex;\n        flex-direction: column;\n        padding: .5rem .8rem;\n      }\n    }\n\n    h3 {\n      font-size: 14px;\n      line-height: 1.3;\n      margin: 0;\n      margin-bottom: .3em;\n    }\n\n    p {\n      display: none;\n\n      @media (min-width: 600px) {\n        display: block;\n        flex-grow: 1;\n        hyphens: auto;\n        line-height: 18px;\n        font-size: 14px;\n        margin: 0;\n        margin-bottom: .3em;\n      }\n    }\n\n    span {\n      margin-top: auto;\n      color: #999;\n    }\n  }\n\n  .created-at {\n    margin-top: .5rem;\n    display: block;\n    font-size: 14px;\n    color: #777;\n    text-decoration: none;\n\n    svg {\n      height: 22px;\n      vertical-align: middle;\n    }\n  }\n\n  .powered-by {\n    @include powered-by();\n  }\n}\n</style>\n\n<script>\nimport EmbettyEmbed from './EmbettyEmbed.vue';\n\nvar LINK_IMAGE_SIZE = 125;\nvar MIN_WINDOW_WIDTH = 600;\n\nexport default {\n  name: 'EmbettyTweet',\n  extends: EmbettyEmbed,\n  props: {\n    status: {\n      type: String,\n      required: true,\n      /**\n       * @param {!string} statusId The Twitter status (tweet) ID.\n       * @returns {!boolean} True if it seems like a valid status ID, false otherwise.\n       */\n      validator: function(statusId) {\n        return /^\\d{6,}$/.test(statusId);\n      }\n    },\n    answered: {\n      type: Boolean,\n      required: false,\n      default: false\n    }\n  },\n  /**\n   * @returns {!object} The component's data.\n   */\n  data: function() {\n    return {\n      linkDescription: null\n    };\n  },\n  computed: {\n    /**\n     * @override\n     * @returns {!string} The embetty-server URL to query for this tweet's data.\n     */\n    url: function() {\n      return this._api('/tweet/' + this.status);\n    },\n\n    /**\n     * @returns {!string} The name of this tweet's user.\n     */\n    userName: function() {\n      return this.data.user.name;\n    },\n\n    /**\n     * @returns {!string} The twitter handle of this tweet's user.\n     */\n    screenName: function() {\n      return this.data.user.screen_name;\n    },\n\n    /**\n     * @returns {!string} The text content of this tweet. Can contain HTML links to URLs, hashtags and at-mentions.\n     */\n    fullText: function() {\n      var thisCmp = this;\n      return this.data.full_text\n        .replace(/(https:\\/\\/[^\\s]+)/g, function(link) {\n          if (thisCmp.media.length > 0 && thisCmp.media[0].url === link) {\n            return '';\n          }\n\n          return '<a href=\"' + link + '\">' + link + '</a>';\n        })\n        .replace(/#(\\w+)/g, function(hashtag, word) {\n          return '<a href=\"https://twitter.com/hashtag/' + word + '\">' + hashtag + '</a>';\n        })\n        .replace(/@(\\w+)/g, function(name, word) {\n          return '<a href=\"https://twitter.com/' + word + '\">' + name + '</a>';\n        });\n    },\n\n    /**\n     * @returns {!array.<object>} An array of objects describing this tweet's attached photos.\n     */\n    media: function() {\n      var thisCmp = this;\n      var extended = this.data.extended_entities || {};\n      var media = extended.media || [];\n      return media.map(function(m, idx) {\n        m.imageUrl = thisCmp.url + '-images-' + idx;\n        return m;\n      });\n    },\n\n    /**\n     * @returns {!array.<object>} An array of objects describing this tweet's links.\n     */\n    links: function() {\n      return this.data.entities.urls || [];\n    },\n\n    /**\n     * @returns {?object} This tweet's first link object.\n     */\n    link: function() {\n      return this.links[0];\n    },\n\n    /**\n     * @returns {!string} The embetty-server URL for this tweet's first link's image.\n     */\n    linkImageUrl: function() {\n      return this.url + '-link-image';\n    },\n\n    /**\n     * @returns {?string} The hostname of this tweet's first link's URL.\n     */\n    linkHostname: function() {\n      // adapted from https://stackoverflow.com/a/21553982/451391\n      var match = this.link.url.match(/^.*?\\/\\/(([^:/?#]*)(?::([0-9]+))?)/);\n      return match ? match[2] : undefined;\n    },\n\n    /**\n     * @returns {!string} The embetty-server URL for this tweet's user profile image.\n     */\n    profileImageUrl: function() {\n      return this.url + '-profile-image';\n    },\n\n    /**\n     * @returns {!Date} A Date object containing this tweet's creation date.\n     */\n    createdAt: function() {\n      var createdAt = this.data.created_at.replace(/\\+\\d{4}\\s/, '');\n      return new Date(createdAt);\n    },\n\n    /**\n     * @returns {!string} The URL leading to this tweet on Twitter.\n     */\n    twitterUrl: function() {\n      return 'https://twitter.com/statuses/' + this.data.id_str;\n    },\n\n    /**\n     * @returns {?string} The status ID of the tweet that this tweet is a reply to, if any.\n     */\n    answeredTweetId: function() {\n      return this.data.in_reply_to_status_id_str;\n    },\n\n    /**\n     * @returns {!boolean} Whether this is a reply to another tweet.\n     */\n    isReply: function() {\n      return !!this.answeredTweetId;\n    }\n  },\n\n  /**\n   * Hook that is called when this component is mounted. Calls fitLinkDescription\n   * as soon as the data are fetched and whenever the window is resized.\n   */\n  mounted: function() {\n    var thisCmp = this;\n    this.$watch('fetched', function(fetched) {\n      if (fetched) {\n        thisCmp.fitLinkDescription();\n      }\n    }, {\n      immediate: true\n    });\n\n    if (window) {\n      window.addEventListener('resize', function() {\n        if (window.innerWidth < MIN_WINDOW_WIDTH) {\n          return;\n        }\n\n        thisCmp.fitLinkDescription();\n      });\n    }\n  },\n  methods: {\n    /**\n     * Truncate this tweet's first link's description to fit into the space it is given.\n     */\n    fitLinkDescription: function() {\n      if (!this.link || !window) {\n        return;\n      }\n\n      // reset link description to the one returned by the API\n      this.linkDescription = this.link.description;\n\n      if (!this.linkDescription) {\n        return;\n      }\n\n      /** @type Element */\n      var section = this.$refs.link;\n      /** @type Element */\n      var linkBody = this.$refs.linkBody;\n\n      // don't do anything if the mobile view is active\n      if (section.clientWidth === linkBody.clientWidth) {\n        return;\n      }\n\n      var imgHeight = LINK_IMAGE_SIZE;\n      var counter = 0;\n      var last = '';\n\n      var computedStyle = window.getComputedStyle(section);\n\n      var sectionHeight = function() {\n        var elemMarginTop = parseFloat(computedStyle.getPropertyValue('margin-top'));\n        var elemMarginBottom = parseFloat(computedStyle.getPropertyValue('margin-bottom'));\n        var elemHeight = parseFloat(computedStyle.getPropertyValue('height'));\n\n        return elemHeight + elemMarginTop + elemMarginBottom;\n      };\n\n      var thisCmp = this;\n      var reduceLinkDescriptionLength = function() {\n        if (counter >= 200 || last === this.linkDescription) {\n          return;\n        }\n\n        if ((sectionHeight() - 2) <= imgHeight) {\n          return;\n        }\n\n        last = thisCmp.linkDescription;\n        thisCmp.linkDescription = thisCmp.linkDescription.replace(/\\W*\\s(\\S)*$/, '…');\n        counter++;\n\n        // wait for Vue to render until we measure again\n        thisCmp.$nextTick(reduceLinkDescriptionLength);\n      };\n\n      this.$nextTick(reduceLinkDescriptionLength);\n    }\n  }\n};\n</script>\n", ".embetty-tweet.answered {\n  margin-top: 0;\n  margin-bottom: 0.5rem;\n  border: 0;\n  padding: 0;\n}\n.embetty-tweet.answered header {\n  padding-bottom: 0.5rem;\n}\n.embetty-tweet.answered article {\n  border-left: 4px solid #bbb;\n  margin-left: 16px;\n  padding-left: 2rem;\n  padding-bottom: 1rem;\n}\n.embetty-tweet.answered article p {\n  font-size: 14px;\n}\n.embetty-tweet.answered article .created-at {\n  display: none;\n}\n.embetty-tweet.answered .powered-by {\n  display: none;\n}\n\n.embetty-tweet {\n  position: relative;\n  overflow: hidden;\n  display: block;\n  max-width: 100%;\n  font-family: var(--embetty-font-family, Helvetica, Roboto, \"Segoe UI\", Calibri, sans-serif);\n  border: 1px solid var(--embetty-border-color, #ccc);\n  border-width: 1px;\n  border-radius: 4px;\n  box-sizing: border-box;\n  font-size: 16px;\n  line-height: 1;\n  max-width: 642px;\n  padding: 1rem 1.2rem;\n}\n@media (min-width: 600px) {\n  .embetty-tweet {\n    padding: 1.5rem 2rem;\n  }\n}\n.embetty-tweet header {\n  display: flex;\n  align-items: center;\n  margin-bottom: 0.5rem;\n}\n.embetty-tweet header img {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n}\n.embetty-tweet header > span {\n  display: inline-block;\n  margin: 0 var(--embetty-spacing, 1rem);\n}\n.embetty-tweet header strong {\n  font-size: 16px;\n  display: block;\n}\n.embetty-tweet header a,\n.embetty-tweet header a:hover {\n  font-size: 14px;\n  color: #697882;\n  text-decoration: none;\n}\n.embetty-tweet article span {\n  display: block;\n}\n.embetty-tweet article p {\n  margin: 0 auto 0.5rem;\n  line-height: 1.4;\n  letter-spacing: 0.01em;\n}\n@media (min-width: 600px) {\n  .embetty-tweet article p {\n    font-size: 18px;\n  }\n}\n.embetty-tweet article p a {\n  color: #2b7bb9;\n  text-decoration: none;\n}\n.embetty-tweet article p a:hover {\n  color: #3b94d9;\n}\n.embetty-tweet article p a:focus {\n  text-decoration: underline;\n}\n.embetty-tweet .media a {\n  height: 100%;\n  display: flex;\n  align-items: center;\n}\n.embetty-tweet .media a:not(:first-child) {\n  display: none;\n}\n.embetty-tweet .media img {\n  max-width: 100%;\n  width: 100%;\n  height: 100%;\n  object-fit: cover;\n}\n@media (min-width: 600px) {\n  .embetty-tweet .media {\n    display: grid;\n    grid-column-gap: 1px;\n    grid-row-gap: 1px;\n  }\n  .embetty-tweet .media a:not(:first-child) {\n    display: block;\n  }\n  .embetty-tweet .media.media-2 {\n    grid-template-columns: 50% 50%;\n  }\n  .embetty-tweet .media.media-3 {\n    grid-template-columns: auto 40%;\n  }\n  .embetty-tweet .media.media-3 a:first-child {\n    grid-row: 1/span 2;\n  }\n  .embetty-tweet .media.media-4 {\n    grid-template-columns: auto 20%;\n  }\n  .embetty-tweet .media.media-4 a:first-child {\n    grid-row: 1/span 3;\n  }\n}\n.embetty-tweet .links {\n  border: 1px solid var(--embetty-border-color, #ccc);\n  border-width: 1px;\n  border-radius: 4px;\n  text-decoration: none;\n  display: flex;\n  flex-direction: column;\n  color: #14171a;\n  font-size: 14px;\n}\n.embetty-tweet .links:hover, .embetty-tweet .links:focus {\n  background-color: #f5f8fa;\n  border-color: rgba(136, 153, 166, 0.5);\n  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;\n}\n@media (min-width: 600px) {\n  .embetty-tweet .links {\n    flex-direction: row;\n  }\n}\n.embetty-tweet .links img {\n  max-width: 100%;\n  object-fit: cover;\n  display: inline-block;\n}\n@media (min-width: 600px) {\n  .embetty-tweet .links img {\n    height: 125px;\n    width: 125px;\n    min-width: 125px;\n  }\n}\n.embetty-tweet .links > *:last-child {\n  margin-bottom: 0;\n}\n.embetty-tweet .links .link-body {\n  padding: 0.5rem;\n}\n@media (min-width: 600px) {\n  .embetty-tweet .links .link-body {\n    display: flex;\n    flex-direction: column;\n    padding: 0.5rem 0.8rem;\n  }\n}\n.embetty-tweet .links h3 {\n  font-size: 14px;\n  line-height: 1.3;\n  margin: 0;\n  margin-bottom: 0.3em;\n}\n.embetty-tweet .links p {\n  display: none;\n}\n@media (min-width: 600px) {\n  .embetty-tweet .links p {\n    display: block;\n    flex-grow: 1;\n    hyphens: auto;\n    line-height: 18px;\n    font-size: 14px;\n    margin: 0;\n    margin-bottom: 0.3em;\n  }\n}\n.embetty-tweet .links span {\n  margin-top: auto;\n  color: #999;\n}\n.embetty-tweet .created-at {\n  margin-top: 0.5rem;\n  display: block;\n  font-size: 14px;\n  color: #777;\n  text-decoration: none;\n}\n.embetty-tweet .created-at svg {\n  height: 22px;\n  vertical-align: middle;\n}\n.embetty-tweet .powered-by {\n  position: absolute;\n  z-index: 3;\n  right: -20px;\n  bottom: 0px;\n  padding: 20px 46px 5px 20px;\n  font-size: 14px;\n  color: #777;\n  text-decoration: none;\n  opacity: 0.3;\n}\n.embetty-tweet .powered-by:hover, .embetty-tweet .powered-by:focus {\n  opacity: 1;\n}\n.embetty-tweet .powered-by .embetty-logo {\n  position: absolute;\n  right: 0;\n  bottom: -42px;\n  width: 40px;\n}\n\n/*# sourceMappingURL=EmbettyTweet.vue.map */"]
+      "sourcesContent": ["<template>\n  <div :class=\"{'embetty-tweet': true, answered}\">\n    <template v-if=\"fetched\">\n      <embetty-tweet v-if=\"isReply\" :status=\"answeredTweetId\" :answered=\"true\" />\n      <header>\n        <img :src=\"profileImageUrl\">\n        <span>\n          <strong>{{ userName }}</strong>\n          <a :href=\"`https://twitter.com/${screenName}`\" target=\"_blank\" rel=\"noopener\">@{{ screenName }}</a>\n        </span>\n      </header>\n      <article>\n        <p v-html=\"fullText\" />\n        <section v-if=\"media.length > 0\" :class=\"`media media-${media.length}`\">\n          <a\n            v-for=\"med in media\"\n            :key=\"med.imageUrl\"\n            :href=\"med.imageUrl\"\n            target=\"_blank\">\n            <img :src=\"med.imageUrl\">\n          </a>\n        </section>\n\n        <a\n          v-if=\"links.length > 0\"\n          ref=\"link\"\n          :href=\"link.url\"\n          target=\"_blank\"\n          rel=\"noopener\"\n          class=\"links\">\n          <img :src=\"linkImageUrl\">\n          <section ref=\"linkBody\" class=\"link-body\">\n            <h3>{{ link.title }}</h3>\n            <p v-if=\"linkDescription\">{{ linkDescription }}</p>\n            <span v-if=\"linkHostname\">{{ linkHostname }}</span>\n          </section>\n        </a>\n\n        <a\n          :href=\"twitterUrl\"\n          target=\"_blank\"\n          rel=\"noopener\"\n          class=\"created-at\">\n          <time :datetime=\"createdAt.toISOString()\">{{ createdAt.toLocaleString() }}</time>\n          via Twitter\n          <svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 400 400\"><path style=\"fill:#1da1f2;\" d=\"M153.62,301.59c94.34,0,145.94-78.16,145.94-145.94,0-2.22,0-4.43-.15-6.63A104.36,104.36,0,0,0,325,122.47a102.38,102.38,0,0,1-29.46,8.07,51.47,51.47,0,0,0,22.55-28.37,102.79,102.79,0,0,1-32.57,12.45,51.34,51.34,0,0,0-87.41,46.78A145.62,145.62,0,0,1,92.4,107.81a51.33,51.33,0,0,0,15.88,68.47A50.91,50.91,0,0,1,85,169.86c0,.21,0,.43,0,.65a51.31,51.31,0,0,0,41.15,50.28,51.21,51.21,0,0,1-23.16.88,51.35,51.35,0,0,0,47.92,35.62,102.92,102.92,0,0,1-63.7,22A104.41,104.41,0,0,1,75,278.55a145.21,145.21,0,0,0,78.62,23\" /></svg>\n        </a>\n\n        <a\n          href=\"https://www.heise.de/embetty?wt_mc=link.embetty.poweredby\"\n          target=\"_blank\"\n          rel=\"noopener\"\n          class=\"powered-by\"\n          title=\"embetty - displaying remote content without compromising your privacy.\">\n          powered by <span class=\"embetty-logo\" v-html=\"embettyLogo\" />\n        </a>\n      </article>\n    </template>\n  </div>\n</template>\n\n<style lang=\"scss\">\n@import '../assets/element.scss';\n@import '../assets/vars.scss';\n\n$profile-image-width: 36px;\n$quoteLineWidth: 4px;\n\n.embetty-tweet.answered {\n  margin-top: 0;\n  margin-bottom: 0.5rem;\n  border: 0;\n  padding: 0;\n\n  header {\n    padding-bottom: 0.5rem;\n  }\n\n  article {\n    border-left: $quoteLineWidth solid #bbb;\n    margin-left: $profile-image-width / 2 - $quoteLineWidth / 2;\n    padding-left: 2rem;\n    padding-bottom: 1rem;\n\n    p {\n      font-size: 14px;\n    }\n\n    .created-at {\n      display: none;\n    }\n  }\n\n  .powered-by {\n    display: none;\n  }\n}\n\n.embetty-tweet {\n  @include host();\n\n  max-width: 642px;\n  padding: 1rem 1.2rem;\n\n  @media (min-width: 600px) {\n    padding: 1.5rem 2rem;\n  }\n\n  header {\n    display: flex;\n    align-items: center;\n    margin-bottom: .5rem;\n\n    img {\n      width: $profile-image-width;\n      height: $profile-image-width;\n      border-radius: 50%;\n    }\n\n    > span {\n      display: inline-block;\n      margin: 0 var(--embetty-spacing, $embetty-spacing);\n    }\n\n    strong {\n      font-size: 16px;\n      display: block;\n    }\n\n    a,\n    a:hover {\n      font-size: 14px;\n      color: #697882;\n      text-decoration: none;\n    }\n  }\n\n  article {\n    span {\n      display: block;\n    }\n\n    p {\n      margin: 0 auto 0.5rem;\n      line-height: 1.4;\n      letter-spacing: .01em;\n\n      @media (min-width: 600px) {\n        font-size: 18px;\n      }\n\n      a {\n        color: #2b7bb9;\n        text-decoration: none;\n\n        &:hover {\n          color: #3b94d9;\n        }\n\n        &:focus {\n          text-decoration: underline;\n        }\n      }\n    }\n  }\n\n  .media {\n    a {\n      height: 100%;\n      display: flex;\n      align-items: center;\n\n      &:not(:first-child) {\n        display: none;\n      }\n    }\n\n    img {\n      max-width: 100%;\n      width: 100%;\n      height: 100%;\n      object-fit: cover;\n    }\n\n    @media (min-width: 600px) {\n      display: grid;\n      grid-column-gap: 1px;\n      grid-row-gap: 1px;\n\n      a:not(:first-child) {\n        display: block;\n      }\n\n      &.media-2 {\n        grid-template-columns: 50% 50%;\n      }\n\n      &.media-3 {\n        grid-template-columns: auto 40%;\n\n        a:first-child {\n          grid-row: 1 / span 2;\n        }\n      }\n\n      &.media-4 {\n        grid-template-columns: auto 20%;\n\n        a:first-child {\n          grid-row: 1 / span 3;\n        }\n      }\n    }\n  }\n\n  .links {\n    border: 1px solid var(--embetty-border-color, $embetty-border-color);\n    border-width: 1px;\n    border-radius: 4px;\n    text-decoration: none;\n    display: flex;\n    flex-direction: column;\n    color: #14171a;\n    font-size: 14px;\n\n    &:hover,\n    &:focus {\n      background-color: rgb(245, 248, 250);\n      border-color: rgba(136,153,166,.5);\n      transition: background-color .15s ease-in-out, border-color .15s ease-in-out;\n    }\n\n    @media (min-width: 600px) {\n      flex-direction: row;\n    }\n\n    img {\n      max-width: 100%;\n      object-fit: cover;\n      display: inline-block;\n\n      @media (min-width: 600px) {\n        height: 125px;\n        width: 125px;\n        min-width: 125px;\n      }\n    }\n\n    & > *:last-child {\n      margin-bottom: 0;\n    }\n\n    .link-body {\n      padding: .5rem;\n\n      @media (min-width: 600px) {\n        display: flex;\n        flex-direction: column;\n        padding: .5rem .8rem;\n      }\n    }\n\n    h3 {\n      font-size: 14px;\n      line-height: 1.3;\n      margin: 0;\n      margin-bottom: .3em;\n    }\n\n    p {\n      display: none;\n\n      @media (min-width: 600px) {\n        display: block;\n        flex-grow: 1;\n        hyphens: auto;\n        line-height: 18px;\n        font-size: 14px;\n        margin: 0;\n        margin-bottom: .3em;\n      }\n    }\n\n    span {\n      margin-top: auto;\n      color: #999;\n    }\n  }\n\n  .created-at {\n    margin-top: .5rem;\n    display: block;\n    font-size: 14px;\n    color: #777;\n    text-decoration: none;\n\n    svg {\n      height: 22px;\n      vertical-align: middle;\n    }\n  }\n\n  .powered-by {\n    @include powered-by();\n  }\n}\n</style>\n\n<script>\nimport EmbettyEmbed from './EmbettyEmbed.vue';\n\nvar LINK_IMAGE_SIZE = 125;\nvar MIN_WINDOW_WIDTH = 600;\n\nexport default {\n  name: 'EmbettyTweet',\n  extends: EmbettyEmbed,\n  props: {\n    status: {\n      type: String,\n      required: true,\n      /**\n       * @param {!string} statusId The Twitter status (tweet) ID.\n       * @returns {!boolean} True if it seems like a valid status ID, false otherwise.\n       */\n      validator: function(statusId) {\n        return /^\\d{6,}$/.test(statusId);\n      }\n    },\n    answered: {\n      type: Boolean,\n      required: false,\n      default: false\n    }\n  },\n  /**\n   * @returns {!object} The component's data.\n   */\n  data: function() {\n    return {\n      linkDescription: null\n    };\n  },\n  computed: {\n    /**\n     * @override\n     * @returns {!string} The embetty-server URL to query for this tweet's data.\n     */\n    url: function() {\n      return this._api('/tweet/' + this.status);\n    },\n\n    /**\n     * @returns {!string} The name of this tweet's user.\n     */\n    userName: function() {\n      return this.data.user.name;\n    },\n\n    /**\n     * @returns {!string} The twitter handle of this tweet's user.\n     */\n    screenName: function() {\n      return this.data.user.screen_name;\n    },\n\n    /**\n     * @returns {!string} The text content of this tweet. Can contain HTML links to URLs, hashtags and at-mentions.\n     */\n    fullText: function() {\n      var thisCmp = this;\n      return this.data.full_text\n        .replace(/(https:\\/\\/[^\\s]+)/g, function(link) {\n          if (thisCmp.media.length > 0 && thisCmp.media[0].url === link) {\n            return '';\n          }\n\n          return '<a href=\"' + link + '\">' + link + '</a>';\n        })\n        .replace(/#(\\w+)/g, function(hashtag, word) {\n          return '<a href=\"https://twitter.com/hashtag/' + word + '\">' + hashtag + '</a>';\n        })\n        .replace(/@(\\w+)/g, function(name, word) {\n          return '<a href=\"https://twitter.com/' + word + '\">' + name + '</a>';\n        });\n    },\n\n    /**\n     * @returns {!array.<object>} An array of objects describing this tweet's attached photos.\n     */\n    media: function() {\n      var thisCmp = this;\n      var extended = this.data.extended_entities || {};\n      var media = extended.media || [];\n      return media.map(function(m, idx) {\n        m.imageUrl = thisCmp.url + '-images-' + idx;\n        return m;\n      });\n    },\n\n    /**\n     * @returns {!array.<object>} An array of objects describing this tweet's links.\n     */\n    links: function() {\n      return this.data.entities.urls || [];\n    },\n\n    /**\n     * @returns {?object} This tweet's first link object.\n     */\n    link: function() {\n      return this.links[0];\n    },\n\n    /**\n     * @returns {!string} The embetty-server URL for this tweet's first link's image.\n     */\n    linkImageUrl: function() {\n      return this.url + '-link-image';\n    },\n\n    /**\n     * @returns {?string} The hostname of this tweet's first link's URL.\n     */\n    linkHostname: function() {\n      // adapted from https://stackoverflow.com/a/21553982/451391\n      var match = this.link.url.match(/^.*?\\/\\/(([^:/?#]*)(?::([0-9]+))?)/);\n      return match ? match[2] : undefined;\n    },\n\n    /**\n     * @returns {!string} The embetty-server URL for this tweet's user profile image.\n     */\n    profileImageUrl: function() {\n      return this.url + '-profile-image';\n    },\n\n    /**\n     * @returns {!Date} A Date object containing this tweet's creation date.\n     */\n    createdAt: function() {\n      var createdAt = this.data.created_at.replace(/\\+\\d{4}\\s/, '');\n      return new Date(createdAt);\n    },\n\n    /**\n     * @returns {!string} The URL leading to this tweet on Twitter.\n     */\n    twitterUrl: function() {\n      return 'https://twitter.com/'+ this.screenName +'/status/' + this.data.id_str;\n    },\n\n    /**\n     * @returns {?string} The status ID of the tweet that this tweet is a reply to, if any.\n     */\n    answeredTweetId: function() {\n      return this.data.in_reply_to_status_id_str;\n    },\n\n    /**\n     * @returns {!boolean} Whether this is a reply to another tweet.\n     */\n    isReply: function() {\n      return !!this.answeredTweetId;\n    }\n  },\n\n  /**\n   * Hook that is called when this component is mounted. Calls fitLinkDescription\n   * as soon as the data are fetched and whenever the window is resized.\n   */\n  mounted: function() {\n    var thisCmp = this;\n    this.$watch('fetched', function(fetched) {\n      if (fetched) {\n        thisCmp.fitLinkDescription();\n      }\n    }, {\n      immediate: true\n    });\n\n    if (window) {\n      window.addEventListener('resize', function() {\n        if (window.innerWidth < MIN_WINDOW_WIDTH) {\n          return;\n        }\n\n        thisCmp.fitLinkDescription();\n      });\n    }\n  },\n  methods: {\n    /**\n     * Truncate this tweet's first link's description to fit into the space it is given.\n     */\n    fitLinkDescription: function() {\n      if (!this.link || !window) {\n        return;\n      }\n\n      // reset link description to the one returned by the API\n      this.linkDescription = this.link.description;\n\n      if (!this.linkDescription) {\n        return;\n      }\n\n      /** @type Element */\n      var section = this.$refs.link;\n      /** @type Element */\n      var linkBody = this.$refs.linkBody;\n\n      // don't do anything if the mobile view is active\n      if (section.clientWidth === linkBody.clientWidth) {\n        return;\n      }\n\n      var imgHeight = LINK_IMAGE_SIZE;\n      var counter = 0;\n      var last = '';\n\n      var computedStyle = window.getComputedStyle(section);\n\n      var sectionHeight = function() {\n        var elemMarginTop = parseFloat(computedStyle.getPropertyValue('margin-top'));\n        var elemMarginBottom = parseFloat(computedStyle.getPropertyValue('margin-bottom'));\n        var elemHeight = parseFloat(computedStyle.getPropertyValue('height'));\n\n        return elemHeight + elemMarginTop + elemMarginBottom;\n      };\n\n      var thisCmp = this;\n      var reduceLinkDescriptionLength = function() {\n        if (counter >= 200 || last === this.linkDescription) {\n          return;\n        }\n\n        if ((sectionHeight() - 2) <= imgHeight) {\n          return;\n        }\n\n        last = thisCmp.linkDescription;\n        thisCmp.linkDescription = thisCmp.linkDescription.replace(/\\W*\\s(\\S)*$/, '…');\n        counter++;\n\n        // wait for Vue to render until we measure again\n        thisCmp.$nextTick(reduceLinkDescriptionLength);\n      };\n\n      this.$nextTick(reduceLinkDescriptionLength);\n    }\n  }\n};\n</script>\n", ".embetty-tweet.answered {\n  margin-top: 0;\n  margin-bottom: 0.5rem;\n  border: 0;\n  padding: 0;\n}\n.embetty-tweet.answered header {\n  padding-bottom: 0.5rem;\n}\n.embetty-tweet.answered article {\n  border-left: 4px solid #bbb;\n  margin-left: 16px;\n  padding-left: 2rem;\n  padding-bottom: 1rem;\n}\n.embetty-tweet.answered article p {\n  font-size: 14px;\n}\n.embetty-tweet.answered article .created-at {\n  display: none;\n}\n.embetty-tweet.answered .powered-by {\n  display: none;\n}\n\n.embetty-tweet {\n  position: relative;\n  overflow: hidden;\n  display: block;\n  max-width: 100%;\n  font-family: var(--embetty-font-family, Helvetica, Roboto, \"Segoe UI\", Calibri, sans-serif);\n  border: 1px solid var(--embetty-border-color, #ccc);\n  border-width: 1px;\n  border-radius: 4px;\n  box-sizing: border-box;\n  font-size: 16px;\n  line-height: 1;\n  max-width: 642px;\n  padding: 1rem 1.2rem;\n}\n@media (min-width: 600px) {\n  .embetty-tweet {\n    padding: 1.5rem 2rem;\n  }\n}\n.embetty-tweet header {\n  display: flex;\n  align-items: center;\n  margin-bottom: 0.5rem;\n}\n.embetty-tweet header img {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n}\n.embetty-tweet header > span {\n  display: inline-block;\n  margin: 0 var(--embetty-spacing, 1rem);\n}\n.embetty-tweet header strong {\n  font-size: 16px;\n  display: block;\n}\n.embetty-tweet header a,\n.embetty-tweet header a:hover {\n  font-size: 14px;\n  color: #697882;\n  text-decoration: none;\n}\n.embetty-tweet article span {\n  display: block;\n}\n.embetty-tweet article p {\n  margin: 0 auto 0.5rem;\n  line-height: 1.4;\n  letter-spacing: 0.01em;\n}\n@media (min-width: 600px) {\n  .embetty-tweet article p {\n    font-size: 18px;\n  }\n}\n.embetty-tweet article p a {\n  color: #2b7bb9;\n  text-decoration: none;\n}\n.embetty-tweet article p a:hover {\n  color: #3b94d9;\n}\n.embetty-tweet article p a:focus {\n  text-decoration: underline;\n}\n.embetty-tweet .media a {\n  height: 100%;\n  display: flex;\n  align-items: center;\n}\n.embetty-tweet .media a:not(:first-child) {\n  display: none;\n}\n.embetty-tweet .media img {\n  max-width: 100%;\n  width: 100%;\n  height: 100%;\n  object-fit: cover;\n}\n@media (min-width: 600px) {\n  .embetty-tweet .media {\n    display: grid;\n    grid-column-gap: 1px;\n    grid-row-gap: 1px;\n  }\n  .embetty-tweet .media a:not(:first-child) {\n    display: block;\n  }\n  .embetty-tweet .media.media-2 {\n    grid-template-columns: 50% 50%;\n  }\n  .embetty-tweet .media.media-3 {\n    grid-template-columns: auto 40%;\n  }\n  .embetty-tweet .media.media-3 a:first-child {\n    grid-row: 1/span 2;\n  }\n  .embetty-tweet .media.media-4 {\n    grid-template-columns: auto 20%;\n  }\n  .embetty-tweet .media.media-4 a:first-child {\n    grid-row: 1/span 3;\n  }\n}\n.embetty-tweet .links {\n  border: 1px solid var(--embetty-border-color, #ccc);\n  border-width: 1px;\n  border-radius: 4px;\n  text-decoration: none;\n  display: flex;\n  flex-direction: column;\n  color: #14171a;\n  font-size: 14px;\n}\n.embetty-tweet .links:hover, .embetty-tweet .links:focus {\n  background-color: #f5f8fa;\n  border-color: rgba(136, 153, 166, 0.5);\n  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;\n}\n@media (min-width: 600px) {\n  .embetty-tweet .links {\n    flex-direction: row;\n  }\n}\n.embetty-tweet .links img {\n  max-width: 100%;\n  object-fit: cover;\n  display: inline-block;\n}\n@media (min-width: 600px) {\n  .embetty-tweet .links img {\n    height: 125px;\n    width: 125px;\n    min-width: 125px;\n  }\n}\n.embetty-tweet .links > *:last-child {\n  margin-bottom: 0;\n}\n.embetty-tweet .links .link-body {\n  padding: 0.5rem;\n}\n@media (min-width: 600px) {\n  .embetty-tweet .links .link-body {\n    display: flex;\n    flex-direction: column;\n    padding: 0.5rem 0.8rem;\n  }\n}\n.embetty-tweet .links h3 {\n  font-size: 14px;\n  line-height: 1.3;\n  margin: 0;\n  margin-bottom: 0.3em;\n}\n.embetty-tweet .links p {\n  display: none;\n}\n@media (min-width: 600px) {\n  .embetty-tweet .links p {\n    display: block;\n    flex-grow: 1;\n    hyphens: auto;\n    line-height: 18px;\n    font-size: 14px;\n    margin: 0;\n    margin-bottom: 0.3em;\n  }\n}\n.embetty-tweet .links span {\n  margin-top: auto;\n  color: #999;\n}\n.embetty-tweet .created-at {\n  margin-top: 0.5rem;\n  display: block;\n  font-size: 14px;\n  color: #777;\n  text-decoration: none;\n}\n.embetty-tweet .created-at svg {\n  height: 22px;\n  vertical-align: middle;\n}\n.embetty-tweet .powered-by {\n  position: absolute;\n  z-index: 3;\n  right: -20px;\n  bottom: 0px;\n  padding: 20px 46px 5px 20px;\n  font-size: 14px;\n  color: #777;\n  text-decoration: none;\n  opacity: 0.3;\n}\n.embetty-tweet .powered-by:hover, .embetty-tweet .powered-by:focus {\n  opacity: 1;\n}\n.embetty-tweet .powered-by .embetty-logo {\n  position: absolute;\n  right: 0;\n  bottom: -42px;\n  width: 40px;\n}\n\n/*# sourceMappingURL=EmbettyTweet.vue.map */"]
     },
     media: undefined
   });
@@ -2461,10 +2467,10 @@ const __vue_is_functional_template__$1 = false;
 
 /* style inject shadow dom */
 
-const __vue_component__$1 = /*#__PURE__*/normalizeComponent({
+const __vue_component__$1 = normalizeComponent_1({
   render: __vue_render__,
   staticRenderFns: __vue_staticRenderFns__
-}, __vue_inject_styles__$1, __vue_script__$1, __vue_scope_id__$1, __vue_is_functional_template__$1, __vue_module_identifier__$1, false, createInjector, undefined, undefined);
+}, __vue_inject_styles__$1, __vue_script__$1, __vue_scope_id__$1, __vue_is_functional_template__$1, __vue_module_identifier__$1, false, browser, undefined, undefined);
 
 /** @type VideoImpl */
 var FacebookVideo = {
@@ -2820,11 +2826,11 @@ __vue_render__$1._withStripped = true;
 
 const __vue_inject_styles__$2 = function (inject) {
   if (!inject) return;
-  inject("data-v-65556e2b_0", {
+  inject("data-v-78868f83_0", {
     source: ".embetty-video {\n  position: relative;\n  overflow: hidden;\n  display: block;\n  max-width: 100%;\n  font-family: var(--embetty-font-family, Helvetica, Roboto, \"Segoe UI\", Calibri, sans-serif);\n  border: 1px solid var(--embetty-border-color, #ccc);\n  border-width: 1px;\n  border-radius: 4px;\n  box-sizing: border-box;\n  font-size: 16px;\n  line-height: 1;\n}\n.embetty-video .poster, .embetty-video .wrapper {\n  position: relative;\n  overflow: hidden;\n  background: no-repeat center black;\n  background-size: cover;\n}\n.embetty-video .poster.contain, .embetty-video .wrapper.contain {\n  background-size: contain;\n}\n.embetty-video .poster.default-height, .embetty-video .wrapper.default-height {\n  height: 0;\n  padding-top: 56.25%;\n}\n.embetty-video .playbutton,\n.embetty-video .playbutton:active {\n  box-sizing: border-box;\n  display: block;\n  position: absolute;\n  z-index: 1;\n  width: 100%;\n  height: 100%;\n  border: 0;\n  padding: 0;\n  outline: 0;\n  opacity: 0.9;\n  background: none;\n  cursor: pointer;\n  background-image: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.8));\n  transition: opacity 150ms;\n}\n.embetty-video .playbutton:hover, .embetty-video .playbutton:focus,\n.embetty-video .playbutton:active:hover,\n.embetty-video .playbutton:active:focus {\n  opacity: 1;\n}\n.embetty-video .powered-by {\n  position: absolute;\n  z-index: 3;\n  right: -20px;\n  bottom: 0px;\n  padding: 20px 46px 5px 20px;\n  font-size: 14px;\n  color: #777;\n  text-decoration: none;\n  opacity: 0.3;\n  -webkit-font-smoothing: antialiased;\n  color: #fff;\n  opacity: 0.6;\n}\n.embetty-video .powered-by:hover, .embetty-video .powered-by:focus {\n  opacity: 1;\n}\n.embetty-video .powered-by .embetty-logo {\n  position: absolute;\n  right: 0;\n  bottom: -42px;\n  width: 40px;\n}\n.embetty-video iframe,\n.embetty-video video {\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n}\n\n/*# sourceMappingURL=EmbettyVideo.vue.map */",
     map: {
       "version": 3,
-      "sources": ["/home/runner/work/embetty-vue/embetty-vue/src/components/EmbettyVideo.vue", "EmbettyVideo.vue"],
+      "sources": ["/home/flo/www/embetty/embetty-vue/src/components/EmbettyVideo.vue", "EmbettyVideo.vue"],
       "names": [],
       "mappings": "AA4CA;EC3CE,kBAAkB;EAClB,gBAAgB;EAChB,cAAc;EACd,eAAe;EACf,2FAA2F;EAC3F,mDAAmD;EACnD,iBAAiB;EACjB,kBAAkB;EAClB,sBAAsB;EACtB,eAAe;EACf,cAAc;AAChB;ADmCA;EACA,kBAAA;EACA,gBAAA;EACA,kCAAA;EACA,sBAAA;ACjCA;ADmCA;EACA,wBAAA;ACjCA;ADoCA;EACA,SAAA;EACA,mBAAA;AClCA;ADsCA;;EAEA,sBAAA;EACA,cAAA;EACA,kBAAA;EACA,UAAA;EACA,WAAA;EACA,YAAA;EACA,SAAA;EACA,UAAA;EACA,UAAA;EACA,YAAA;EACA,gBAAA;EACA,eAAA;EACA,yEAAA;EACA,yBAAA;ACpCA;ADsCA;;;EAEA,UAAA;ACnCA;ADuCA;ECrCE,kBAAkB;EAClB,UAAU;EACV,YAAY;EACZ,WAAW;EACX,2BAA2B;EAC3B,eAAe;EACf,WAAW;EACX,qBAAqB;EACrB,YAAY;EDgCd,mCAAA;EAEA,WAAA;EACA,YAAA;AC/BA;AACA;EACE,UAAU;AACZ;AACA;EACE,kBAAkB;EAClB,QAAQ;EACR,aAAa;EACb,WAAW;AACb;ADyBA;;EAEA,kBAAA;EACA,MAAA;EACA,OAAA;EACA,WAAA;EACA,YAAA;ACvBA;;AAEA,2CAA2C",
       "file": "EmbettyVideo.vue",
@@ -2847,10 +2853,10 @@ const __vue_is_functional_template__$2 = false;
 
 /* style inject shadow dom */
 
-const __vue_component__$2 = /*#__PURE__*/normalizeComponent({
+const __vue_component__$2 = normalizeComponent_1({
   render: __vue_render__$1,
   staticRenderFns: __vue_staticRenderFns__$1
-}, __vue_inject_styles__$2, __vue_script__$2, __vue_scope_id__$2, __vue_is_functional_template__$2, __vue_module_identifier__$2, false, createInjector, undefined, undefined);
+}, __vue_inject_styles__$2, __vue_script__$2, __vue_scope_id__$2, __vue_is_functional_template__$2, __vue_module_identifier__$2, false, browser, undefined, undefined);
 
 var EmbettyPlugin = {
   /**
