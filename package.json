@@ -46,7 +46,7 @@
     "eslint-plugin-vue": "^7.0.0",
     "rollup": "^1.32.1",
     "rollup-plugin-babel": "^4.4.0",
-    "rollup-plugin-css-only": "^2.0.0",
+    "rollup-plugin-css-only": "^3.0.0",
     "rollup-plugin-svg": "^2.0.0",
     "rollup-plugin-uglify": "^6.0.4",
     "rollup-plugin-vue": "5.1.9",
