@@ -3,7 +3,7 @@ import svg from 'rollup-plugin-svg';
 import css from 'rollup-plugin-css-only';
 import { terser } from 'rollup-plugin-terser';
 
-import * as CleanCSS from 'clean-css';
+import CleanCSS from 'clean-css';
 import { writeFileSync } from 'fs';
 
 const vueOptions = {
