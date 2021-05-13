@@ -25,27 +25,22 @@
     "twitter",
     "video"
   ],
-  "main": "./dist/embetty-vue.common.js",
-  "module": "./dist/embetty-vue.esm.js",
+  "main": "./dist/embetty-vue.js",
+  "type": "module",
   "scripts": {
     "watch": "rollup -c -w",
     "build": "rollup -c",
     "version": "npm run build && git add -A dist"
   },
-  "dependencies": {},
+  "peerDependencies": {
+    "vue": "^2.6.11"
+  },
   "devDependencies": {
-    "@babel/core": "^7.9.0",
-    "@babel/preset-env": "^7.9.0",
-    "@rollup/plugin-commonjs": "^11.0.2",
-    "@rollup/plugin-node-resolve": "^11.0.0",
-    "babel-eslint": "^10.1.0",
     "clean-css": "^5.0.1",
-    "core-js": "^3.6.4",
     "eslint": "^7.10.0",
     "eslint-plugin-no-es2015": "^1.2.0",
     "eslint-plugin-vue": "^7.0.0",
     "rollup": "^1.32.1",
-    "rollup-plugin-babel": "^4.4.0",
     "rollup-plugin-css-only": "^3.0.0",
     "rollup-plugin-svg": "^2.0.0",
     "rollup-plugin-terser": "^7.0.2",
