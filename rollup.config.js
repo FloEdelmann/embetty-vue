@@ -4,7 +4,7 @@ import commonjs from '@rollup/plugin-commonjs';
 import css from 'rollup-plugin-css-only';
 import babel from 'rollup-plugin-babel';
 import resolve from '@rollup/plugin-node-resolve';
-import { uglify } from 'rollup-plugin-uglify';
+import { terser } from 'rollup-plugin-terser';
 
 import * as CleanCSS from 'clean-css';
 import { writeFileSync } from 'fs';
@@ -118,7 +118,7 @@ export default [
       svg(),
       vue(vueOptions),
       babel(babelBrowserOptions),
-      uglify({
+      terser({
         mangle: false
       })
     ]
