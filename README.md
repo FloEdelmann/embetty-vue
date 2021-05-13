@@ -11,10 +11,10 @@ This is a Vue.js alternative to the original [embetty](https://github.com/heiseo
 
 ```js
 import Vue from 'vue';
-import EmbettyVue from 'embetty-vue'; // or 'embetty-vue/dist/embetty-vue.esm.js'
-// or
+import EmbettyVue from 'embetty-vue';
+
 const Vue = require('vue');
-const EmbettyVue = require('embetty-vue'); // or 'embetty-vue/dist/embetty-vue.common.js'
+const { EmbettyVue } = require('embetty-vue');
 
 Vue.use(EmbettyVue, {
   // optional, but recommended
@@ -36,7 +36,7 @@ In your HTML head:
 <link rel="stylesheet" type="text/css" href="dist/embetty-vue.min.css" />
 <meta data-embetty-server="/path/to/embetty-server" /> <!-- without trailing slash -->
 <script type="text/javascript" src="vue.js"></script>
-<script type="text/javascript" src="dist/embetty-vue.min.js"></script>
+<script type="text/javascript" src="dist/embetty-vue.browser.min.js"></script>
 ```
 
 You can link to the files without `.min` for debugging.

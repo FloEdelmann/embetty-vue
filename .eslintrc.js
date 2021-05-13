@@ -84,8 +84,5 @@ module.exports = {
 
     // using import is allowed, since webpack gets rid of it automatically
     "no-es2015/no-import": "off"
-  },
-  parserOptions: {
-    parser: 'babel-eslint'
   }
 }
