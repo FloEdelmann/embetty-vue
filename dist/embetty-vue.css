@@ -1,84 +1,4 @@
-.embetty-video {
-  position: relative;
-  overflow: hidden;
-  display: block;
-  max-width: 100%;
-  font-family: var(--embetty-font-family, Helvetica, Roboto, "Segoe UI", Calibri, sans-serif);
-  border: 1px solid var(--embetty-border-color, #ccc);
-  border-width: 1px;
-  border-radius: 4px;
-  box-sizing: border-box;
-  font-size: 16px;
-  line-height: 1;
-}
-.embetty-video .poster, .embetty-video .wrapper {
-  position: relative;
-  overflow: hidden;
-  background: no-repeat center black;
-  background-size: cover;
-}
-.embetty-video .poster.contain, .embetty-video .wrapper.contain {
-  background-size: contain;
-}
-.embetty-video .poster.default-height, .embetty-video .wrapper.default-height {
-  height: 0;
-  padding-top: 56.25%;
-}
-.embetty-video .playbutton,
-.embetty-video .playbutton:active {
-  box-sizing: border-box;
-  display: block;
-  position: absolute;
-  z-index: 1;
-  width: 100%;
-  height: 100%;
-  border: 0;
-  padding: 0;
-  outline: 0;
-  opacity: 0.9;
-  background: none;
-  cursor: pointer;
-  background-image: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.8));
-  transition: opacity 150ms;
-}
-.embetty-video .playbutton:hover, .embetty-video .playbutton:focus,
-.embetty-video .playbutton:active:hover,
-.embetty-video .playbutton:active:focus {
-  opacity: 1;
-}
-.embetty-video .powered-by {
-  position: absolute;
-  z-index: 3;
-  right: -20px;
-  bottom: 0px;
-  padding: 20px 46px 5px 20px;
-  font-size: 14px;
-  color: #777;
-  text-decoration: none;
-  opacity: 0.3;
-  -webkit-font-smoothing: antialiased;
-  color: #fff;
-  opacity: 0.6;
-}
-.embetty-video .powered-by:hover, .embetty-video .powered-by:focus {
-  opacity: 1;
-}
-.embetty-video .powered-by .embetty-logo {
-  position: absolute;
-  right: 0;
-  bottom: -42px;
-  width: 40px;
-}
-.embetty-video iframe,
-.embetty-video video {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-}
-
-/*# sourceMappingURL=EmbettyVideo.vue.map */.embetty-tweet.answered {
+.embetty-tweet.answered {
   margin-top: 0;
   margin-bottom: 0.5rem;
   border: 0;
@@ -309,4 +229,84 @@
   width: 40px;
 }
 
-/*# sourceMappingURL=EmbettyTweet.vue.map */
+/*# sourceMappingURL=EmbettyTweet.vue.map */.embetty-video {
+  position: relative;
+  overflow: hidden;
+  display: block;
+  max-width: 100%;
+  font-family: var(--embetty-font-family, Helvetica, Roboto, "Segoe UI", Calibri, sans-serif);
+  border: 1px solid var(--embetty-border-color, #ccc);
+  border-width: 1px;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-size: 16px;
+  line-height: 1;
+}
+.embetty-video .poster, .embetty-video .wrapper {
+  position: relative;
+  overflow: hidden;
+  background: no-repeat center black;
+  background-size: cover;
+}
+.embetty-video .poster.contain, .embetty-video .wrapper.contain {
+  background-size: contain;
+}
+.embetty-video .poster.default-height, .embetty-video .wrapper.default-height {
+  height: 0;
+  padding-top: 56.25%;
+}
+.embetty-video .playbutton,
+.embetty-video .playbutton:active {
+  box-sizing: border-box;
+  display: block;
+  position: absolute;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  padding: 0;
+  outline: 0;
+  opacity: 0.9;
+  background: none;
+  cursor: pointer;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.8));
+  transition: opacity 150ms;
+}
+.embetty-video .playbutton:hover, .embetty-video .playbutton:focus,
+.embetty-video .playbutton:active:hover,
+.embetty-video .playbutton:active:focus {
+  opacity: 1;
+}
+.embetty-video .powered-by {
+  position: absolute;
+  z-index: 3;
+  right: -20px;
+  bottom: 0px;
+  padding: 20px 46px 5px 20px;
+  font-size: 14px;
+  color: #777;
+  text-decoration: none;
+  opacity: 0.3;
+  -webkit-font-smoothing: antialiased;
+  color: #fff;
+  opacity: 0.6;
+}
+.embetty-video .powered-by:hover, .embetty-video .powered-by:focus {
+  opacity: 1;
+}
+.embetty-video .powered-by .embetty-logo {
+  position: absolute;
+  right: 0;
+  bottom: -42px;
+  width: 40px;
+}
+.embetty-video iframe,
+.embetty-video video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/*# sourceMappingURL=EmbettyVideo.vue.map */
