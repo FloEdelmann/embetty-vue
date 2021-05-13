@@ -13,6 +13,9 @@ This is a Vue.js alternative to the original [embetty](https://github.com/heiseo
 import Vue from 'vue';
 import EmbettyVue from 'embetty-vue';
 
+const Vue = require('vue');
+const { EmbettyVue } = require('embetty-vue');
+
 Vue.use(EmbettyVue, {
   // optional, but recommended
   serverUrl: '/path/to/embetty-server', // without trailing slash

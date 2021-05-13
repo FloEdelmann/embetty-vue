@@ -54,7 +54,22 @@ export default [
     input: 'src/plugin.js',
     output: {
       format: 'esm',
-      file: 'dist/embetty-vue.js',
+      file: 'dist/embetty-vue.mjs',
+    },
+    plugins: [
+      css({ output: false }),
+      svg(),
+      vue({ ...vueOptions }),
+    ],
+  },
+
+  // CommonJS bundler build
+  {
+    input: 'src/plugin.js',
+    output: {
+      format: 'cjs',
+      file: 'dist/embetty-vue.cjs',
+      exports: 'named',
     },
     plugins: [
       css({ output: false }),

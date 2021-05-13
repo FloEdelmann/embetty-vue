@@ -25,7 +25,8 @@
     "twitter",
     "video"
   ],
-  "main": "./dist/embetty-vue.js",
+  "main": "./dist/embetty-vue.cjs",
+  "module": "./dist/embetty-vue.mjs",
   "type": "module",
   "scripts": {
     "watch": "rollup -c -w",
