@@ -1,7 +1,7 @@
 import { EmbettyPlugin } from './plugin.js';
 
 // auto install
-if (typeof window !== 'undefined' && window.hasOwnProperty('Vue')) {
+if (typeof window !== 'undefined' && Object.prototype.hasOwnProperty.call(window, 'Vue')) {
   var baseUrlMeta = document.querySelector('meta[data-embetty-server]');
 
   /** @type EmbettyVueOptions */
