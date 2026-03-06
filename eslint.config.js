@@ -32,7 +32,7 @@ export default [
       'quotes': ['error', 'single'],
       'no-template-curly-in-string': 'error',
       'vue/max-attributes-per-line': ['error', { 'singleline': 3 }],
-      'vue/html-closing-bracket-newline': 'error',
+      'vue/html-closing-bracket-newline': ['error', { singleline: 'never', multiline: 'never'}],
       'vue/html-closing-bracket-spacing': 'error',
       'vue/prop-name-casing': 'error',
 
