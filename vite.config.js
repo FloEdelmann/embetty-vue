@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue2';
 import { resolve } from 'path';
 import { readFileSync, writeFileSync } from 'fs';
-import CleanCSS from 'clean-css';
+import { transformSync } from 'esbuild';
 
 export default defineConfig({
   plugins: [
@@ -12,8 +12,8 @@ export default defineConfig({
       closeBundle() {
         try {
           const css = readFileSync('dist/embetty-vue.css', 'utf-8');
-          const minified = new CleanCSS({}).minify(css);
-          writeFileSync('dist/embetty-vue.min.css', minified.styles);
+          const { code } = transformSync(css, { loader: 'css', minify: true });
+          writeFileSync('dist/embetty-vue.min.css', code);
         } catch (e) {
           // CSS file may not exist in non-lib builds
         }
@@ -46,6 +46,7 @@ export default defineConfig({
     },
     cssCodeSplit: false,
     minify: false,
-    cssMinify: false
+    cssMinify: false,
+    emptyOutDir: false
   }
 });

@@ -30,7 +30,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run build:lib && npm run build:browser-dev && npm run build:browser-prod",
+    "build": "npm run build:browser-dev && npm run build:browser-prod && npm run build:lib",
     "build:lib": "vite build",
     "build:browser-dev": "vite build --config vite.browser.config.js --mode development",
     "build:browser-prod": "vite build --config vite.browser.config.js",
@@ -44,7 +44,6 @@
     "@eslint/compat": "^2.0.2",
     "@eslint/js": "^10.0.0",
     "@vitejs/plugin-vue2": "^2.3.4",
-    "clean-css": "^5.0.1",
     "eslint": "^10.0.0",
     "eslint-plugin-no-es2015": "^1.2.0",
     "eslint-plugin-vue": "^10.0.0",
