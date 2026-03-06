@@ -38,6 +38,9 @@
     "lint": "eslint",
     "version": "npm run build && git add -A dist"
   },
+  "engines": {
+    "node": ">=24"
+  },
   "peerDependencies": {
     "vue": "^2.7.0"
   },
