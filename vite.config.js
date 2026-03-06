@@ -1,5 +1,8 @@
 import { resolve } from 'node:path';
+import babelPresetEnv from '@babel/preset-env';
+import { getBabelOutputPlugin } from '@rollup/plugin-babel';
 import vitePluginVue2 from '@vitejs/plugin-vue2';
+import babelPresetMinify from 'babel-preset-minify';
 import { defineConfig } from 'vite';
 
 export default defineConfig(function({ mode }) {
@@ -38,7 +41,18 @@ export default defineConfig(function({ mode }) {
           },
           ...(
             isBrowserBuild
-              ? { assetFileNames: () => `embetty-vue${minSuffix}.css` }
+              ? {
+                assetFileNames: () => `embetty-vue${minSuffix}.css`,
+                plugins: [
+                  getBabelOutputPlugin({
+                    allowAllFormats: true,
+                    presets: [
+                      [babelPresetEnv, { targets: { ie: 11 } }],
+                      ...(shouldMinify ? [babelPresetMinify] : [])
+                    ]
+                  })
+                ]
+              }
               : { exports: 'named' }
           )
         }
