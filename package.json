@@ -30,7 +30,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run build:browser-dev && npm run build:browser-prod && npm run build:lib",
+    "build": "npm run build:clean && npm run build:browser-dev && npm run build:browser-prod && npm run build:lib",
+    "build:clean": "node --input-type=module --eval \"import { rmSync } from 'node:fs'; rmSync('dist', { recursive: true, force: true });\"",
     "build:lib": "vite build",
     "build:browser-dev": "vite build --mode browser",
     "build:browser-prod": "vite build --mode browser-min",
