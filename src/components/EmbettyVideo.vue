@@ -130,7 +130,7 @@ export default {
        * @param {!string} videoType The type of the video.
        * @returns {!boolean} True if it is a valid type, false otherwise.
        */
-      validator: function(videoType) {
+      validator(videoType) {
         return videoType in videoImplementations;
       }
     },
@@ -141,7 +141,7 @@ export default {
        * @param {!string} videoId The ID of the video.
        * @returns {!boolean} True if it seems like a valid video ID, false otherwise.
        */
-      validator: function(videoId) {
+      validator(videoId) {
         return /^[a-zA-Z0-9_-]{6,}$/.test(videoId) || videoId.startsWith('http');
       }
     },
@@ -153,7 +153,7 @@ export default {
        * @param {!number} startAt The number of seconds to start playback after.
        * @returns {!boolean} True if it is a non-negative integer, false otherwise.
        */
-      validator: function(startAt) {
+      validator(startAt) {
         if (typeof startAt === 'number') {
           return startAt % 1 === 0 && startAt >= 0;
         }
@@ -170,7 +170,7 @@ export default {
   /**
    * @returns {!object} The component's data.
    */
-  data: function() {
+  data() {
     return {
       activated: false
     };
@@ -180,9 +180,9 @@ export default {
      * @returns {!VideoImpl} The video implementation, based on the video type.
      * @throws {!Error} If there is no video implementation for the given type.
      */
-    impl: function() {
+    impl() {
       if (!(this.type in videoImplementations)) {
-        throw new Error('Could not find video implementation for type ' + this.type + '. Please specify a valid video type.');
+        throw new Error(`Could not find video implementation for type ${this.type}. Please specify a valid video type.`);
       }
 
       return videoImplementations[this.type];
@@ -191,41 +191,36 @@ export default {
     /**
      * @returns {!string} The embetty-server URL for the video poster image.
      */
-    posterImageUrl: function() {
+    posterImageUrl() {
       return this._api(this.impl.getPosterImageApiEndpoint(this.videoId));
     },
 
     /**
      * @returns {!string} The poster image mode.
      */
-    _posterImageMode: function() {
+    _posterImageMode() {
       return this.posterImageMode || this._embettyVueOptions.posterImageMode || 'cover';
     },
 
     /**
      * @returns {!number} The number of seconds the video should start at.
      */
-    _startAt: function() {
+    _startAt() {
       if (typeof this.startAt === 'number') {
         return this.startAt;
       }
 
-      var timeRegex = /^(?:(?:(\d+)h)?(\d+)m)?(\d+)s?$/;
-      var timeMatch = this.startAt.match(timeRegex);
+      const timeRegex = /^(?:(?:(\d+)h)?(\d+)m)?(\d+)s?$/;
+      const timeMatch = this.startAt.match(timeRegex);
 
       if (timeMatch) {
         // '1m16s'    -> timeMatch = ['1m16s',    undefined, '1', '16']
         // '1h23m45s' -> timeMatch = ['1h23m45s', '1',       '2', '34']
-        var timeNumbers = timeMatch.map(function(val) {
-          if (val === undefined) {
-            return 0;
-          }
-          return parseInt(val);
-        });
+        const timeNumbers = timeMatch.map(val => val === undefined ? 0 : parseInt(val));
 
-        var hours = timeNumbers[1];
-        var minutes = timeNumbers[2];
-        var seconds = timeNumbers[3];
+        const hours = timeNumbers[1];
+        const minutes = timeNumbers[2];
+        const seconds = timeNumbers[3];
 
         return (hours * 3600) + (minutes * 60) + seconds;
       }
@@ -238,14 +233,14 @@ export default {
      * @returns {?string} The embetty-server URL to fetch video data from, or undefined
      *                    if this video does not require additional data.
      */
-    url: function() {
+    url() {
       return this._api(this.impl.getVideoDataApiEndpoint(this.videoId));
     },
 
     /**
      * @returns {!string} The HTML for the <iframe> this component renders upon activating.
      */
-    iframe: function() {
+    iframe() {
       return this.impl.getIframe({
         width: this.width || 1600,
         height: this.height || 900,
@@ -259,7 +254,7 @@ export default {
     /**
      * Activates the video, i.e. replaces the poster image and play button with the iframe.
      */
-    activate: function() {
+    activate() {
       this.activated = true;
       this.$emit('activated');
     }

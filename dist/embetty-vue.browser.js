@@ -25,7 +25,7 @@
     /**
      * @returns {!object} Component's data.
      */
-    data: function() {
+    data() {
       return {
         embettyLogo: EMBETTY_LOGO,
         fetched: false,
@@ -37,18 +37,18 @@
        * Override this in child components!
        * @returns {string | undefined} The URL to query for data in this component.
        */
-      url: function() {
+      url() {
         return void 0;
       },
       /**
        * @returns {!string} The server URL, either from this component's prop or the global config.
        */
-      _serverUrl: function() {
+      _serverUrl() {
         if (this.serverUrl) {
           return this.serverUrl;
         }
         if (!this._embettyVueOptions.serverUrl) {
-          throw new Error("serverUrl is neither set directly on the " + this.$vnode.tag + " component nor globally.");
+          throw new Error(`serverUrl is neither set directly on the ${this.$vnode.tag} component nor globally.`);
         }
         return this._embettyVueOptions.serverUrl;
       }
@@ -59,7 +59,7 @@
         /**
          * @param {?string} url The newly set URL.
          */
-        handler: function(url) {
+        handler(url) {
           if (url) {
             this.fetchData();
           }
@@ -70,23 +70,20 @@
       /**
        * Calls the API of embetty-server using the url set in the calling (child) component.
        */
-      fetchData: function() {
+      fetchData() {
         if (typeof window === "undefined") {
           return;
         }
-        var thisCmp = this;
-        window.fetch(this.url).then(function(response) {
-          return response.json();
-        }).then(function(data) {
-          thisCmp.data = data;
-          thisCmp.fetched = true;
+        window.fetch(this.url).then((response) => response.json()).then((data) => {
+          this.data = data;
+          this.fetched = true;
         });
       },
       /**
        * @param {?string} apiEndpoint The API endpoint of the embetty-server.
        * @returns {?string} The given URL, prepended with the embetty-server base URL.
        */
-      _api: function(apiEndpoint) {
+      _api(apiEndpoint) {
         return apiEndpoint ? this._serverUrl + apiEndpoint : void 0;
       }
     }
@@ -99,8 +96,8 @@
     _sfc_staticRenderFns$2
   );
   const EmbettyEmbed = __component__$2.exports;
-  var LINK_IMAGE_SIZE = 125;
-  var MIN_WINDOW_WIDTH = 600;
+  const LINK_IMAGE_SIZE = 125;
+  const MIN_WINDOW_WIDTH = 600;
   const _sfc_main$1 = {
     name: "EmbettyTweet",
     extends: EmbettyEmbed,
@@ -112,7 +109,7 @@
          * @param {!string} statusId The Twitter status (tweet) ID.
          * @returns {!boolean} True if it seems like a valid status ID, false otherwise.
          */
-        validator: function(statusId) {
+        validator(statusId) {
           return /^\d{6,}$/.test(statusId);
         }
       },
@@ -125,7 +122,7 @@
     /**
      * @returns {!object} The component's data.
      */
-    data: function() {
+    data() {
       return {
         linkDescription: null
       };
@@ -135,103 +132,97 @@
        * @override
        * @returns {!string} The embetty-server URL to query for this tweet's data.
        */
-      url: function() {
-        return this._api("/tweet/" + this.status);
+      url() {
+        return this._api(`/tweet/${this.status}`);
       },
       /**
        * @returns {!string} The name of this tweet's user.
        */
-      userName: function() {
+      userName() {
         return this.data.user.name;
       },
       /**
        * @returns {!string} The twitter handle of this tweet's user.
        */
-      screenName: function() {
+      screenName() {
         return this.data.user.screen_name;
       },
       /**
        * @returns {!string} The text content of this tweet. Can contain HTML links to URLs, hashtags and at-mentions.
        */
-      fullText: function() {
-        var thisCmp = this;
-        return this.data.full_text.replace(/(https:\/\/[^\s]+)/g, function(link) {
-          if (thisCmp.media.length > 0 && thisCmp.media[0].url === link) {
+      fullText() {
+        return this.data.full_text.replace(/(https:\/\/[^\s]+)/g, (link) => {
+          if (this.media.length > 0 && this.media[0].url === link) {
             return "";
           }
-          return '<a href="' + link + '">' + link + "</a>";
-        }).replace(/#(\w+)/g, function(hashtag, word) {
-          return '<a href="https://twitter.com/hashtag/' + word + '">' + hashtag + "</a>";
-        }).replace(/@(\w+)/g, function(name, word) {
-          return '<a href="https://twitter.com/' + word + '">' + name + "</a>";
-        });
+          return `<a href="${link}">${link}</a>`;
+        }).replace(/#(\w+)/g, (hashtag, word) => `<a href="https://twitter.com/hashtag/${word}">${hashtag}</a>`).replace(/@(\w+)/g, (name, word) => `<a href="https://twitter.com/${word}">${name}</a>`);
       },
       /**
        * @returns {!array.<object>} An array of objects describing this tweet's attached photos.
        */
-      media: function() {
-        var thisCmp = this;
-        var extended = this.data.extended_entities || {};
-        var media = extended.media || [];
-        return media.map(function(m, idx) {
-          m.imageUrl = thisCmp.url + "-images-" + idx;
+      media() {
+        const extended = this.data.extended_entities || {};
+        const media = extended.media || [];
+        return media.map((m, idx) => {
+          m.imageUrl = `${this.url}-images-${idx}`;
           return m;
         });
       },
       /**
        * @returns {!array.<object>} An array of objects describing this tweet's links.
        */
-      links: function() {
+      links() {
         return this.data.entities.urls || [];
       },
       /**
        * @returns {?object} This tweet's first link object.
        */
-      link: function() {
+      link() {
         return this.links[0];
       },
       /**
        * @returns {!string} The embetty-server URL for this tweet's first link's image.
        */
-      linkImageUrl: function() {
-        return this.url + "-link-image";
+      linkImageUrl() {
+        return `${this.url}-link-image`;
       },
       /**
        * @returns {?string} The hostname of this tweet's first link's URL.
        */
-      linkHostname: function() {
-        var match = this.link.url.match(/^.*?\/\/(([^:/?#]*)(?::([0-9]+))?)/);
+      linkHostname() {
+        const match = this.link.url.match(/^.*?\/\/(([^:/?#]*)(?::([0-9]+))?)/);
         return match ? match[2] : void 0;
       },
       /**
        * @returns {!string} The embetty-server URL for this tweet's user profile image.
        */
-      profileImageUrl: function() {
-        return this.url + "-profile-image";
+      profileImageUrl() {
+        return `${this.url}-profile-image`;
       },
       /**
        * @returns {!Date} A Date object containing this tweet's creation date.
        */
-      createdAt: function() {
-        var createdAt = this.data.created_at.replace(/\+\d{4}\s/, "");
+      createdAt() {
+        const createdAt = this.data.created_at.replace(/\+\d{4}\s/, "");
         return new Date(createdAt);
       },
       /**
        * @returns {!string} The URL leading to this tweet on Twitter.
        */
-      twitterUrl: function() {
-        return "https://twitter.com/" + this.screenName + "/status/" + this.data.id_str;
+      twitterUrl() {
+        return `https://twitter.com/${this.screenName}/status/${this.data.id_str}`;
       },
       /**
        * @returns {?string} The status ID of the tweet that this tweet is a reply to, if any.
        */
-      answeredTweetId: function() {
+      answeredTweetId() {
         return this.data.in_reply_to_status_id_str;
       },
       /**
        * @returns {!boolean} Whether this is a reply to another tweet.
        */
-      isReply: function() {
+      isReply() {
         return !!this.answeredTweetId;
       }
     },
@@ -239,21 +230,20 @@
      * Hook that is called when this component is mounted. Calls fitLinkDescription
      * as soon as the data are fetched and whenever the window is resized.
      */
-    mounted: function() {
-      var thisCmp = this;
-      this.$watch("fetched", function(fetched) {
+    mounted() {
+      this.$watch("fetched", (fetched) => {
         if (fetched) {
-          thisCmp.fitLinkDescription();
+          this.fitLinkDescription();
         }
       }, {
         immediate: true
       });
       if (window) {
-        window.addEventListener("resize", function() {
+        window.addEventListener("resize", () => {
           if (window.innerWidth < MIN_WINDOW_WIDTH) {
             return;
           }
-          thisCmp.fitLinkDescription();
+          this.fitLinkDescription();
         });
       }
     },
@@ -261,7 +251,7 @@
       /**
        * Truncate this tweet's first link's description to fit into the space it is given.
        */
-      fitLinkDescription: function() {
+      fitLinkDescription() {
         if (!this.link || !window) {
           return;
         }
@@ -269,33 +259,32 @@
         if (!this.linkDescription) {
           return;
         }
-        var section = this.$refs.link;
-        var linkBody = this.$refs.linkBody;
+        const section = this.$refs.link;
+        const linkBody = this.$refs.linkBody;
         if (section.clientWidth === linkBody.clientWidth) {
           return;
         }
-        var imgHeight = LINK_IMAGE_SIZE;
-        var counter = 0;
-        var last = "";
-        var computedStyle = window.getComputedStyle(section);
-        var sectionHeight = function() {
-          var elemMarginTop = parseFloat(computedStyle.getPropertyValue("margin-top"));
-          var elemMarginBottom = parseFloat(computedStyle.getPropertyValue("margin-bottom"));
-          var elemHeight = parseFloat(computedStyle.getPropertyValue("height"));
+        const imgHeight = LINK_IMAGE_SIZE;
+        let counter = 0;
+        let last = "";
+        const computedStyle = window.getComputedStyle(section);
+        const sectionHeight = () => {
+          const elemMarginTop = parseFloat(computedStyle.getPropertyValue("margin-top"));
+          const elemMarginBottom = parseFloat(computedStyle.getPropertyValue("margin-bottom"));
+          const elemHeight = parseFloat(computedStyle.getPropertyValue("height"));
           return elemHeight + elemMarginTop + elemMarginBottom;
         };
-        var thisCmp = this;
-        var reduceLinkDescriptionLength = function() {
+        const reduceLinkDescriptionLength = () => {
           if (counter >= 200 || last === this.linkDescription) {
             return;
           }
           if (sectionHeight() - 2 <= imgHeight) {
             return;
           }
-          last = thisCmp.linkDescription;
-          thisCmp.linkDescription = thisCmp.linkDescription.replace(/\W*\s(\S)*$/, "…");
+          last = this.linkDescription;
+          this.linkDescription = this.linkDescription.replace(/\W*\s(\S)*$/, "…");
           counter++;
-          thisCmp.$nextTick(reduceLinkDescriptionLength);
+          this.$nextTick(reduceLinkDescriptionLength);
         };
         this.$nextTick(reduceLinkDescriptionLength);
       }
@@ -314,101 +303,101 @@
     _sfc_staticRenderFns$1
   );
   const EmbettyTweet = __component__$1.exports;
-  var FacebookVideo = {
+  const FacebookVideo = {
     /**
      * @param {!string} videoId The ID of the video.
      * @returns {?string} The embetty-server API endpoint to get the video data from.
      */
-    getVideoDataApiEndpoint: function(videoId) {
-      return "/video/facebook/" + videoId;
+    getVideoDataApiEndpoint(videoId) {
+      return `/video/facebook/${videoId}`;
     },
     /**
      * @param {!string} videoId The ID of the video.
      * @returns {!string} The embetty-server API endpoint to get the poster image from.
      */
-    getPosterImageApiEndpoint: function(videoId) {
-      return "/video/facebook/" + videoId + "-poster-image";
+    getPosterImageApiEndpoint(videoId) {
+      return `/video/facebook/${videoId}-poster-image`;
     },
     /**
      * @param {!VideoData} videoData All data required to render the video iframe.
      * @returns {!string} The <iframe> playing the video.
      */
-    getIframe: function(videoData) {
-      var canonicalUrl = encodeURIComponent(videoData.serverData.canonicalUrl);
-      var iframeSrc = "https://www.facebook.com/plugins/video.php?href=" + canonicalUrl + "&show_text=0&autoplay=1&mute=0&width=" + videoData.width;
-      return '<iframe src="' + iframeSrc + '" width="' + videoData.width + '" height="' + videoData.height + '" frameborder="0" webkitallowfullscreen mozallowfullscreen msallowfullscreen allowfullscreen></iframe>';
+    getIframe(videoData) {
+      const canonicalUrl = encodeURIComponent(videoData.serverData.canonicalUrl);
+      const iframeSrc = `https://www.facebook.com/plugins/video.php?href=${canonicalUrl}&show_text=0&autoplay=1&mute=0&width=${videoData.width}`;
+      return `<iframe src="${iframeSrc}" width="${videoData.width}" height="${videoData.height}" frameborder="0" webkitallowfullscreen mozallowfullscreen msallowfullscreen allowfullscreen></iframe>`;
     }
   };
-  var NativeVideo = {
+  const NativeVideo = {
     /**
      * @param {!string} videoId The ID of the video.
      * @returns {?string} undefined because no additional video data are required for native videos.
      */
-    getVideoDataApiEndpoint: function(videoId) {
+    getVideoDataApiEndpoint(videoId) {
       return void 0;
     },
     /**
      * @param {!string} videoId The ID of the video.
      * @returns {?string} undefined because poster images for native videos are not yet supported by the server.
      */
-    getPosterImageApiEndpoint: function(videoId) {
+    getPosterImageApiEndpoint(videoId) {
       return void 0;
     },
     /**
      * @param {!VideoData} videoData All data required to render the video element.
      * @returns {!string} The <video> element playing the video.
      */
-    getIframe: function(videoData) {
-      return '<video width="' + videoData.width + '" height="' + videoData.height + '" autoplay controls><source src="' + videoData.videoId + '" /></video>';
+    getIframe(videoData) {
+      return `<video width="${videoData.width}" height="${videoData.height}" autoplay controls><source src="${videoData.videoId}" /></video>`;
     }
   };
-  var VimeoVideo = {
+  const VimeoVideo = {
     /**
      * @param {!string} videoId The ID of the video.
      * @returns {?string} undefined because no additional video data are required for Vimeo.
      */
-    getVideoDataApiEndpoint: function(videoId) {
+    getVideoDataApiEndpoint(videoId) {
       return void 0;
     },
     /**
      * @param {!string} videoId The ID of the video.
      * @returns {!string} The embetty-server API endpoint to get the poster image from.
      */
-    getPosterImageApiEndpoint: function(videoId) {
-      return "/video/vimeo/" + videoId + "-poster-image";
+    getPosterImageApiEndpoint(videoId) {
+      return `/video/vimeo/${videoId}-poster-image`;
     },
     /**
      * @param {!VideoData} videoData All data required to render the video iframe.
      * @returns {!string} The <iframe> playing the video.
      */
-    getIframe: function(videoData) {
-      return '<iframe src="https://player.vimeo.com/video/' + videoData.videoId + "?autoplay=1#t=" + videoData.startAt + '" width="' + videoData.width + '" height="' + videoData.height + '" frameborder="0" webkitallowfullscreen mozallowfullscreen msallowfullscreen allowfullscreen></iframe>';
+    getIframe(videoData) {
+      return `<iframe src="https://player.vimeo.com/video/${videoData.videoId}?autoplay=1#t=${videoData.startAt}" width="${videoData.width}" height="${videoData.height}" frameborder="0" webkitallowfullscreen mozallowfullscreen msallowfullscreen allowfullscreen></iframe>`;
     }
   };
-  var YoutubeVideo = {
+  const YoutubeVideo = {
     /**
      * @param {!string} videoId The ID of the video.
      * @returns {?string} undefined because no additional video data are required for YouTube.
      */
-    getVideoDataApiEndpoint: function(videoId) {
+    getVideoDataApiEndpoint(videoId) {
       return void 0;
     },
     /**
      * @param {!string} videoId The ID of the video.
      * @returns {!string} The embetty-server API endpoint to get the poster image from.
      */
-    getPosterImageApiEndpoint: function(videoId) {
-      return "/video/youtube/" + videoId + "-poster-image";
+    getPosterImageApiEndpoint(videoId) {
+      return `/video/youtube/${videoId}-poster-image`;
     },
     /**
      * @param {!VideoData} videoData All data required to render the video iframe.
      * @returns {!string} The <iframe> playing the video.
      */
-    getIframe: function(videoData) {
-      return '<iframe src="https://www.youtube-nocookie.com/embed/' + videoData.videoId + "?autoplay=1&start=" + videoData.startAt + '" width="' + videoData.width + '" height="' + videoData.height + '" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"webkitallowfullscreen mozallowfullscreen msallowfullscreen allowfullscreen></iframe>';
+    getIframe(videoData) {
+      return `<iframe src="https://www.youtube-nocookie.com/embed/${videoData.videoId}?autoplay=1&start=${videoData.startAt}" width="${videoData.width}" height="${videoData.height}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" webkitallowfullscreen mozallowfullscreen msallowfullscreen allowfullscreen></iframe>`;
     }
   };
-  var videoImplementations = {
+  const videoImplementations = {
     facebook: FacebookVideo,
     native: NativeVideo,
     vimeo: VimeoVideo,
@@ -435,7 +424,7 @@
          * @param {!string} videoType The type of the video.
          * @returns {!boolean} True if it is a valid type, false otherwise.
          */
-        validator: function(videoType) {
+        validator(videoType) {
           return videoType in videoImplementations;
         }
       },
@@ -446,7 +435,7 @@
          * @param {!string} videoId The ID of the video.
          * @returns {!boolean} True if it seems like a valid video ID, false otherwise.
          */
-        validator: function(videoId) {
+        validator(videoId) {
           return /^[a-zA-Z0-9_-]{6,}$/.test(videoId) || videoId.startsWith("http");
         }
       },
@@ -458,7 +447,7 @@
          * @param {!number} startAt The number of seconds to start playback after.
          * @returns {!boolean} True if it is a non-negative integer, false otherwise.
          */
-        validator: function(startAt) {
+        validator(startAt) {
           if (typeof startAt === "number") {
             return startAt % 1 === 0 && startAt >= 0;
           }
@@ -474,7 +463,7 @@
     /**
      * @returns {!object} The component's data.
      */
-    data: function() {
+    data() {
       return {
         activated: false
       };
@@ -484,43 +473,38 @@
        * @returns {!VideoImpl} The video implementation, based on the video type.
        * @throws {!Error} If there is no video implementation for the given type.
        */
-      impl: function() {
+      impl() {
         if (!(this.type in videoImplementations)) {
-          throw new Error("Could not find video implementation for type " + this.type + ". Please specify a valid video type.");
+          throw new Error(`Could not find video implementation for type ${this.type}. Please specify a valid video type.`);
         }
         return videoImplementations[this.type];
       },
       /**
        * @returns {!string} The embetty-server URL for the video poster image.
        */
-      posterImageUrl: function() {
+      posterImageUrl() {
         return this._api(this.impl.getPosterImageApiEndpoint(this.videoId));
       },
       /**
        * @returns {!string} The poster image mode.
        */
-      _posterImageMode: function() {
+      _posterImageMode() {
         return this.posterImageMode || this._embettyVueOptions.posterImageMode || "cover";
       },
       /**
        * @returns {!number} The number of seconds the video should start at.
        */
-      _startAt: function() {
+      _startAt() {
         if (typeof this.startAt === "number") {
           return this.startAt;
         }
-        var timeRegex = /^(?:(?:(\d+)h)?(\d+)m)?(\d+)s?$/;
-        var timeMatch = this.startAt.match(timeRegex);
+        const timeRegex = /^(?:(?:(\d+)h)?(\d+)m)?(\d+)s?$/;
+        const timeMatch = this.startAt.match(timeRegex);
         if (timeMatch) {
-          var timeNumbers = timeMatch.map(function(val) {
-            if (val === void 0) {
-              return 0;
-            }
-            return parseInt(val);
-          });
-          var hours = timeNumbers[1];
-          var minutes = timeNumbers[2];
-          var seconds = timeNumbers[3];
+          const timeNumbers = timeMatch.map((val) => val === void 0 ? 0 : parseInt(val));
+          const hours = timeNumbers[1];
+          const minutes = timeNumbers[2];
+          const seconds = timeNumbers[3];
           return hours * 3600 + minutes * 60 + seconds;
         }
         return 0;
@@ -530,13 +514,13 @@
        * @returns {?string} The embetty-server URL to fetch video data from, or undefined
        *                    if this video does not require additional data.
        */
-      url: function() {
+      url() {
         return this._api(this.impl.getVideoDataApiEndpoint(this.videoId));
       },
       /**
        * @returns {!string} The HTML for the <iframe> this component renders upon activating.
        */
-      iframe: function() {
+      iframe() {
         return this.impl.getIframe({
           width: this.width || 1600,
           height: this.height || 900,
@@ -550,7 +534,7 @@
       /**
        * Activates the video, i.e. replaces the poster image and play button with the iframe.
        */
-      activate: function() {
+      activate() {
         this.activated = true;
         this.$emit("activated");
       }
@@ -574,21 +558,20 @@
     _sfc_staticRenderFns
   );
   const EmbettyVideo = __component__.exports;
-  var EmbettyPlugin = {
+  const EmbettyPlugin = {
     /**
      * @param {!VueConstructor} Vue The global Vue object.
      * @param {?EmbettyVueOptions} options Options for embetty-vue.
      */
-    install: function(Vue, options) {
-      options = options || {};
+    install(Vue, options = {}) {
       Vue.component("EmbettyTweet", EmbettyTweet);
       Vue.component("EmbettyVideo", EmbettyVideo);
       Vue.prototype._embettyVueOptions = options;
     }
   };
   if (typeof window !== "undefined" && Object.prototype.hasOwnProperty.call(window, "Vue")) {
-    var baseUrlMeta = document.querySelector("meta[data-embetty-server]");
-    var embettyVueOptions = {
+    const baseUrlMeta = document.querySelector("meta[data-embetty-server]");
+    const embettyVueOptions = {
       serverUrl: baseUrlMeta !== null ? baseUrlMeta.getAttribute("data-embetty-server") : void 0
     };
     window.Vue.use(EmbettyPlugin, embettyVueOptions);
