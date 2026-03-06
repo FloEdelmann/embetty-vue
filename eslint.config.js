@@ -4,6 +4,9 @@ import eslintPluginNoEs2015 from 'eslint-plugin-no-es2015';
 import globals from 'globals';
 import { fixupPluginRules } from '@eslint/compat';
 
+// eslint-plugin-no-es2015 predates the meta.fixable requirement; patch it so ESLint v10 accepts it.
+eslintPluginNoEs2015.rules['only-var'].meta = { fixable: 'code' };
+
 export default [
   {
     ignores: ['node_modules/', 'dist/', 'tests/'],
