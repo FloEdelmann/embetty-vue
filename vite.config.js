@@ -1,6 +1,6 @@
+import { resolve } from 'node:path';
+import vitePluginVue2 from '@vitejs/plugin-vue2';
 import { defineConfig } from 'vite';
-import vue from '@vitejs/plugin-vue2';
-import { resolve } from 'path';
 
 export default defineConfig(function({ mode }) {
   const isBrowser = mode === 'browser' || mode === 'browser-min';
@@ -8,7 +8,7 @@ export default defineConfig(function({ mode }) {
 
   return {
     plugins: [
-      vue(),
+      vitePluginVue2(),
       ...(!isBrowser ? [{
         name: 'no-css',
         generateBundle(options, bundle) {
