@@ -5,7 +5,6 @@ node_modules
 # Vite config files
 index.html
 vite.config.js
-vite.browser.config.js
 
 /tests/e2e/reports/
 selenium-debug.log

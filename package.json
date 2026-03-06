@@ -32,8 +32,8 @@
     "dev": "vite",
     "build": "npm run build:browser-dev && npm run build:browser-prod && npm run build:lib",
     "build:lib": "vite build",
-    "build:browser-dev": "vite build --config vite.browser.config.js --mode development",
-    "build:browser-prod": "vite build --config vite.browser.config.js",
+    "build:browser-dev": "vite build --mode browser",
+    "build:browser-prod": "vite build --mode browser-min",
     "lint": "eslint",
     "version": "npm run build && git add -A dist"
   },
