@@ -3,7 +3,7 @@ import App from './App.vue';
 
 Vue.config.productionTip = false;
 
-import EmbettyVue from './install';
+import EmbettyVue from './plugin';
 
 Vue.use(EmbettyVue, {
   serverUrl: 'http://localhost:3000'

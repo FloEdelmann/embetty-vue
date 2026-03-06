@@ -9,7 +9,7 @@ eslintPluginNoEs2015.rules['only-var'].meta = { fixable: 'code' };
 
 export default [
   {
-    ignores: ['node_modules/', 'dist/', 'tests/'],
+    ignores: ['node_modules/', 'dist/', 'tests/', 'vite.config.js', 'vite.browser.config.js'],
   },
   eslintJs.configs.recommended,
   ...eslintPluginVue.configs['flat/recommended'],
