@@ -31,7 +31,7 @@
   "scripts": {
     "watch": "rollup -c -w",
     "build": "rollup -c",
-    "lint": "eslint src",
+    "lint": "eslint",
     "version": "npm run build && git add -A dist"
   },
   "peerDependencies": {

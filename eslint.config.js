@@ -1,6 +1,6 @@
-import js from '@eslint/js';
-import pluginVue from 'eslint-plugin-vue';
-import noEs2015 from 'eslint-plugin-no-es2015';
+import eslintJs from '@eslint/js';
+import eslintPluginVue from 'eslint-plugin-vue';
+import eslintPluginNoEs2015 from 'eslint-plugin-no-es2015';
 import globals from 'globals';
 import { fixupPluginRules } from '@eslint/compat';
 
@@ -8,11 +8,11 @@ export default [
   {
     ignores: ['node_modules/', 'dist/', 'tests/'],
   },
-  js.configs.recommended,
-  ...pluginVue.configs['flat/recommended'],
+  eslintJs.configs.recommended,
+  ...eslintPluginVue.configs['flat/recommended'],
   {
     plugins: {
-      'no-es2015': fixupPluginRules(noEs2015),
+      'no-es2015': fixupPluginRules(eslintPluginNoEs2015),
     },
     languageOptions: {
       globals: {
