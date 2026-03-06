@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue2';
 import { resolve } from 'path';
+import { unlinkSync, existsSync } from 'fs';
 
 export default defineConfig(function({ mode }) {
   const isProduction = mode === 'production';
@@ -9,11 +10,11 @@ export default defineConfig(function({ mode }) {
       vue(),
       {
         name: 'suppress-css-output',
-        generateBundle(options, bundle) {
-          for (const key of Object.keys(bundle)) {
-            if (bundle[key].fileName && bundle[key].fileName.endsWith('.css')) {
-              delete bundle[key];
-            }
+        closeBundle() {
+          // Delete the CSS temp file - the lib build already provides embetty-vue.css
+          const tempCss = 'dist/embetty-vue.browser-temp.css';
+          if (existsSync(tempCss)) {
+            unlinkSync(tempCss);
           }
         }
       }
@@ -32,6 +33,12 @@ export default defineConfig(function({ mode }) {
         output: {
           globals: {
             vue: 'Vue'
+          },
+          assetFileNames(assetInfo) {
+            if (assetInfo.name && assetInfo.name.endsWith('.css')) {
+              return 'embetty-vue.browser-temp.css';
+            }
+            return assetInfo.name || '[name][extname]';
           }
         }
       },

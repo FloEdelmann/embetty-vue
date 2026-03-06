@@ -30,7 +30,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && vite build --config vite.browser.config.js --mode development && vite build --config vite.browser.config.js",
+    "build": "npm run build:lib && npm run build:browser-dev && npm run build:browser-prod",
+    "build:lib": "vite build",
+    "build:browser-dev": "vite build --config vite.browser.config.js --mode development",
+    "build:browser-prod": "vite build --config vite.browser.config.js",
     "lint": "eslint",
     "version": "npm run build && git add -A dist"
   },

@@ -44,6 +44,8 @@ export default defineConfig({
         }
       }
     },
-    cssCodeSplit: false
+    cssCodeSplit: false,
+    minify: false,
+    cssMinify: false
   }
 });
