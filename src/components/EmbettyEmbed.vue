@@ -1,5 +1,5 @@
 <script>
-import EMBETTY_LOGO from '../assets/embetty.svg';
+import EMBETTY_LOGO from '../assets/embetty.svg?raw';
 
 export default {
   name: 'EmbettyEmbed',

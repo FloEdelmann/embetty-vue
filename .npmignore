@@ -2,6 +2,10 @@
 node_modules
 /dist/demo.html
 
+# Vite config files
+index.html
+vite.config.js
+
 /tests/e2e/reports/
 selenium-debug.log
 
