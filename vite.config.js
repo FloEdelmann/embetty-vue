@@ -3,13 +3,14 @@ import vitePluginVue2 from '@vitejs/plugin-vue2';
 import { defineConfig } from 'vite';
 
 export default defineConfig(function({ mode }) {
-  const isBrowser = mode === 'browser' || mode === 'browser-min';
-  const isBrowserMin = mode === 'browser-min';
+  const isBrowserBuild = mode === 'browser' || mode === 'browser-min';
+  const shouldMinify = mode === 'browser-min';
+  const minSuffix = shouldMinify ? '.min' : '';
 
   return {
     plugins: [
       vitePluginVue2(),
-      ...(!isBrowser ? [{
+      ...(isBrowserBuild ? [] : [{
         name: 'no-css',
         generateBundle(options, bundle) {
           for (const key of Object.keys(bundle)) {
@@ -18,28 +19,33 @@ export default defineConfig(function({ mode }) {
             }
           }
         }
-      }] : [])
+      }])
     ],
     build: {
       lib: {
-        entry: resolve(import.meta.dirname, isBrowser ? 'src/browser-wrapper.js' : 'src/plugin.js'),
+        entry: resolve(import.meta.dirname, isBrowserBuild ? 'src/browser-wrapper.js' : 'src/plugin.js'),
         name: 'EmbettyVue',
-        formats: isBrowser ? ['iife'] : ['es', 'cjs'],
-        fileName: isBrowser
-          ? () => (isBrowserMin ? 'embetty-vue.browser.min.js' : 'embetty-vue.browser.js')
+        formats: isBrowserBuild ? ['iife'] : ['es', 'cjs'],
+        fileName: isBrowserBuild
+          ? () => `embetty-vue.browser${minSuffix}.js`
           : (format) => (format === 'es' ? 'embetty-vue.mjs' : 'embetty-vue.cjs')
       },
       rollupOptions: {
         external: ['vue'],
         output: {
-          ...(!isBrowser && { exports: 'named' }),
-          globals: { vue: 'Vue' },
-          ...(isBrowser && { assetFileNames: () => (isBrowserMin ? 'embetty-vue.min.css' : 'embetty-vue.css') })
+          globals: {
+            vue: 'Vue'
+          },
+          ...(
+            isBrowserBuild
+              ? { assetFileNames: () => `embetty-vue${minSuffix}.css` }
+              : { exports: 'named' }
+          )
         }
       },
       cssCodeSplit: false,
-      cssMinify: isBrowserMin ? 'esbuild' : false,
-      minify: isBrowserMin ? 'esbuild' : false,
+      cssMinify: shouldMinify ? 'esbuild' : false,
+      minify: shouldMinify ? 'esbuild' : false,
       emptyOutDir: false
     }
   };
