@@ -1,4 +1,6 @@
 import { resolve } from 'node:path';
+import { transformSync } from '@babel/core';
+import presetEnv from '@babel/preset-env';
 import vitePluginVue2 from '@vitejs/plugin-vue2';
 import { defineConfig } from 'vite';
 
@@ -10,16 +12,35 @@ export default defineConfig(function({ mode }) {
   return {
     plugins: [
       vitePluginVue2(),
-      ...(isBrowserBuild ? [] : [{
-        name: 'no-css',
-        generateBundle(options, bundle) {
-          for (const key of Object.keys(bundle)) {
-            if (key.endsWith('.css')) {
-              delete bundle[key];
+      ...(isBrowserBuild ? [
+        {
+          name: 'babel-es5',
+          renderChunk(code) {
+            const result = transformSync(code, {
+              presets: [[presetEnv, { targets: { ie: 11 } }]],
+              sourceType: 'script',
+              babelrc: false,
+              configFile: false,
+              compact: false
+            });
+            if (!result) {
+              throw new Error('Babel transformSync returned null');
+            }
+            return { code: result.code, map: result.map };
+          }
+        }
+      ] : [
+        {
+          name: 'no-css',
+          generateBundle(options, bundle) {
+            for (const key of Object.keys(bundle)) {
+              if (key.endsWith('.css')) {
+                delete bundle[key];
+              }
             }
           }
         }
-      }])
+      ])
     ],
     build: {
       lib: {

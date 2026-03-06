@@ -62,18 +62,15 @@ export default {
     /**
      * Calls the API of embetty-server using the url set in the calling (child) component.
      */
-    fetchData() {
+    async fetchData() {
       // skip fetching in SSR
       if (typeof window === 'undefined') {
         return;
       }
 
-      window.fetch(this.url)
-        .then(response => response.json())
-        .then(data => {
-          this.data = data;
-          this.fetched = true;
-        });
+      const response = await window.fetch(this.url);
+      this.data = await response.json();
+      this.fetched = true;
     },
 
     /**

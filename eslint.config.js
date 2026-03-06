@@ -4,15 +4,23 @@ import globals from 'globals';
 
 export default [
   {
-    ignores: ['node_modules/', 'dist/', 'tests/', 'vite.config.js', 'eslint.config.js'],
+    ignores: ['node_modules/', 'dist/', 'tests/']
   },
   eslintJs.configs.recommended,
   ...eslintPluginVue.configs['flat/recommended'],
   {
+    files: ['*.config.js'],
     languageOptions: {
       globals: {
-        ...globals.browser,
-      },
+        ...globals.node
+      }
+    }
+  },
+  {
+    languageOptions: {
+      globals: {
+        ...globals.browser
+      }
     },
     rules: {
       'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'off',
@@ -27,6 +35,6 @@ export default [
       'vue/html-closing-bracket-newline': ['error', { singleline: 'never', multiline: 'never'}],
       'vue/html-closing-bracket-spacing': 'error',
       'vue/prop-name-casing': 'error'
-    },
-  },
+    }
+  }
 ];

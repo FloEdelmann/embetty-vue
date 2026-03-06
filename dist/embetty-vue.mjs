@@ -68,14 +68,13 @@ const _sfc_main$2 = {
     /**
      * Calls the API of embetty-server using the url set in the calling (child) component.
      */
-    fetchData() {
+    async fetchData() {
       if (typeof window === "undefined") {
         return;
       }
-      window.fetch(this.url).then((response) => response.json()).then((data) => {
-        this.data = data;
-        this.fetched = true;
-      });
+      const response = await window.fetch(this.url);
+      this.data = await response.json();
+      this.fetched = true;
     },
     /**
      * @param {?string} apiEndpoint The API endpoint of the embetty-server.
@@ -96,6 +95,7 @@ var __component__$2 = /* @__PURE__ */ normalizeComponent(
 const EmbettyEmbed = __component__$2.exports;
 const LINK_IMAGE_SIZE = 125;
 const MIN_WINDOW_WIDTH = 600;
+const MAX_TRUNCATION_ITERATIONS = 200;
 const _sfc_main$1 = {
   name: "EmbettyTweet",
   extends: EmbettyEmbed,
@@ -273,7 +273,7 @@ const _sfc_main$1 = {
         return elemHeight + elemMarginTop + elemMarginBottom;
       };
       const reduceLinkDescriptionLength = () => {
-        if (counter >= 200 || last === this.linkDescription) {
+        if (counter >= MAX_TRUNCATION_ITERATIONS || last === this.linkDescription) {
           return;
         }
         if (sectionHeight() - 2 <= imgHeight) {
@@ -369,7 +369,8 @@ const VimeoVideo = {
    * @returns {!string} The <iframe> playing the video.
    */
   getIframe(videoData) {
-    return `<iframe src="https://player.vimeo.com/video/${videoData.videoId}?autoplay=1#t=${videoData.startAt}" width="${videoData.width}" height="${videoData.height}" frameborder="0" webkitallowfullscreen mozallowfullscreen msallowfullscreen allowfullscreen></iframe>`;
+    const src = `https://player.vimeo.com/video/${videoData.videoId}?autoplay=1#t=${videoData.startAt}`;
+    return `<iframe src="${src}" width="${videoData.width}" height="${videoData.height}" frameborder="0" webkitallowfullscreen mozallowfullscreen msallowfullscreen allowfullscreen></iframe>`;
   }
 };
 const YoutubeVideo = {
@@ -392,7 +393,8 @@ const YoutubeVideo = {
    * @returns {!string} The <iframe> playing the video.
    */
   getIframe(videoData) {
-    return `<iframe src="https://www.youtube-nocookie.com/embed/${videoData.videoId}?autoplay=1&start=${videoData.startAt}" width="${videoData.width}" height="${videoData.height}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" webkitallowfullscreen mozallowfullscreen msallowfullscreen allowfullscreen></iframe>`;
+    const src = `https://www.youtube-nocookie.com/embed/${videoData.videoId}?autoplay=1&start=${videoData.startAt}`;
+    return `<iframe src="${src}" width="${videoData.width}" height="${videoData.height}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" webkitallowfullscreen mozallowfullscreen msallowfullscreen allowfullscreen></iframe>`;
   }
 };
 const videoImplementations = {
