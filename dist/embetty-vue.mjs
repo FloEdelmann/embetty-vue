@@ -107,22 +107,25 @@ const _sfc_main$1 = defineComponent({
     };
   },
   computed: {
+    /** The raw tweet data cast to TweetData. */
+    tweetData() {
+      return this.data;
+    },
     /** @override The embetty-server URL to query for this tweet's data. */
     url() {
       return this._api(`/tweet/${this.status}`);
     },
     /** The name of this tweet's user. */
     userName() {
-      return this.data.user.name;
+      return this.tweetData.user.name;
     },
     /** The twitter handle of this tweet's user. */
     screenName() {
-      return this.data.user.screen_name;
+      return this.tweetData.user.screen_name;
     },
     /** The text content of this tweet. Can contain HTML links to URLs, hashtags and at-mentions. */
     fullText() {
-      const tweetData = this.data;
-      return tweetData.full_text.replace(/(https:\/\/[^\s]+)/g, (link) => {
+      return this.tweetData.full_text.replace(/(https:\/\/[^\s]+)/g, (link) => {
         if (this.media.length > 0 && this.media[0].url === link) {
           return "";
         }
@@ -131,8 +134,7 @@ const _sfc_main$1 = defineComponent({
     },
     /** An array of objects describing this tweet's attached photos. */
     media() {
-      const tweetData = this.data;
-      const extended = tweetData.extended_entities || {};
+      const extended = this.tweetData.extended_entities || {};
       const media = extended.media || [];
       return media.map((m, idx) => {
         m.imageUrl = `${this.url}-images-${idx}`;
@@ -141,8 +143,7 @@ const _sfc_main$1 = defineComponent({
     },
     /** An array of objects describing this tweet's links. */
     links() {
-      const tweetData = this.data;
-      return tweetData.entities.urls || [];
+      return this.tweetData.entities.urls || [];
     },
     /** This tweet's first link object. */
     link() {
@@ -166,19 +167,16 @@ const _sfc_main$1 = defineComponent({
     },
     /** A Date object containing this tweet's creation date. */
     createdAt() {
-      const tweetData = this.data;
-      const createdAt = tweetData.created_at.replace(/\+\d{4}\s/, "");
+      const createdAt = this.tweetData.created_at.replace(/\+\d{4}\s/, "");
       return new Date(createdAt);
     },
     /** The URL leading to this tweet on Twitter. */
     twitterUrl() {
-      const tweetData = this.data;
-      return `https://twitter.com/${this.screenName}/status/${tweetData.id_str}`;
+      return `https://twitter.com/${this.screenName}/status/${this.tweetData.id_str}`;
     },
     /** The status ID of the tweet that this tweet is a reply to, if any. */
     answeredTweetId() {
-      const tweetData = this.data;
-      return tweetData.in_reply_to_status_id_str;
+      return this.tweetData.in_reply_to_status_id_str;
     },
     /** Whether this is a reply to another tweet. */
     isReply() {
