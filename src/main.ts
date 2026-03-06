@@ -1,16 +1,15 @@
 import Vue from 'vue';
 import App from './App.vue';
+import EmbettyVue from './plugin';
 
 Vue.config.productionTip = false;
-
-import EmbettyVue from './plugin';
 
 Vue.use(EmbettyVue, {
   serverUrl: 'http://localhost:3000'
 });
 
 new Vue({
-  render: function(h) {
+  render(h) {
     return h(App);
   }
 }).$mount('#app');

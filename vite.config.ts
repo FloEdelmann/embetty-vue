@@ -3,7 +3,7 @@ import babelPresetEnv from '@babel/preset-env';
 import { getBabelOutputPlugin } from '@rollup/plugin-babel';
 import vitePluginVue2 from '@vitejs/plugin-vue2';
 import babelPresetMinify from 'babel-preset-minify';
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 
 export default defineConfig(function({ mode }) {
   const isBrowserBuild = mode === 'browser' || mode === 'browser-min';
@@ -15,18 +15,18 @@ export default defineConfig(function({ mode }) {
       vitePluginVue2(),
       ...(isBrowserBuild ? [] : [{
         name: 'no-css',
-        generateBundle(options, bundle) {
+        generateBundle(_options: unknown, bundle: Record<string, unknown>) {
           for (const key of Object.keys(bundle)) {
             if (key.endsWith('.css')) {
               delete bundle[key];
             }
           }
         }
-      }])
+      } satisfies Plugin])
     ],
     build: {
       lib: {
-        entry: resolve(import.meta.dirname, isBrowserBuild ? 'src/browser-wrapper.js' : 'src/plugin.js'),
+        entry: resolve(import.meta.dirname, isBrowserBuild ? 'src/browser-wrapper.ts' : 'src/plugin.ts'),
         name: 'EmbettyVue',
         formats: isBrowserBuild ? ['iife'] : ['es', 'cjs'],
         fileName: isBrowserBuild

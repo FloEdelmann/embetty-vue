@@ -306,25 +306,50 @@ $quoteLineWidth: 4px;
 }
 </style>
 
-<script>
+<script lang="ts">
+import { defineComponent } from 'vue';
 import EmbettyEmbed from './EmbettyEmbed.vue';
 
 const LINK_IMAGE_SIZE = 125;
 const MIN_WINDOW_WIDTH = 600;
 const MAX_TRUNCATION_ITERATIONS = 200;
 
-export default {
+interface TweetMedia {
+  url: string;
+  imageUrl: string;
+}
+
+interface TweetLink {
+  url: string;
+  description?: string;
+  title: string;
+}
+
+interface TweetData {
+  user: {
+    name: string;
+    screen_name: string;
+  };
+  full_text: string;
+  extended_entities?: {
+    media?: TweetMedia[];
+  };
+  entities: {
+    urls?: TweetLink[];
+  };
+  created_at: string;
+  id_str: string;
+  in_reply_to_status_id_str: string | null;
+}
+
+export default defineComponent({
   name: 'EmbettyTweet',
   extends: EmbettyEmbed,
   props: {
     status: {
       type: String,
       required: true,
-      /**
-       * @param {!string} statusId The Twitter status (tweet) ID.
-       * @returns {!boolean} True if it seems like a valid status ID, false otherwise.
-       */
-      validator(statusId) {
+      validator(statusId: string): boolean {
         return /^\d{6,}$/.test(statusId);
       }
     },
@@ -334,138 +359,111 @@ export default {
       default: false
     }
   },
-  /**
-   * @returns {!object} The component's data.
-   */
   data() {
     return {
-      linkDescription: null
+      linkDescription: null as string | null
     };
   },
   computed: {
-    /**
-     * @override
-     * @returns {!string} The embetty-server URL to query for this tweet's data.
-     */
-    url() {
-      return this._api(`/tweet/${this.status}`);
+    /** The raw tweet data cast to TweetData. */
+    tweetData(): TweetData {
+      return this.data as unknown as TweetData;
     },
 
-    /**
-     * @returns {!string} The name of this tweet's user.
-     */
-    userName() {
-      return this.data.user.name;
+    /** @override The embetty-server URL to query for this tweet's data. */
+    url(): string {
+      return this._api(`/tweet/${this.status}`) as string;
     },
 
-    /**
-     * @returns {!string} The twitter handle of this tweet's user.
-     */
-    screenName() {
-      return this.data.user.screen_name;
+    /** The name of this tweet's user. */
+    userName(): string {
+      return this.tweetData.user.name;
     },
 
-    /**
-     * @returns {!string} The text content of this tweet. Can contain HTML links to URLs, hashtags and at-mentions.
-     */
-    fullText() {
-      return this.data.full_text
-        .replace(/(https:\/\/[^\s]+)/g, link => {
+    /** The twitter handle of this tweet's user. */
+    screenName(): string {
+      return this.tweetData.user.screen_name;
+    },
+
+    /** The text content of this tweet. Can contain HTML links to URLs, hashtags and at-mentions. */
+    fullText(): string {
+      return this.tweetData.full_text
+        .replace(/(https:\/\/[^\s]+)/g, (link: string) => {
           if (this.media.length > 0 && this.media[0].url === link) {
             return '';
           }
 
           return `<a href="${link}">${link}</a>`;
         })
-        .replace(/#(\w+)/g, (hashtag, word) => `<a href="https://twitter.com/hashtag/${word}">${hashtag}</a>`)
-        .replace(/@(\w+)/g, (name, word) => `<a href="https://twitter.com/${word}">${name}</a>`);
+        .replace(/#(\w+)/g, (hashtag: string, word: string) => `<a href="https://twitter.com/hashtag/${word}">${hashtag}</a>`)
+        .replace(/@(\w+)/g, (name: string, word: string) => `<a href="https://twitter.com/${word}">${name}</a>`);
     },
 
-    /**
-     * @returns {!array.<object>} An array of objects describing this tweet's attached photos.
-     */
-    media() {
-      const extended = this.data.extended_entities || {};
+    /** An array of objects describing this tweet's attached photos. */
+    media(): TweetMedia[] {
+      const extended = this.tweetData.extended_entities || {};
       const media = extended.media || [];
-      return media.map((m, idx) => {
+      return media.map((m: TweetMedia, idx: number) => {
         m.imageUrl = `${this.url}-images-${idx}`;
         return m;
       });
     },
 
-    /**
-     * @returns {!array.<object>} An array of objects describing this tweet's links.
-     */
-    links() {
-      return this.data.entities.urls || [];
+    /** An array of objects describing this tweet's links. */
+    links(): TweetLink[] {
+      return this.tweetData.entities.urls || [];
     },
 
-    /**
-     * @returns {?object} This tweet's first link object.
-     */
-    link() {
+    /** This tweet's first link object. */
+    link(): TweetLink | undefined {
       return this.links[0];
     },
 
-    /**
-     * @returns {!string} The embetty-server URL for this tweet's first link's image.
-     */
-    linkImageUrl() {
+    /** The embetty-server URL for this tweet's first link's image. */
+    linkImageUrl(): string {
       return `${this.url}-link-image`;
     },
 
-    /**
-     * @returns {?string} The hostname of this tweet's first link's URL.
-     */
-    linkHostname() {
+    /** The hostname of this tweet's first link's URL. */
+    linkHostname(): string | undefined {
+      if (!this.link) {
+        return undefined;
+      }
       // adapted from https://stackoverflow.com/a/21553982/451391
       const match = this.link.url.match(/^.*?\/\/(([^:/?#]*)(?::([0-9]+))?)/);
       return match ? match[2] : undefined;
     },
 
-    /**
-     * @returns {!string} The embetty-server URL for this tweet's user profile image.
-     */
-    profileImageUrl() {
+    /** The embetty-server URL for this tweet's user profile image. */
+    profileImageUrl(): string {
       return `${this.url}-profile-image`;
     },
 
-    /**
-     * @returns {!Date} A Date object containing this tweet's creation date.
-     */
-    createdAt() {
-      const createdAt = this.data.created_at.replace(/\+\d{4}\s/, '');
+    /** A Date object containing this tweet's creation date. */
+    createdAt(): Date {
+      const createdAt = this.tweetData.created_at.replace(/\+\d{4}\s/, '');
       return new Date(createdAt);
     },
 
-    /**
-     * @returns {!string} The URL leading to this tweet on Twitter.
-     */
-    twitterUrl() {
-      return `https://twitter.com/${this.screenName}/status/${this.data.id_str}`;
+    /** The URL leading to this tweet on Twitter. */
+    twitterUrl(): string {
+      return `https://twitter.com/${this.screenName}/status/${this.tweetData.id_str}`;
     },
 
-    /**
-     * @returns {?string} The status ID of the tweet that this tweet is a reply to, if any.
-     */
-    answeredTweetId() {
-      return this.data.in_reply_to_status_id_str;
+    /** The status ID of the tweet that this tweet is a reply to, if any. */
+    answeredTweetId(): string | null {
+      return this.tweetData.in_reply_to_status_id_str;
     },
 
-    /**
-     * @returns {!boolean} Whether this is a reply to another tweet.
-     */
-    isReply() {
+    /** Whether this is a reply to another tweet. */
+    isReply(): boolean {
       return !!this.answeredTweetId;
     }
   },
 
-  /**
-   * Hook that is called when this component is mounted. Calls fitLinkDescription
-   * as soon as the data are fetched and whenever the window is resized.
-   */
+  /** Hook that is called when this component is mounted. */
   mounted() {
-    this.$watch('fetched', fetched => {
+    this.$watch('fetched', (fetched: boolean) => {
       if (fetched) {
         this.fitLinkDescription();
       }
@@ -484,25 +482,21 @@ export default {
     }
   },
   methods: {
-    /**
-     * Truncate this tweet's first link's description to fit into the space it is given.
-     */
-    fitLinkDescription() {
+    /** Truncate this tweet's first link's description to fit into the space it is given. */
+    fitLinkDescription(): void {
       if (!this.link || !window) {
         return;
       }
 
       // reset link description to the one returned by the API
-      this.linkDescription = this.link.description;
+      this.linkDescription = this.link.description ?? null;
 
       if (!this.linkDescription) {
         return;
       }
 
-      /** @type Element */
-      const section = this.$refs.link;
-      /** @type Element */
-      const linkBody = this.$refs.linkBody;
+      const section = this.$refs.link as Element;
+      const linkBody = this.$refs.linkBody as Element;
 
       // don't do anything if the mobile view is active
       if (section.clientWidth === linkBody.clientWidth) {
@@ -515,7 +509,7 @@ export default {
 
       const computedStyle = window.getComputedStyle(section);
 
-      const sectionHeight = () => {
+      const sectionHeight = (): number => {
         const elemMarginTop = parseFloat(computedStyle.getPropertyValue('margin-top'));
         const elemMarginBottom = parseFloat(computedStyle.getPropertyValue('margin-bottom'));
         const elemHeight = parseFloat(computedStyle.getPropertyValue('height'));
@@ -523,7 +517,7 @@ export default {
         return elemHeight + elemMarginTop + elemMarginBottom;
       };
 
-      const reduceLinkDescriptionLength = () => {
+      const reduceLinkDescriptionLength = (): void => {
         if (counter >= MAX_TRUNCATION_ITERATIONS || last === this.linkDescription) {
           return;
         }
@@ -532,8 +526,8 @@ export default {
           return;
         }
 
-        last = this.linkDescription;
-        this.linkDescription = this.linkDescription.replace(/\W*\s(\S)*$/, '…');
+        last = this.linkDescription as string;
+        this.linkDescription = (this.linkDescription as string).replace(/\W*\s(\S)*$/, '…');
         counter++;
 
         // wait for Vue to render until we measure again
@@ -543,5 +537,5 @@ export default {
       this.$nextTick(reduceLinkDescriptionLength);
     }
   }
-};
+});
 </script>

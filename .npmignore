@@ -4,7 +4,10 @@ node_modules
 
 # Vite config files
 index.html
-vite.config.js
+vite.config.ts
+
+# TypeScript config
+tsconfig.json
 
 /tests/e2e/reports/
 selenium-debug.log
