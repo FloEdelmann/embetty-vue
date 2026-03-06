@@ -1,8 +1,6 @@
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue2';
 import { resolve } from 'path';
-import { readFileSync, writeFileSync } from 'fs';
-import { transformSync } from 'esbuild';
 
 export default defineConfig(function({ mode }) {
   const isBrowser = mode === 'browser' || mode === 'browser-min';
@@ -25,11 +23,15 @@ export default defineConfig(function({ mode }) {
           output: {
             globals: {
               vue: 'Vue'
+            },
+            assetFileNames() {
+              return isBrowserMin ? 'embetty-vue.min.css' : 'embetty-vue.css';
             }
           }
         },
-        minify: isBrowserMin ? 'esbuild' : false,
         cssCodeSplit: false,
+        cssMinify: isBrowserMin ? 'esbuild' : false,
+        minify: isBrowserMin ? 'esbuild' : false,
         emptyOutDir: !isBrowserMin
       }
     };
@@ -39,14 +41,12 @@ export default defineConfig(function({ mode }) {
     plugins: [
       vue(),
       {
-        name: 'generate-min-css',
-        closeBundle() {
-          try {
-            const css = readFileSync('dist/embetty-vue.css', 'utf-8');
-            const { code } = transformSync(css, { loader: 'css', minify: true });
-            writeFileSync('dist/embetty-vue.min.css', code);
-          } catch (e) {
-            // CSS file may not exist in non-lib builds
+        name: 'no-css',
+        generateBundle(options, bundle) {
+          for (const key of Object.keys(bundle)) {
+            if (key.endsWith('.css')) {
+              delete bundle[key];
+            }
           }
         }
       }
@@ -66,12 +66,6 @@ export default defineConfig(function({ mode }) {
           exports: 'named',
           globals: {
             vue: 'Vue'
-          },
-          assetFileNames(assetInfo) {
-            if (assetInfo.name === 'style.css') {
-              return 'embetty-vue.css';
-            }
-            return assetInfo.name;
           }
         }
       },
