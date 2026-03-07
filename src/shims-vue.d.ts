@@ -6,6 +6,6 @@ declare module '*.vue' {
 }
 
 declare module 'babel-preset-minify' {
-  const preset: (api: unknown, options?: Record<string, unknown>) => { plugins: unknown[] };
+  const preset: (api: import('@babel/core').ConfigAPI, options?: Record<string, unknown>) => import('@babel/core').TransformOptions;
   export default preset;
 }

@@ -349,6 +349,10 @@ export default defineComponent({
     status: {
       type: String,
       required: true,
+      /**
+       * @param statusId The Twitter status (tweet) ID.
+       * @returns True if it seems like a valid status ID, false otherwise.
+       */
       validator(statusId: string): boolean {
         return /^\d{6,}$/.test(statusId);
       }
@@ -359,33 +363,47 @@ export default defineComponent({
       default: false
     }
   },
+  /**
+   * @returns The component's data.
+   */
   data() {
     return {
       linkDescription: null as string | null
     };
   },
   computed: {
-    /** The raw tweet data cast to TweetData. */
+    /**
+     * @returns The raw tweet data cast to TweetData.
+     */
     tweetData(): TweetData {
       return this.data as unknown as TweetData;
     },
 
-    /** @override The embetty-server URL to query for this tweet's data. */
+    /**
+     * @override
+     * @returns The embetty-server URL to query for this tweet's data.
+     */
     url(): string {
       return this._api(`/tweet/${this.status}`) as string;
     },
 
-    /** The name of this tweet's user. */
+    /**
+     * @returns The name of this tweet's user.
+     */
     userName(): string {
       return this.tweetData.user.name;
     },
 
-    /** The twitter handle of this tweet's user. */
+    /**
+     * @returns The twitter handle of this tweet's user.
+     */
     screenName(): string {
       return this.tweetData.user.screen_name;
     },
 
-    /** The text content of this tweet. Can contain HTML links to URLs, hashtags and at-mentions. */
+    /**
+     * @returns The text content of this tweet. Can contain HTML links to URLs, hashtags and at-mentions.
+     */
     fullText(): string {
       return this.tweetData.full_text
         .replace(/(https:\/\/[^\s]+)/g, (link: string) => {
@@ -399,7 +417,9 @@ export default defineComponent({
         .replace(/@(\w+)/g, (name: string, word: string) => `<a href="https://twitter.com/${word}">${name}</a>`);
     },
 
-    /** An array of objects describing this tweet's attached photos. */
+    /**
+     * @returns An array of objects describing this tweet's attached photos.
+     */
     media(): TweetMedia[] {
       const extended = this.tweetData.extended_entities || {};
       const media = extended.media || [];
@@ -409,22 +429,30 @@ export default defineComponent({
       });
     },
 
-    /** An array of objects describing this tweet's links. */
+    /**
+     * @returns An array of objects describing this tweet's links.
+     */
     links(): TweetLink[] {
       return this.tweetData.entities.urls || [];
     },
 
-    /** This tweet's first link object. */
+    /**
+     * @returns This tweet's first link object.
+     */
     link(): TweetLink | undefined {
       return this.links[0];
     },
 
-    /** The embetty-server URL for this tweet's first link's image. */
+    /**
+     * @returns The embetty-server URL for this tweet's first link's image.
+     */
     linkImageUrl(): string {
       return `${this.url}-link-image`;
     },
 
-    /** The hostname of this tweet's first link's URL. */
+    /**
+     * @returns The hostname of this tweet's first link's URL.
+     */
     linkHostname(): string | undefined {
       if (!this.link) {
         return undefined;
@@ -434,34 +462,47 @@ export default defineComponent({
       return match ? match[2] : undefined;
     },
 
-    /** The embetty-server URL for this tweet's user profile image. */
+    /**
+     * @returns The embetty-server URL for this tweet's user profile image.
+     */
     profileImageUrl(): string {
       return `${this.url}-profile-image`;
     },
 
-    /** A Date object containing this tweet's creation date. */
+    /**
+     * @returns A Date object containing this tweet's creation date.
+     */
     createdAt(): Date {
       const createdAt = this.tweetData.created_at.replace(/\+\d{4}\s/, '');
       return new Date(createdAt);
     },
 
-    /** The URL leading to this tweet on Twitter. */
+    /**
+     * @returns The URL leading to this tweet on Twitter.
+     */
     twitterUrl(): string {
       return `https://twitter.com/${this.screenName}/status/${this.tweetData.id_str}`;
     },
 
-    /** The status ID of the tweet that this tweet is a reply to, if any. */
+    /**
+     * @returns The status ID of the tweet that this tweet is a reply to, if any.
+     */
     answeredTweetId(): string | null {
       return this.tweetData.in_reply_to_status_id_str;
     },
 
-    /** Whether this is a reply to another tweet. */
+    /**
+     * @returns Whether this is a reply to another tweet.
+     */
     isReply(): boolean {
       return !!this.answeredTweetId;
     }
   },
 
-  /** Hook that is called when this component is mounted. */
+  /**
+   * Hook that is called when this component is mounted. Calls fitLinkDescription
+   * as soon as the data are fetched and whenever the window is resized.
+   */
   mounted() {
     this.$watch('fetched', (fetched: boolean) => {
       if (fetched) {
@@ -482,7 +523,9 @@ export default defineComponent({
     }
   },
   methods: {
-    /** Truncate this tweet's first link's description to fit into the space it is given. */
+    /**
+     * Truncate this tweet's first link's description to fit into the space it is given.
+     */
     fitLinkDescription(): void {
       if (!this.link || !window) {
         return;

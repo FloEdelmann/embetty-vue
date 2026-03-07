@@ -1,3 +1,4 @@
+import type { VueConstructor } from 'vue';
 import type { EmbettyVueOptions } from './types';
 import { EmbettyPlugin } from './plugin';
 
@@ -9,5 +10,5 @@ if (typeof window !== 'undefined' && Object.prototype.hasOwnProperty.call(window
     serverUrl: baseUrlMeta !== null ? (baseUrlMeta.getAttribute('data-embetty-server') ?? undefined) : undefined
   };
 
-  (window as Window & { Vue: { use: (plugin: typeof EmbettyPlugin, options: EmbettyVueOptions) => void } }).Vue.use(EmbettyPlugin, embettyVueOptions);
+  (window as Window & { Vue: VueConstructor }).Vue.use(EmbettyPlugin, embettyVueOptions);
 }

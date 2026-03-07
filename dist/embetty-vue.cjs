@@ -11,6 +11,9 @@ const _sfc_main$2 = vue.defineComponent({
       default: null
     }
   },
+  /**
+   * @returns Component's data.
+   */
   data() {
     return {
       embettyLogo: EMBETTY_LOGO,
@@ -19,11 +22,16 @@ const _sfc_main$2 = vue.defineComponent({
     };
   },
   computed: {
-    /** Override this in child components! */
+    /**
+     * Override this in child components!
+     * @returns The URL to query for data in this component.
+     */
     url() {
       return void 0;
     },
-    /** The server URL, either from this component's prop or the global config. */
+    /**
+     * @returns The server URL, either from this component's prop or the global config.
+     */
     _serverUrl() {
       if (this.serverUrl) {
         return this.serverUrl;
@@ -37,6 +45,9 @@ const _sfc_main$2 = vue.defineComponent({
   watch: {
     url: {
       immediate: true,
+      /**
+       * @param url The newly set URL.
+       */
       handler(url) {
         if (url) {
           this.fetchData();
@@ -45,7 +56,9 @@ const _sfc_main$2 = vue.defineComponent({
     }
   },
   methods: {
-    /** Calls the API of embetty-server using the url set in the calling (child) component. */
+    /**
+     * Calls the API of embetty-server using the url set in the calling (child) component.
+     */
     async fetchData() {
       if (typeof window === "undefined") {
         return;
@@ -55,8 +68,8 @@ const _sfc_main$2 = vue.defineComponent({
       this.fetched = true;
     },
     /**
-     * Returns the given API endpoint URL, prepended with the embetty-server base URL,
-     * or undefined if no endpoint is given.
+     * @param apiEndpoint The API endpoint of the embetty-server.
+     * @returns The given URL, prepended with the embetty-server base URL.
      */
     _api(apiEndpoint) {
       return apiEndpoint ? this._serverUrl + apiEndpoint : void 0;
@@ -93,6 +106,10 @@ const _sfc_main$1 = vue.defineComponent({
     status: {
       type: String,
       required: true,
+      /**
+       * @param statusId The Twitter status (tweet) ID.
+       * @returns True if it seems like a valid status ID, false otherwise.
+       */
       validator(statusId) {
         return /^\d{6,}$/.test(statusId);
       }
@@ -103,29 +120,43 @@ const _sfc_main$1 = vue.defineComponent({
       default: false
     }
   },
+  /**
+   * @returns The component's data.
+   */
   data() {
     return {
       linkDescription: null
     };
   },
   computed: {
-    /** The raw tweet data cast to TweetData. */
+    /**
+     * @returns The raw tweet data cast to TweetData.
+     */
     tweetData() {
       return this.data;
     },
-    /** @override The embetty-server URL to query for this tweet's data. */
+    /**
+     * @override
+     * @returns The embetty-server URL to query for this tweet's data.
+     */
     url() {
       return this._api(`/tweet/${this.status}`);
     },
-    /** The name of this tweet's user. */
+    /**
+     * @returns The name of this tweet's user.
+     */
     userName() {
       return this.tweetData.user.name;
     },
-    /** The twitter handle of this tweet's user. */
+    /**
+     * @returns The twitter handle of this tweet's user.
+     */
     screenName() {
       return this.tweetData.user.screen_name;
     },
-    /** The text content of this tweet. Can contain HTML links to URLs, hashtags and at-mentions. */
+    /**
+     * @returns The text content of this tweet. Can contain HTML links to URLs, hashtags and at-mentions.
+     */
     fullText() {
       return this.tweetData.full_text.replace(/(https:\/\/[^\s]+)/g, (link) => {
         if (this.media.length > 0 && this.media[0].url === link) {
@@ -134,7 +165,9 @@ const _sfc_main$1 = vue.defineComponent({
         return `<a href="${link}">${link}</a>`;
       }).replace(/#(\w+)/g, (hashtag, word) => `<a href="https://twitter.com/hashtag/${word}">${hashtag}</a>`).replace(/@(\w+)/g, (name, word) => `<a href="https://twitter.com/${word}">${name}</a>`);
     },
-    /** An array of objects describing this tweet's attached photos. */
+    /**
+     * @returns An array of objects describing this tweet's attached photos.
+     */
     media() {
       const extended = this.tweetData.extended_entities || {};
       const media = extended.media || [];
@@ -143,19 +176,27 @@ const _sfc_main$1 = vue.defineComponent({
         return m;
       });
     },
-    /** An array of objects describing this tweet's links. */
+    /**
+     * @returns An array of objects describing this tweet's links.
+     */
     links() {
       return this.tweetData.entities.urls || [];
     },
-    /** This tweet's first link object. */
+    /**
+     * @returns This tweet's first link object.
+     */
     link() {
       return this.links[0];
     },
-    /** The embetty-server URL for this tweet's first link's image. */
+    /**
+     * @returns The embetty-server URL for this tweet's first link's image.
+     */
     linkImageUrl() {
       return `${this.url}-link-image`;
     },
-    /** The hostname of this tweet's first link's URL. */
+    /**
+     * @returns The hostname of this tweet's first link's URL.
+     */
     linkHostname() {
       if (!this.link) {
         return void 0;
@@ -163,29 +204,42 @@ const _sfc_main$1 = vue.defineComponent({
       const match = this.link.url.match(/^.*?\/\/(([^:/?#]*)(?::([0-9]+))?)/);
       return match ? match[2] : void 0;
     },
-    /** The embetty-server URL for this tweet's user profile image. */
+    /**
+     * @returns The embetty-server URL for this tweet's user profile image.
+     */
     profileImageUrl() {
       return `${this.url}-profile-image`;
     },
-    /** A Date object containing this tweet's creation date. */
+    /**
+     * @returns A Date object containing this tweet's creation date.
+     */
     createdAt() {
       const createdAt = this.tweetData.created_at.replace(/\+\d{4}\s/, "");
       return new Date(createdAt);
     },
-    /** The URL leading to this tweet on Twitter. */
+    /**
+     * @returns The URL leading to this tweet on Twitter.
+     */
     twitterUrl() {
       return `https://twitter.com/${this.screenName}/status/${this.tweetData.id_str}`;
     },
-    /** The status ID of the tweet that this tweet is a reply to, if any. */
+    /**
+     * @returns The status ID of the tweet that this tweet is a reply to, if any.
+     */
     answeredTweetId() {
       return this.tweetData.in_reply_to_status_id_str;
     },
-    /** Whether this is a reply to another tweet. */
+    /**
+     * @returns Whether this is a reply to another tweet.
+     */
     isReply() {
       return !!this.answeredTweetId;
     }
   },
-  /** Hook that is called when this component is mounted. */
+  /**
+   * Hook that is called when this component is mounted. Calls fitLinkDescription
+   * as soon as the data are fetched and whenever the window is resized.
+   */
   mounted() {
     this.$watch("fetched", (fetched) => {
       if (fetched) {
@@ -204,7 +258,9 @@ const _sfc_main$1 = vue.defineComponent({
     }
   },
   methods: {
-    /** Truncate this tweet's first link's description to fit into the space it is given. */
+    /**
+     * Truncate this tweet's first link's description to fit into the space it is given.
+     */
     fitLinkDescription() {
       if (!this.link || !window) {
         return;
@@ -259,12 +315,24 @@ var __component__$1 = /* @__PURE__ */ normalizeComponent(
 );
 const EmbettyTweet = __component__$1.exports;
 const FacebookVideo = {
+  /**
+   * @param videoId The ID of the video.
+   * @returns The embetty-server API endpoint to get the video data from.
+   */
   getVideoDataApiEndpoint(videoId) {
     return `/video/facebook/${videoId}`;
   },
+  /**
+   * @param videoId The ID of the video.
+   * @returns The embetty-server API endpoint to get the poster image from.
+   */
   getPosterImageApiEndpoint(videoId) {
     return `/video/facebook/${videoId}-poster-image`;
   },
+  /**
+   * @param videoData All data required to render the video iframe.
+   * @returns The `<iframe>` playing the video.
+   */
   getIframe(videoData) {
     const canonicalUrl = encodeURIComponent(videoData.serverData.canonicalUrl);
     const iframeSrc = `https://www.facebook.com/plugins/video.php?href=${canonicalUrl}&show_text=0&autoplay=1&mute=0&width=${videoData.width}`;
@@ -272,35 +340,71 @@ const FacebookVideo = {
   }
 };
 const NativeVideo = {
+  /**
+   * @param videoId The ID of the video.
+   * @returns undefined because no additional video data are required for native videos.
+   */
   getVideoDataApiEndpoint(_videoId) {
     return void 0;
   },
+  /**
+   * @param videoId The ID of the video.
+   * @returns undefined because poster images for native videos are not yet supported by the server.
+   */
   getPosterImageApiEndpoint(_videoId) {
     return void 0;
   },
+  /**
+   * @param videoData All data required to render the video element.
+   * @returns The `<video>` element playing the video.
+   */
   getIframe(videoData) {
     return `<video width="${videoData.width}" height="${videoData.height}" autoplay controls><source src="${videoData.videoId}" /></video>`;
   }
 };
 const VimeoVideo = {
+  /**
+   * @param videoId The ID of the video.
+   * @returns undefined because no additional video data are required for Vimeo.
+   */
   getVideoDataApiEndpoint(_videoId) {
     return void 0;
   },
+  /**
+   * @param videoId The ID of the video.
+   * @returns The embetty-server API endpoint to get the poster image from.
+   */
   getPosterImageApiEndpoint(videoId) {
     return `/video/vimeo/${videoId}-poster-image`;
   },
+  /**
+   * @param videoData All data required to render the video iframe.
+   * @returns The `<iframe>` playing the video.
+   */
   getIframe(videoData) {
     const src = `https://player.vimeo.com/video/${videoData.videoId}?autoplay=1#t=${videoData.startAt}`;
     return `<iframe src="${src}" width="${videoData.width}" height="${videoData.height}" frameborder="0" webkitallowfullscreen mozallowfullscreen msallowfullscreen allowfullscreen></iframe>`;
   }
 };
 const YoutubeVideo = {
+  /**
+   * @param videoId The ID of the video.
+   * @returns undefined because no additional video data are required for YouTube.
+   */
   getVideoDataApiEndpoint(_videoId) {
     return void 0;
   },
+  /**
+   * @param videoId The ID of the video.
+   * @returns The embetty-server API endpoint to get the poster image from.
+   */
   getPosterImageApiEndpoint(videoId) {
     return `/video/youtube/${videoId}-poster-image`;
   },
+  /**
+   * @param videoData All data required to render the video iframe.
+   * @returns The `<iframe>` playing the video.
+   */
   getIframe(videoData) {
     const src = `https://www.youtube-nocookie.com/embed/${videoData.videoId}?autoplay=1&start=${videoData.startAt}`;
     return `<iframe src="${src}" width="${videoData.width}" height="${videoData.height}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" webkitallowfullscreen mozallowfullscreen msallowfullscreen allowfullscreen></iframe>`;
@@ -329,6 +433,10 @@ const _sfc_main = vue.defineComponent({
     type: {
       type: String,
       required: true,
+      /**
+       * @param videoType The type of the video.
+       * @returns True if it is a valid type, false otherwise.
+       */
       validator(videoType) {
         return videoType in videoImplementations;
       }
@@ -336,6 +444,10 @@ const _sfc_main = vue.defineComponent({
     videoId: {
       type: String,
       required: true,
+      /**
+       * @param videoId The ID of the video.
+       * @returns True if it seems like a valid video ID, false otherwise.
+       */
       validator(videoId) {
         return /^[a-zA-Z0-9_-]{6,}$/.test(videoId) || videoId.startsWith("http");
       }
@@ -344,6 +456,10 @@ const _sfc_main = vue.defineComponent({
       type: [Number, String],
       required: false,
       default: 0,
+      /**
+       * @param startAt The number of seconds to start playback after.
+       * @returns True if it is a non-negative integer, false otherwise.
+       */
       validator(startAt) {
         if (typeof startAt === "number") {
           return startAt % 1 === 0 && startAt >= 0;
@@ -357,28 +473,40 @@ const _sfc_main = vue.defineComponent({
       default: null
     }
   },
+  /**
+   * @returns The component's data.
+   */
   data() {
     return {
       activated: false
     };
   },
   computed: {
-    /** The video implementation, based on the video type. */
+    /**
+     * @returns The video implementation, based on the video type.
+     * @throws If there is no video implementation for the given type.
+     */
     impl() {
       if (!(this.type in videoImplementations)) {
         throw new Error(`Could not find video implementation for type ${this.type}. Please specify a valid video type.`);
       }
       return videoImplementations[this.type];
     },
-    /** The embetty-server URL for the video poster image. */
+    /**
+     * @returns The embetty-server URL for the video poster image.
+     */
     posterImageUrl() {
       return this._api(this.impl.getPosterImageApiEndpoint(this.videoId));
     },
-    /** The poster image mode. */
+    /**
+     * @returns The poster image mode.
+     */
     _posterImageMode() {
       return this.posterImageMode || this._embettyVueOptions.posterImageMode || "cover";
     },
-    /** The number of seconds the video should start at. */
+    /**
+     * @returns The number of seconds the video should start at.
+     */
     _startAt() {
       if (typeof this.startAt === "number") {
         return this.startAt;
@@ -395,13 +523,16 @@ const _sfc_main = vue.defineComponent({
       return 0;
     },
     /**
-     * @override The embetty-server URL to fetch video data from, or undefined
-     *           if this video does not require additional data.
+     * @override
+     * @returns The embetty-server URL to fetch video data from, or undefined
+     *          if this video does not require additional data.
      */
     url() {
       return this._api(this.impl.getVideoDataApiEndpoint(this.videoId));
     },
-    /** The HTML for the iframe this component renders upon activating. */
+    /**
+     * @returns The HTML for the `<iframe>` this component renders upon activating.
+     */
     iframe() {
       const videoData = {
         width: this.width || 1600,
@@ -414,7 +545,9 @@ const _sfc_main = vue.defineComponent({
     }
   },
   methods: {
-    /** Activates the video, i.e. replaces the poster image and play button with the iframe. */
+    /**
+     * Activates the video, i.e. replaces the poster image and play button with the iframe.
+     */
     activate() {
       this.activated = true;
       this.$emit("activated");
@@ -441,6 +574,10 @@ var __component__ = /* @__PURE__ */ normalizeComponent(
 );
 const EmbettyVideo = __component__.exports;
 const EmbettyPlugin = {
+  /**
+   * @param Vue The global Vue object.
+   * @param options Options for embetty-vue.
+   */
   install(Vue, options = {}) {
     Vue.component("EmbettyTweet", EmbettyTweet);
     Vue.component("EmbettyVideo", EmbettyVideo);

@@ -11,6 +11,9 @@ export default defineComponent({
       default: null
     }
   },
+  /**
+   * @returns Component's data.
+   */
   data() {
     return {
       embettyLogo: EMBETTY_LOGO as string,
@@ -20,12 +23,17 @@ export default defineComponent({
     };
   },
   computed: {
-    /** Override this in child components! */
+    /**
+     * Override this in child components!
+     * @returns The URL to query for data in this component.
+     */
     url(): string | undefined {
       return undefined;
     },
 
-    /** The server URL, either from this component's prop or the global config. */
+    /**
+     * @returns The server URL, either from this component's prop or the global config.
+     */
     _serverUrl(): string {
       if (this.serverUrl) {
         return this.serverUrl;
@@ -41,6 +49,9 @@ export default defineComponent({
   watch: {
     url: {
       immediate: true,
+      /**
+       * @param url The newly set URL.
+       */
       handler(url: string | undefined) {
         if (url) {
           this.fetchData();
@@ -49,7 +60,9 @@ export default defineComponent({
     }
   },
   methods: {
-    /** Calls the API of embetty-server using the url set in the calling (child) component. */
+    /**
+     * Calls the API of embetty-server using the url set in the calling (child) component.
+     */
     async fetchData(): Promise<void> {
       // skip fetching in SSR
       if (typeof window === 'undefined') {
@@ -62,8 +75,8 @@ export default defineComponent({
     },
 
     /**
-     * Returns the given API endpoint URL, prepended with the embetty-server base URL,
-     * or undefined if no endpoint is given.
+     * @param apiEndpoint The API endpoint of the embetty-server.
+     * @returns The given URL, prepended with the embetty-server base URL.
      */
     _api(apiEndpoint: string | undefined): string | undefined {
       return apiEndpoint ? (this._serverUrl + apiEndpoint) : undefined;

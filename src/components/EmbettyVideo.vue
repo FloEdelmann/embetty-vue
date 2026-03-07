@@ -128,6 +128,10 @@ export default defineComponent({
     type: {
       type: String,
       required: true,
+      /**
+       * @param videoType The type of the video.
+       * @returns True if it is a valid type, false otherwise.
+       */
       validator(videoType: string): boolean {
         return videoType in videoImplementations;
       }
@@ -135,6 +139,10 @@ export default defineComponent({
     videoId: {
       type: String,
       required: true,
+      /**
+       * @param videoId The ID of the video.
+       * @returns True if it seems like a valid video ID, false otherwise.
+       */
       validator(videoId: string): boolean {
         return /^[a-zA-Z0-9_-]{6,}$/.test(videoId) || videoId.startsWith('http');
       }
@@ -143,6 +151,10 @@ export default defineComponent({
       type: [Number, String],
       required: false,
       default: 0,
+      /**
+       * @param startAt The number of seconds to start playback after.
+       * @returns True if it is a non-negative integer, false otherwise.
+       */
       validator(startAt: number | string): boolean {
         if (typeof startAt === 'number') {
           return startAt % 1 === 0 && startAt >= 0;
@@ -157,13 +169,19 @@ export default defineComponent({
       default: null
     }
   },
+  /**
+   * @returns The component's data.
+   */
   data() {
     return {
       activated: false
     };
   },
   computed: {
-    /** The video implementation, based on the video type. */
+    /**
+     * @returns The video implementation, based on the video type.
+     * @throws If there is no video implementation for the given type.
+     */
     impl(): VideoImpl {
       if (!(this.type in videoImplementations)) {
         throw new Error(`Could not find video implementation for type ${this.type}. Please specify a valid video type.`);
@@ -172,17 +190,23 @@ export default defineComponent({
       return videoImplementations[this.type];
     },
 
-    /** The embetty-server URL for the video poster image. */
+    /**
+     * @returns The embetty-server URL for the video poster image.
+     */
     posterImageUrl(): string | undefined {
       return this._api(this.impl.getPosterImageApiEndpoint(this.videoId));
     },
 
-    /** The poster image mode. */
+    /**
+     * @returns The poster image mode.
+     */
     _posterImageMode(): string {
       return this.posterImageMode || this._embettyVueOptions.posterImageMode || 'cover';
     },
 
-    /** The number of seconds the video should start at. */
+    /**
+     * @returns The number of seconds the video should start at.
+     */
     _startAt(): number {
       if (typeof this.startAt === 'number') {
         return this.startAt;
@@ -207,14 +231,17 @@ export default defineComponent({
     },
 
     /**
-     * @override The embetty-server URL to fetch video data from, or undefined
-     *           if this video does not require additional data.
+     * @override
+     * @returns The embetty-server URL to fetch video data from, or undefined
+     *          if this video does not require additional data.
      */
     url(): string | undefined {
       return this._api(this.impl.getVideoDataApiEndpoint(this.videoId));
     },
 
-    /** The HTML for the iframe this component renders upon activating. */
+    /**
+     * @returns The HTML for the `<iframe>` this component renders upon activating.
+     */
     iframe(): string {
       const videoData: VideoData = {
         width: this.width || 1600,
@@ -227,7 +254,9 @@ export default defineComponent({
     }
   },
   methods: {
-    /** Activates the video, i.e. replaces the poster image and play button with the iframe. */
+    /**
+     * Activates the video, i.e. replaces the poster image and play button with the iframe.
+     */
     activate(): void {
       this.activated = true;
       this.$emit('activated');
