@@ -4,6 +4,6 @@ export {};
 
 declare module 'vue' {
   interface ComponentCustomProperties {
-    _embettyVueOptions: import('./types').EmbettyVueOptions;
+    _embettyVueOptions?: import('./types').EmbettyVueOptions;
   }
 }

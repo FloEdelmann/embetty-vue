@@ -176,7 +176,7 @@ export default defineComponent({
      * @returns The poster image mode.
      */
     _posterImageMode(): string {
-      return this.posterImageMode || this._embettyVueOptions.posterImageMode || 'cover';
+      return this.posterImageMode || this._embettyVueOptions?.posterImageMode || 'cover';
     },
 
     /**

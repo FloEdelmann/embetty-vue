@@ -685,7 +685,8 @@ function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length)
        * @returns The poster image mode.
        */
       _posterImageMode: function _posterImageMode() {
-        return this.posterImageMode || this._embettyVueOptions.posterImageMode || "cover";
+        var _this$_embettyVueOpti;
+        return this.posterImageMode || ((_this$_embettyVueOpti = this._embettyVueOptions) === null || _this$_embettyVueOpti === void 0 ? void 0 : _this$_embettyVueOpti.posterImageMode) || "cover";
       },
       /**
        * @returns The number of seconds the video should start at.

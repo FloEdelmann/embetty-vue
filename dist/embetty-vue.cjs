@@ -461,7 +461,7 @@ const _sfc_main = vue.defineComponent({
      * @returns The poster image mode.
      */
     _posterImageMode() {
-      return this.posterImageMode || this._embettyVueOptions.posterImageMode || "cover";
+      return this.posterImageMode || this._embettyVueOptions?.posterImageMode || "cover";
     },
     /**
      * @returns The number of seconds the video should start at.
