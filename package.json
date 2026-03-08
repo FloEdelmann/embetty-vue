@@ -42,7 +42,7 @@
     "node": ">=24"
   },
   "peerDependencies": {
-    "vue": "^2.7.0"
+    "vue": "^3.0.0"
   },
   "dependencies": {
     "vue-ts-types": "^1.9.0"
@@ -59,7 +59,7 @@
     "globals": "^16.0.0",
     "sass": "^1.97.3",
     "vite": "^7.3.1",
-    "vue": "^2.7.0",
+    "vue": "^3.0.0",
     "vue-eslint-parser": "^10.4.0"
   }
 }
