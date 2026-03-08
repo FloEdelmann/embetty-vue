@@ -1,6 +1,6 @@
 {
   "name": "embetty-vue",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Embetty displays remote content like tweets or videos without compromising your privacy.",
   "license": "MIT",
   "author": {
@@ -44,6 +44,9 @@
   },
   "peerDependencies": {
     "vue": "^2.7.0"
+  },
+  "dependencies": {
+    "vue-ts-types": "^1.9.0"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",

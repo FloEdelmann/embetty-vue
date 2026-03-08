@@ -34,7 +34,7 @@ export default defineConfig(function({ mode }) {
           : (format) => (format === 'es' ? 'embetty-vue.mjs' : 'embetty-vue.cjs')
       },
       rollupOptions: {
-        external: ['vue'],
+        external: isBrowserBuild ? ['vue'] : ['vue', 'vue-ts-types'],
         output: {
           globals: {
             vue: 'Vue'

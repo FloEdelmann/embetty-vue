@@ -309,6 +309,7 @@ $quoteLineWidth: 4px;
 <script lang="ts">
 import { defineComponent } from 'vue';
 import EmbettyEmbed from './EmbettyEmbed.vue';
+import { booleanProp, stringProp } from 'vue-ts-types';
 
 const LINK_IMAGE_SIZE = 125;
 const MIN_WINDOW_WIDTH = 600;
@@ -346,22 +347,14 @@ export default defineComponent({
   name: 'EmbettyTweet',
   extends: EmbettyEmbed,
   props: {
-    status: {
-      type: String,
-      required: true,
-      /**
-       * @param statusId The Twitter status (tweet) ID.
-       * @returns True if it seems like a valid status ID, false otherwise.
-       */
-      validator(statusId: string): boolean {
-        return /^\d{6,}$/.test(statusId);
+    status: stringProp((statusId: unknown) => {
+      if (typeof statusId === 'string' && /^\d{6,}$/.test(statusId)) {
+        return undefined;
       }
-    },
-    answered: {
-      type: Boolean,
-      required: false,
-      default: false
-    }
+
+      return 'Expected a valid Twitter status ID';
+    }).required,
+    answered: booleanProp().withDefault(false)
   },
   /**
    * @returns The component's data.

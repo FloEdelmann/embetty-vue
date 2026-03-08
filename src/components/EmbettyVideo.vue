@@ -107,6 +107,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import EmbettyEmbed from './EmbettyEmbed.vue';
+import { numberProp, oneOfObjectKeysProp, oneOfProp, oneOfTypesProp, stringProp } from 'vue-ts-types';
 
 import type { VideoData, VideoImpl } from '../types';
 import { videoImplementations } from './video-impl/index';
@@ -115,59 +116,33 @@ export default defineComponent({
   name: 'EmbettyVideo',
   extends: EmbettyEmbed,
   props: {
-    width: {
-      type: Number,
-      required: false,
-      default: null
-    },
-    height: {
-      type: Number,
-      required: false,
-      default: null
-    },
-    type: {
-      type: String,
-      required: true,
-      /**
-       * @param videoType The type of the video.
-       * @returns True if it is a valid type, false otherwise.
-       */
-      validator(videoType: string): boolean {
-        return videoType in videoImplementations;
+    width: numberProp().nullable,
+    height: numberProp().nullable,
+    type: oneOfObjectKeysProp(videoImplementations).required,
+    videoId: stringProp((videoId) => {
+      if (typeof videoId === 'string' && (/^[a-zA-Z0-9_-]{6,}$/.test(videoId) || videoId.startsWith('http'))) {
+        return undefined;
       }
-    },
-    videoId: {
-      type: String,
-      required: true,
-      /**
-       * @param videoId The ID of the video.
-       * @returns True if it seems like a valid video ID, false otherwise.
-       */
-      validator(videoId: string): boolean {
-        return /^[a-zA-Z0-9_-]{6,}$/.test(videoId) || videoId.startsWith('http');
-      }
-    },
-    startAt: {
-      type: [Number, String],
-      required: false,
-      default: 0,
-      /**
-       * @param startAt The number of seconds to start playback after.
-       * @returns True if it is a non-negative integer, false otherwise.
-       */
-      validator(startAt: number | string): boolean {
-        if (typeof startAt === 'number') {
-          return startAt % 1 === 0 && startAt >= 0;
+
+      return 'Expected a valid video ID';
+    }).required,
+    /** The number of seconds (or a string in the format `XXhXXmXXs`) to start playback after. */
+    startAt: oneOfTypesProp<number | string>([Number, String], (startAt) => {
+      if (typeof startAt === 'number') {
+        if (startAt % 1 === 0 && startAt >= 0) {
+          return undefined;
         }
 
-        return /^(?:(?:\d+h)?\d+m)?\d+s?$/.test(startAt);
+        return 'Expected a non-negative integer';
       }
-    },
-    posterImageMode: {
-      type: String,
-      required: false,
-      default: null
-    }
+
+      if (typeof startAt === 'string' && /^(?:(?:\d+h)?\d+m)?\d+s?$/.test(startAt)) {
+        return undefined;
+      }
+
+      return 'Expected a valid time string';
+    }).withDefault(0),
+    posterImageMode: oneOfProp(['cover', 'contain']).nullable
   },
   /**
    * @returns The component's data.

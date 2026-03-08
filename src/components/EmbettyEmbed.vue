@@ -1,15 +1,12 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import EMBETTY_LOGO from '../assets/embetty.svg?raw';
+import { stringProp } from 'vue-ts-types';
 
 export default defineComponent({
   name: 'EmbettyEmbed',
   props: {
-    serverUrl: {
-      type: String,
-      required: false,
-      default: null
-    }
+    serverUrl: stringProp().nullable
   },
   /**
    * @returns Component's data.
