@@ -411,6 +411,7 @@ const _sfc_main = {
       }
       return "Expected a valid video ID";
     }).required,
+    /** The number of seconds (or a string in the format `XXhXXmXXs`) to start playback after. */
     startAt: vueTsTypes.oneOfTypesProp([Number, String], (startAt) => {
       if (typeof startAt === "number") {
         if (startAt % 1 === 0 && startAt >= 0) {
@@ -423,7 +424,7 @@ const _sfc_main = {
       }
       return "Expected a valid time string";
     }).withDefault(0),
-    posterImageMode: vueTsTypes.stringProp().nullable
+    posterImageMode: vueTsTypes.oneOfProp(["cover", "contain"]).nullable
   },
   /**
    * @returns {!object} The component's data.

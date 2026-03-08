@@ -106,7 +106,7 @@
 
 <script>
 import EmbettyEmbed from './EmbettyEmbed.vue';
-import { numberProp, oneOfTypesProp, stringProp } from 'vue-ts-types';
+import { numberProp, oneOfProp, oneOfTypesProp, stringProp } from 'vue-ts-types';
 
 import { videoImplementations } from './video-impl/index';
 
@@ -130,6 +130,7 @@ export default {
 
       return 'Expected a valid video ID';
     }).required,
+    /** The number of seconds (or a string in the format `XXhXXmXXs`) to start playback after. */
     startAt: oneOfTypesProp([Number, String], (startAt) => {
       if (typeof startAt === 'number') {
         if (startAt % 1 === 0 && startAt >= 0) {
@@ -145,7 +146,7 @@ export default {
 
       return 'Expected a valid time string';
     }).withDefault(0),
-    posterImageMode: stringProp().nullable
+    posterImageMode: oneOfProp(['cover', 'contain']).nullable
   },
   /**
    * @returns {!object} The component's data.
