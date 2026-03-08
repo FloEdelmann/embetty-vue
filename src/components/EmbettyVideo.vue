@@ -106,6 +106,7 @@
 
 <script>
 import EmbettyEmbed from './EmbettyEmbed.vue';
+import { numberProp, oneOfTypesProp, stringProp } from 'vue-ts-types';
 
 import { videoImplementations } from './video-impl/index';
 
@@ -113,59 +114,38 @@ export default {
   name: 'EmbettyVideo',
   extends: EmbettyEmbed,
   props: {
-    width: {
-      type: Number,
-      required: false,
-      default: null
-    },
-    height: {
-      type: Number,
-      required: false,
-      default: null
-    },
-    type: {
-      type: String,
-      required: true,
-      /**
-       * @param {!string} videoType The type of the video.
-       * @returns {!boolean} True if it is a valid type, false otherwise.
-       */
-      validator(videoType) {
-        return videoType in videoImplementations;
+    width: numberProp().nullable,
+    height: numberProp().nullable,
+    type: stringProp((videoType) => {
+      if (videoType in videoImplementations) {
+        return undefined;
       }
-    },
-    videoId: {
-      type: String,
-      required: true,
-      /**
-       * @param {!string} videoId The ID of the video.
-       * @returns {!boolean} True if it seems like a valid video ID, false otherwise.
-       */
-      validator(videoId) {
-        return /^[a-zA-Z0-9_-]{6,}$/.test(videoId) || videoId.startsWith('http');
+
+      return `Expected one of: ${Object.keys(videoImplementations).join(', ')}`;
+    }).required,
+    videoId: stringProp((videoId) => {
+      if (/^[a-zA-Z0-9_-]{6,}$/.test(videoId) || videoId.startsWith('http')) {
+        return undefined;
       }
-    },
-    startAt: {
-      type: [Number, String],
-      required: false,
-      default: 0,
-      /**
-       * @param {!number} startAt The number of seconds to start playback after.
-       * @returns {!boolean} True if it is a non-negative integer, false otherwise.
-       */
-      validator(startAt) {
-        if (typeof startAt === 'number') {
-          return startAt % 1 === 0 && startAt >= 0;
+
+      return 'Expected a valid video ID';
+    }).required,
+    startAt: oneOfTypesProp([Number, String], (startAt) => {
+      if (typeof startAt === 'number') {
+        if (startAt % 1 === 0 && startAt >= 0) {
+          return undefined;
         }
 
-        return /^(?:(?:\d+h)?\d+m)?\d+s?$/.test(startAt);
+        return 'Expected a non-negative integer';
       }
-    },
-    posterImageMode: {
-      type: String,
-      required: false,
-      default: null
-    }
+
+      if (/^(?:(?:\d+h)?\d+m)?\d+s?$/.test(startAt)) {
+        return undefined;
+      }
+
+      return 'Expected a valid time string';
+    }).withDefault(0),
+    posterImageMode: stringProp().nullable
   },
   /**
    * @returns {!object} The component's data.
