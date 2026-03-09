@@ -1,4 +1,5 @@
 import eslintJs from '@eslint/js';
+import eslintPluginPackageJson from 'eslint-plugin-package-json';
 import eslintPluginVue from 'eslint-plugin-vue';
 import globals from 'globals';
 
@@ -8,6 +9,7 @@ export default [
   },
   eslintJs.configs.recommended,
   ...eslintPluginVue.configs['flat/recommended'],
+  eslintPluginPackageJson.configs.recommended,
   {
     files: ['*.config.js'],
     languageOptions: {

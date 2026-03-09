@@ -27,14 +27,31 @@
   ],
   "main": "./dist/embetty-vue.cjs",
   "module": "./dist/embetty-vue.mjs",
+  "exports": {
+    ".": {
+      "import": "./dist/embetty-vue.mjs",
+      "require": "./dist/embetty-vue.cjs"
+    },
+    "./dist/embetty-vue.browser.js": "./dist/embetty-vue.browser.js",
+    "./dist/embetty-vue.browser.min.js": "./dist/embetty-vue.browser.min.js",
+    "./dist/embetty-vue.cjs": "./dist/embetty-vue.cjs",
+    "./dist/embetty-vue.css": "./dist/embetty-vue.css",
+    "./dist/embetty-vue.min.css": "./dist/embetty-vue.min.css",
+    "./dist/embetty-vue.mjs": "./dist/embetty-vue.mjs",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
   "type": "module",
+  "sideEffects": false,
   "scripts": {
-    "dev": "vite",
     "build": "npm run build:clean && npm run build:browser-dev && npm run build:browser-prod && npm run build:lib",
-    "build:clean": "node --input-type=module --eval \"import { rmSync } from 'node:fs'; rmSync('dist', { recursive: true, force: true });\"",
-    "build:lib": "vite build",
     "build:browser-dev": "vite build --mode browser",
     "build:browser-prod": "vite build --mode browser-min",
+    "build:clean": "node --input-type=module --eval \"import { rmSync } from 'node:fs'; rmSync('dist', { recursive: true, force: true });\"",
+    "build:lib": "vite build",
+    "dev": "vite",
     "lint": "eslint",
     "version": "npm run build && git add -A dist"
   },
@@ -55,6 +72,7 @@
     "@vitejs/plugin-vue2": "^2.3.4",
     "babel-preset-minify": "^0.5.2",
     "eslint": "^10.0.3",
+    "eslint-plugin-package-json": "^0.89.4",
     "eslint-plugin-vue": "^10.0.0",
     "globals": "^17.4.0",
     "sass": "^1.97.3",
