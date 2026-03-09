@@ -26,7 +26,7 @@
         :style="[
           posterImageUrl ? { backgroundImage: `url(${posterImageUrl})` } : {},
           height === null ? {} : { height: `${height}px` }
-      ]" />
+        ]" />
       <a
         href="https://www.heise.de/embetty"
         target="_blank"
@@ -38,71 +38,6 @@
     </template>
   </div>
 </template>
-
-<style lang="scss">
-@import '../assets/element.scss';
-
-.embetty-video {
-  @include host();
-
-  .poster, .wrapper {
-    position: relative;
-    overflow: hidden;
-    background: no-repeat center black;
-    background-size: cover;
-
-    &.contain {
-      background-size: contain;
-    }
-
-    &.default-height {
-      height: 0;
-      padding-top: 56.25%; // percentage values in padding refer to width; creates a 16:9 ratio
-    }
-  }
-
-  .playbutton,
-  .playbutton:active {
-    box-sizing: border-box;
-    display: block;
-    position: absolute;
-    z-index: 1;
-    width: 100%;
-    height: 100%;
-    border: 0;
-    padding: 0;
-    outline: 0;
-    opacity: 0.9;
-    background: none;
-    cursor: pointer;
-    background-image: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.8));
-    transition: opacity 150ms;
-
-    &:hover,
-    &:focus {
-      opacity: 1;
-    }
-  }
-
-  .powered-by {
-    @include powered-by();
-
-    -webkit-font-smoothing: antialiased;
-
-    color: #fff;
-    opacity: .6;
-  }
-
-  iframe,
-  video {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-  }
-}
-</style>
 
 <script>
 import EmbettyEmbed from './EmbettyEmbed.vue';
@@ -242,3 +177,68 @@ export default {
   }
 };
 </script>
+
+<style lang="scss">
+@import '../assets/element.scss';
+
+.embetty-video {
+  @include host();
+
+  .poster, .wrapper {
+    position: relative;
+    overflow: hidden;
+    background: no-repeat center black;
+    background-size: cover;
+
+    &.contain {
+      background-size: contain;
+    }
+
+    &.default-height {
+      height: 0;
+      padding-top: 56.25%; // percentage values in padding refer to width; creates a 16:9 ratio
+    }
+  }
+
+  .playbutton,
+  .playbutton:active {
+    box-sizing: border-box;
+    display: block;
+    position: absolute;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    padding: 0;
+    outline: 0;
+    opacity: 0.9;
+    background: none;
+    cursor: pointer;
+    background-image: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.8));
+    transition: opacity 150ms;
+
+    &:hover,
+    &:focus {
+      opacity: 1;
+    }
+  }
+
+  .powered-by {
+    @include powered-by();
+
+    -webkit-font-smoothing: antialiased;
+
+    color: #fff;
+    opacity: .6;
+  }
+
+  iframe,
+  video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+}
+</style>

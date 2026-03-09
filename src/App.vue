@@ -142,6 +142,12 @@
   </div>
 </template>
 
+<script>
+export default {
+  name: 'App'
+};
+</script>
+
 <style lang="scss">
 // Demo styling
 #app {
@@ -165,9 +171,3 @@ article {
   --embetty-font-family: 'Comic Sans MS'
 }
 </style>
-
-<script>
-export default {
-  name: 'App'
-};
-</script>
