@@ -31,7 +31,9 @@
     ".": {
       "import": "./dist/embetty-vue.mjs",
       "require": "./dist/embetty-vue.cjs"
-    }
+    },
+    "./dist/embetty-vue.css": "./dist/embetty-vue.css",
+    "./dist/embetty-vue.min.css": "./dist/embetty-vue.min.css"
   },
   "files": [
     "dist"
