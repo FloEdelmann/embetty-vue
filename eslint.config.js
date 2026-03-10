@@ -1,4 +1,5 @@
 import eslintJs from '@eslint/js';
+import eslintPluginPackageJson from 'eslint-plugin-package-json';
 import eslintPluginVue from 'eslint-plugin-vue';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
@@ -11,6 +12,7 @@ export default tseslint.config(
   eslintJs.configs.recommended,
   ...eslintPluginVue.configs['flat/recommended'],
   ...tseslint.configs.recommended,
+  eslintPluginPackageJson.configs.recommended,
   {
     files: ['**/*.vue'],
     languageOptions: {

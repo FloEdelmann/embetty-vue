@@ -4,6 +4,7 @@ import { getBabelOutputPlugin } from '@rollup/plugin-babel';
 import vitePluginVue2 from '@vitejs/plugin-vue2';
 import babelPresetMinify from 'babel-preset-minify';
 import { defineConfig, type Plugin } from 'vite';
+import dts from 'vite-plugin-dts';
 
 export default defineConfig(function({ mode }) {
   const isBrowserBuild = mode === 'browser' || mode === 'browser-min';
@@ -13,16 +14,26 @@ export default defineConfig(function({ mode }) {
   return {
     plugins: [
       vitePluginVue2(),
-      ...(isBrowserBuild ? [] : [{
-        name: 'no-css',
-        generateBundle(_options: unknown, bundle: Record<string, unknown>) {
-          for (const key of Object.keys(bundle)) {
-            if (key.endsWith('.css')) {
-              delete bundle[key];
+      ...(isBrowserBuild ? [] : [
+        dts({
+          tsconfigPath: './tsconfig.json',
+          entryRoot: 'src',
+          include: ['src'],
+          // main.ts is the dev app entry, not part of the library public API
+          exclude: ['src/main.ts'],
+          insertTypesEntry: true
+        }),
+        {
+          name: 'no-css',
+          generateBundle(_options: unknown, bundle: Record<string, unknown>) {
+            for (const key of Object.keys(bundle)) {
+              if (key.endsWith('.css')) {
+                delete bundle[key];
+              }
             }
           }
-        }
-      } satisfies Plugin])
+        } satisfies Plugin
+      ])
     ],
     build: {
       lib: {
