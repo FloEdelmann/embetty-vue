@@ -1,6 +1,6 @@
 {
   "name": "embetty-vue",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Embetty displays remote content like tweets or videos without compromising your privacy.",
   "license": "MIT",
   "author": {
@@ -77,10 +77,10 @@
     "@types/node": "^25.3.5",
     "@vitejs/plugin-vue2": "^2.3.4",
     "babel-preset-minify": "^0.5.2",
-    "eslint": "^10.0.0",
+    "eslint": "^10.0.3",
     "eslint-plugin-package-json": "^0.90.0",
     "eslint-plugin-vue": "^10.0.0",
-    "globals": "^16.0.0",
+    "globals": "^17.4.0",
     "sass": "^1.97.3",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.56.1",
