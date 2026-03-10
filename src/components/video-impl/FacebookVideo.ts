@@ -1,0 +1,35 @@
+import type { VideoData, VideoImpl } from '../../types';
+
+const FacebookVideo: VideoImpl = {
+  /**
+   * @param videoId The ID of the video.
+   * @returns The embetty-server API endpoint to get the video data from.
+   */
+  getVideoDataApiEndpoint(videoId: string): string {
+    return `/video/facebook/${videoId}`;
+  },
+
+  /**
+   * @param videoId The ID of the video.
+   * @returns The embetty-server API endpoint to get the poster image from.
+   */
+  getPosterImageApiEndpoint(videoId: string): string {
+    return `/video/facebook/${videoId}-poster-image`;
+  },
+
+  /**
+   * @param videoData All data required to render the video iframe.
+   * @returns The `<iframe>` playing the video.
+   */
+  getIframe(videoData: VideoData): string {
+    const canonicalUrl = encodeURIComponent((videoData.serverData as { canonicalUrl: string }).canonicalUrl);
+    const iframeSrc = `https://www.facebook.com/plugins/video.php?href=${canonicalUrl}` +
+      `&show_text=0&autoplay=1&mute=0&width=${videoData.width}`;
+
+    return `<iframe src="${iframeSrc}" width="${videoData.width}" height="${videoData.height}" ` +
+      'frameborder="0" webkitallowfullscreen mozallowfullscreen msallowfullscreen allowfullscreen></iframe>';
+  }
+};
+
+export default FacebookVideo;
+

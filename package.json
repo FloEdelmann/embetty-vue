@@ -27,8 +27,10 @@
   ],
   "main": "./dist/embetty-vue.cjs",
   "module": "./dist/embetty-vue.mjs",
+  "types": "./dist/embetty-vue.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/embetty-vue.d.ts",
       "import": "./dist/embetty-vue.mjs",
       "require": "./dist/embetty-vue.cjs"
     },
@@ -53,6 +55,7 @@
     "build:lib": "vite build",
     "dev": "vite",
     "lint": "eslint",
+    "type-check": "tsc --noEmit",
     "version": "npm run build && git add -A dist"
   },
   "engines": {
@@ -69,14 +72,20 @@
     "@babel/preset-env": "^7.29.0",
     "@eslint/js": "^10.0.0",
     "@rollup/plugin-babel": "^7.0.0",
+    "@types/babel__core": "^7.20.5",
+    "@types/babel__preset-env": "^7.10.0",
+    "@types/node": "^25.3.5",
     "@vitejs/plugin-vue2": "^2.3.4",
     "babel-preset-minify": "^0.5.2",
     "eslint": "^10.0.3",
-    "eslint-plugin-package-json": "^0.89.4",
+    "eslint-plugin-package-json": "^0.90.0",
     "eslint-plugin-vue": "^10.0.0",
     "globals": "^17.4.0",
     "sass": "^1.97.3",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.56.1",
     "vite": "^7.3.1",
+    "vite-plugin-dts": "^4.5.4",
     "vue": "^2.7.0",
     "vue-eslint-parser": "^10.4.0"
   }

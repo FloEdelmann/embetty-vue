@@ -104,34 +104,30 @@
 }
 </style>
 
-<script>
+<script lang="ts">
+import { defineComponent } from 'vue';
 import EmbettyEmbed from './EmbettyEmbed.vue';
-import { numberProp, oneOfProp, oneOfTypesProp, stringProp } from 'vue-ts-types';
+import { numberProp, oneOfObjectKeysProp, oneOfProp, oneOfTypesProp, stringProp } from 'vue-ts-types';
 
+import type { VideoData, VideoImpl } from '../types';
 import { videoImplementations } from './video-impl/index';
 
-export default {
+export default defineComponent({
   name: 'EmbettyVideo',
   extends: EmbettyEmbed,
   props: {
     width: numberProp().nullable,
     height: numberProp().nullable,
-    type: stringProp((videoType) => {
-      if (videoType in videoImplementations) {
-        return undefined;
-      }
-
-      return `Expected one of: ${Object.keys(videoImplementations).join(', ')}`;
-    }).required,
+    type: oneOfObjectKeysProp(videoImplementations).required,
     videoId: stringProp((videoId) => {
-      if (/^[a-zA-Z0-9_-]{6,}$/.test(videoId) || videoId.startsWith('http')) {
+      if (typeof videoId === 'string' && (/^[a-zA-Z0-9_-]{6,}$/.test(videoId) || videoId.startsWith('http'))) {
         return undefined;
       }
 
       return 'Expected a valid video ID';
     }).required,
     /** The number of seconds (or a string in the format `XXhXXmXXs`) to start playback after. */
-    startAt: oneOfTypesProp([Number, String], (startAt) => {
+    startAt: oneOfTypesProp<number | string>([Number, String], (startAt) => {
       if (typeof startAt === 'number') {
         if (startAt % 1 === 0 && startAt >= 0) {
           return undefined;
@@ -140,7 +136,7 @@ export default {
         return 'Expected a non-negative integer';
       }
 
-      if (/^(?:(?:\d+h)?\d+m)?\d+s?$/.test(startAt)) {
+      if (typeof startAt === 'string' && /^(?:(?:\d+h)?\d+m)?\d+s?$/.test(startAt)) {
         return undefined;
       }
 
@@ -149,7 +145,7 @@ export default {
     posterImageMode: oneOfProp(['cover', 'contain']).nullable
   },
   /**
-   * @returns {!object} The component's data.
+   * @returns The component's data.
    */
   data() {
     return {
@@ -158,10 +154,10 @@ export default {
   },
   computed: {
     /**
-     * @returns {!VideoImpl} The video implementation, based on the video type.
-     * @throws {!Error} If there is no video implementation for the given type.
+     * @returns The video implementation, based on the video type.
+     * @throws If there is no video implementation for the given type.
      */
-    impl() {
+    impl(): VideoImpl {
       if (!(this.type in videoImplementations)) {
         throw new Error(`Could not find video implementation for type ${this.type}. Please specify a valid video type.`);
       }
@@ -170,29 +166,29 @@ export default {
     },
 
     /**
-     * @returns {!string} The embetty-server URL for the video poster image.
+     * @returns The embetty-server URL for the video poster image.
      */
-    posterImageUrl() {
+    posterImageUrl(): string | undefined {
       return this._api(this.impl.getPosterImageApiEndpoint(this.videoId));
     },
 
     /**
-     * @returns {!string} The poster image mode.
+     * @returns The poster image mode.
      */
-    _posterImageMode() {
-      return this.posterImageMode || this._embettyVueOptions.posterImageMode || 'cover';
+    _posterImageMode(): string {
+      return this.posterImageMode || this._embettyVueOptions?.posterImageMode || 'cover';
     },
 
     /**
-     * @returns {!number} The number of seconds the video should start at.
+     * @returns The number of seconds the video should start at.
      */
-    _startAt() {
+    _startAt(): number {
       if (typeof this.startAt === 'number') {
         return this.startAt;
       }
 
       const timeRegex = /^(?:(?:(\d+)h)?(\d+)m)?(\d+)s?$/;
-      const timeMatch = this.startAt.match(timeRegex);
+      const timeMatch = (this.startAt as string).match(timeRegex);
 
       if (timeMatch) {
         // '1m16s'    -> timeMatch = ['1m16s',    undefined, '1', '16']
@@ -211,34 +207,35 @@ export default {
 
     /**
      * @override
-     * @returns {?string} The embetty-server URL to fetch video data from, or undefined
-     *                    if this video does not require additional data.
+     * @returns The embetty-server URL to fetch video data from, or undefined
+     *          if this video does not require additional data.
      */
-    url() {
+    url(): string | undefined {
       return this._api(this.impl.getVideoDataApiEndpoint(this.videoId));
     },
 
     /**
-     * @returns {!string} The HTML for the <iframe> this component renders upon activating.
+     * @returns The HTML for the `<iframe>` this component renders upon activating.
      */
-    iframe() {
-      return this.impl.getIframe({
+    iframe(): string {
+      const videoData: VideoData = {
         width: this.width || 1600,
         height: this.height || 900,
         videoId: this.videoId,
         startAt: this._startAt,
         serverData: this.data
-      });
+      };
+      return this.impl.getIframe(videoData);
     }
   },
   methods: {
     /**
      * Activates the video, i.e. replaces the poster image and play button with the iframe.
      */
-    activate() {
+    activate(): void {
       this.activated = true;
       this.$emit('activated');
     }
   }
-};
+});
 </script>

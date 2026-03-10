@@ -2,16 +2,28 @@ import eslintJs from '@eslint/js';
 import eslintPluginPackageJson from 'eslint-plugin-package-json';
 import eslintPluginVue from 'eslint-plugin-vue';
 import globals from 'globals';
+import tseslint from 'typescript-eslint';
+import vueEslintParser from 'vue-eslint-parser';
 
-export default [
+export default tseslint.config(
   {
     ignores: ['node_modules/', 'dist/', 'tests/']
   },
   eslintJs.configs.recommended,
   ...eslintPluginVue.configs['flat/recommended'],
+  ...tseslint.configs.recommended,
   eslintPluginPackageJson.configs.recommended,
   {
-    files: ['*.config.js'],
+    files: ['**/*.vue'],
+    languageOptions: {
+      parser: vueEslintParser,
+      parserOptions: {
+        parser: tseslint.parser
+      }
+    }
+  },
+  {
+    files: ['*.config.ts', '*.config.js'],
     languageOptions: {
       globals: {
         ...globals.node
@@ -27,7 +39,8 @@ export default [
     rules: {
       'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'off',
       'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
-      'no-unused-vars': ['error', { 'args': 'none' }],
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': ['error', { 'args': 'none' }],
       'semi': 'error',
       'no-trailing-spaces': 'error',
       'comma-dangle': ['error', 'never'],
@@ -39,4 +52,4 @@ export default [
       'vue/prop-name-casing': 'error'
     }
   }
-];
+);
