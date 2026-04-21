@@ -44,7 +44,7 @@
     "dist"
   ],
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": ["**/*.css"],
   "scripts": {
     "build": "npm run build:clean && npm run build:browser-dev && npm run build:browser-prod && npm run build:lib",
     "build:browser-dev": "vite build --mode browser",
