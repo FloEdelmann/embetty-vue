@@ -74,7 +74,7 @@
     "@vitejs/plugin-vue2": "^2.3.4",
     "babel-preset-minify": "^0.5.2",
     "eslint": "^10.0.3",
-    "eslint-plugin-package-json": "^0.91.0",
+    "eslint-plugin-package-json": "^1.0.0",
     "eslint-plugin-vue": "^10.0.0",
     "globals": "^17.4.0",
     "sass": "^1.97.3",
